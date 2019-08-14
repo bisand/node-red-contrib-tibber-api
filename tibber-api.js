@@ -18,7 +18,7 @@ module.exports = function (RED) {
         function myTimer() {
             var d = new Date();
             var t = d.toLocaleTimeString();
-            var msg = { payload: { time: t } };
+            var msg = { payload: { date: d, time: t } };
             node.send(msg)
         }
     }
