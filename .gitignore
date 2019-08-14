@@ -61,4 +61,4 @@ typings/
 .next
 
 # Visual Studio Code dir.
-.vscode
+.vscode/
