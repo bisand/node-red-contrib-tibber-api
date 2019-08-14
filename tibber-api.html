@@ -1,0 +1,36 @@
+<script type="text/javascript">
+    RED.nodes.registerType('tibber-api',{
+        category: 'Tibber API',
+        color: '#23B8CC',
+        defaults: {
+            name: {value:""},
+            apikey: {value:""},
+            homeid: {value:""}
+        },
+        inputs:1,
+        outputs:1,
+        icon: "feed.png",
+        label: function() {
+            return this.name||"tibber-api";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="tibber-api">
+    <div class="form-row">
+        <label for="node-input-apikey"><i class="icon-tag"></i> API key</label>
+        <input type="text" id="node-input-apikey" placeholder="API key">
+    </div>
+    <div class="form-row">
+        <label for="node-input-homeid"><i class="icon-tag"></i> Home id</label>
+        <input type="text" id="node-input-homeid" placeholder="Home id">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="tibber-api">
+    <p>A simple node that converts the message payloads into all tibber-api characters</p>
+</script>

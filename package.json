@@ -18,5 +18,10 @@
     "HomeAutomation"
   ],
   "author": "André Biseth",
-  "license": "MIT"
+  "license": "MIT",
+  "node-red": {
+    "nodes": {
+      "tibber-api": "tibber-api.js"
+    }
+  }
 }
