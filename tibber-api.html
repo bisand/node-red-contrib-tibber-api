@@ -1,17 +1,17 @@
 <script type="text/javascript">
-    RED.nodes.registerType('tibber-api',{
+    RED.nodes.registerType('tibber-api', {
         category: 'Tibber API',
         color: '#23B8CC',
         defaults: {
-            name: {value:""},
-            apikey: {value:""},
-            homeid: {value:""}
+            name: { value: "" },
+            apikey: { value: "" },
+            homeid: { value: "" }
         },
-        inputs:1,
-        outputs:1,
+        inputs: 0,
+        outputs: 1,
         icon: "feed.png",
-        label: function() {
-            return this.name||"tibber-api";
+        label: function () {
+            return this.name || "tibber-api";
         }
     });
 </script>
