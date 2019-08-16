@@ -6,7 +6,7 @@ module.exports = function (RED) {
         var node = this;
 
         if( !config.apiUrl || !config.apikey || !config.homeid){
-            this.error('Missing mandatory parameters');
+            node.error('Missing mandatory parameters');
             return;
         }
         var tibberFeed = new TibberFeed(config)
@@ -16,23 +16,19 @@ module.exports = function (RED) {
         });
 
         tibberFeed.events.on('connected', function (data) {
-            var msg = { payload: data };
-            node.send(msg);
+            node.log(data);
         });
 
         tibberFeed.events.on('connection_ack', function (data) {
-            var msg = { payload: data };
-            node.send(msg);
+            node.log(JSON.stringify(data));
         });
 
         tibberFeed.events.on('disconnected', function (data) {
-            var msg = { payload: data };
-            node.send(msg);
+            node.log(data);
         });
 
         tibberFeed.events.on('error', function (data) {
-            var msg = { payload: data };
-            node.send(msg);
+            node.error(data);
         });
 
         node.on('close', function () {

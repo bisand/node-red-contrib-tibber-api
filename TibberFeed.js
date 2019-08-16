@@ -6,13 +6,12 @@ class TibberFeed {
 
     constructor(config) {
         
-        if (!TibberFeed.ws)
-            TibberFeed.ws = new WebSocket(config.apiUrl, ['graphql-ws']);
-
-        console.log('Created!');
         var self = this;
         self.apikey = config.apikey;
         self.homeid = config.homeid;
+
+        if (!TibberFeed.ws)
+            TibberFeed.ws = new WebSocket(config.apiUrl, ['graphql-ws']);
 
         var gql = 'subscription{\nliveMeasurement(homeId:\"' + self.homeid + '\"){\n';
         if (config.timestamp == 1)
@@ -74,7 +73,6 @@ class TibberFeed {
         self.events = new events.EventEmitter();
 
         TibberFeed.ws.on('open', function () {
-            console.log('Connected!');
             TibberFeed.ws.send('{"type":"connection_init","payload":"token=' + self.apikey + '"}')
             self.events.emit('connected', "Connected to Tibber feed");
         });
@@ -100,12 +98,10 @@ class TibberFeed {
         });
 
         TibberFeed.ws.on('close', function (code) {
-            console.log('Disconnected: ' + code);
             self.events.emit('disconnected', "Disconnected from Tibber feed");
         });
 
         TibberFeed.ws.on('error', function (error) {
-            console.log('Error: ' + error.code);
             self.events.emit('error', error);
         });
 
