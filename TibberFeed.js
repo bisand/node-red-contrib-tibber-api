@@ -1,11 +1,14 @@
 const WebSocket = require('ws');
 var events = require('events');
-var ws = null;
 
 class TibberFeed {
+    static ws = null;
+
     constructor(config) {
-        if (!ws)
-            ws = new WebSocket(config.apiUrl, ['graphql-ws']);
+        
+        if (!TibberFeed.ws)
+            TibberFeed.ws = new WebSocket(config.apiUrl, ['graphql-ws']);
+
         console.log('Created!');
         var self = this;
         self.apikey = config.apikey;
@@ -70,19 +73,19 @@ class TibberFeed {
 
         self.events = new events.EventEmitter();
 
-        ws.on('open', function () {
+        TibberFeed.ws.on('open', function () {
             console.log('Connected!');
-            ws.send('{"type":"connection_init","payload":"token=' + self.apikey + '"}')
+            TibberFeed.ws.send('{"type":"connection_init","payload":"token=' + self.apikey + '"}')
             self.events.emit('connected', "Connected to Tibber feed");
         });
 
-        ws.on('message', function (message) {
+        TibberFeed.ws.on('message', function (message) {
             if (message.startsWith('{')) {
                 var msg = JSON.parse(message);
                 if (msg.type == 'connection_ack') {
                     self.events.emit('connection_ack', msg);
                     var str = JSON.stringify(self.query);
-                    ws.send(str);
+                    TibberFeed.ws.send(str);
                 }
                 else if (msg.type == "connection_error") {
                     self.events.emit('error', msg);
@@ -96,20 +99,20 @@ class TibberFeed {
             }
         });
 
-        ws.on('close', function (code) {
+        TibberFeed.ws.on('close', function (code) {
             console.log('Disconnected: ' + code);
             self.events.emit('disconnected', "Disconnected from Tibber feed");
         });
 
-        ws.on('error', function (error) {
+        TibberFeed.ws.on('error', function (error) {
             console.log('Error: ' + error.code);
             self.events.emit('error', error);
         });
 
-        self.close = function(){
-            ws.close();
-            ws.terminate();
-            ws = null;
+        self.close = function () {
+            TibberFeed.ws.close();
+            TibberFeed.ws.terminate();
+            TibberFeed.ws = null;
         };
     }
 }

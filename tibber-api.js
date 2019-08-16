@@ -35,11 +35,9 @@ module.exports = function (RED) {
             node.send(msg);
         });
 
-        node.on('input', function (msg) {
-            node.send(msg);
-        });
         node.on('close', function () {
             tibberFeed.close();
+            tibberFeed = null;
         });
     }
     RED.nodes.registerType("tibber-feed", tibberApiNode);
