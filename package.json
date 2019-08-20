@@ -4,11 +4,13 @@
   "description": "Node Red module for integrating with Tibber api",
   "main": "client.js",
   "dependencies": {
-    "uuid": "^3.3.2",
+    "uuid": "^3.3.3",
     "websocket": "^1.0.29",
-    "ws": "^7.1.1"
+    "ws": "^7.1.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^6.2.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,5 +20,10 @@
     "HomeAutomation"
   ],
   "author": "André Biseth",
-  "license": "MIT"
+  "license": "MIT",
+  "node-red": {
+    "nodes": {
+      "tibber-api": "tibber-api.js"
+    }
+  }
 }
