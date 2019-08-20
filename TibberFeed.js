@@ -1,11 +1,9 @@
-const WebSocket = require('ws');
+var WebSocket = require('ws');
 var events = require('events');
 
 class TibberFeed {
-    static ws = null;
-
     constructor(config) {
-        
+
         var self = this;
         self.apikey = config.apikey;
         self.homeid = config.homeid;
@@ -84,11 +82,9 @@ class TibberFeed {
                     self.events.emit('connection_ack', msg);
                     var str = JSON.stringify(self.query);
                     TibberFeed.ws.send(str);
-                }
-                else if (msg.type == "connection_error") {
+                } else if (msg.type == "connection_error") {
                     self.events.emit('error', msg);
-                }
-                else if (msg.type == "data") {
+                } else if (msg.type == "data") {
                     if (!msg.payload.data)
                         return;
                     var data = msg.payload.data.liveMeasurement;
