@@ -9,7 +9,7 @@ module.exports = function (RED) {
             node.error('Missing mandatory parameters');
             return;
         }
-        var tibberFeed = new TibberFeed(config)
+        var tibberFeed = new TibberFeed(config);
         tibberFeed.events.on('data', function (data) {
             var msg = {
                 payload: data
@@ -39,4 +39,4 @@ module.exports = function (RED) {
         });
     }
     RED.nodes.registerType("tibber-feed", tibberApiNode);
-}
+};
