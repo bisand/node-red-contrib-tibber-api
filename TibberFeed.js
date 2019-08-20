@@ -93,7 +93,7 @@ class TibberFeed {
             }
         });
 
-        TibberFeed.ws.on('close', function (code) {
+        TibberFeed.ws.on('close', function () {
             self.events.emit('disconnected', "Disconnected from Tibber feed");
         });
 
