@@ -5,6 +5,11 @@ class TibberFeed {
     constructor(config) {
 
         var self = this;
+        self.active = false;
+
+        if (!config.apikey || !config.homeid || !config.apiUrl)
+            return;
+        
         self.apikey = config.apikey;
         self.homeid = config.homeid;
 

@@ -1,4 +1,4 @@
-const TibberFeed = require('./TibberFeed');
+const TibberFeed = require('./nodes/TibberFeed');
 
 module.exports = function (RED) {
     function TibberFeedNode(config) {
