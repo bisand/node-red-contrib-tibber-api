@@ -1,7 +1,7 @@
-var TibberFeed = require('./TibberFeed').default;
+const TibberFeed = require('./TibberFeed');
 
 module.exports = function (RED) {
-    function tibberApiNode(config) {
+    function TibberFeedNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
 
@@ -9,34 +9,39 @@ module.exports = function (RED) {
             node.error('Missing mandatory parameters');
             return;
         }
-        var tibberFeed = new TibberFeed(config);
-        tibberFeed.events.on('data', function (data) {
+
+        if (!TibberFeedNode.tibberFeed[config.apikey])
+            TibberFeedNode.tibberFeed[config.apikey] = new TibberFeed(config);
+
+        TibberFeedNode.tibberFeed[config.apikey].events.on('data', function (data) {
             var msg = {
                 payload: data
             };
             node.send(msg);
         });
 
-        tibberFeed.events.on('connected', function (data) {
+        TibberFeedNode.tibberFeed[config.apikey].events.on('connected', function (data) {
             node.log(data);
         });
 
-        tibberFeed.events.on('connection_ack', function (data) {
+        TibberFeedNode.tibberFeed[config.apikey].events.on('connection_ack', function (data) {
             node.log(JSON.stringify(data));
         });
 
-        tibberFeed.events.on('disconnected', function (data) {
+        TibberFeedNode.tibberFeed[config.apikey].events.on('disconnected', function (data) {
             node.log(data);
         });
 
-        tibberFeed.events.on('error', function (data) {
+        TibberFeedNode.tibberFeed[config.apikey].events.on('error', function (data) {
             node.error(data);
         });
 
         node.on('close', function () {
-            tibberFeed.close();
-            tibberFeed = null;
+            TibberFeedNode.tibberFeed[config.apikey].close();
+            TibberFeedNode.tibberFeed[config.apikey] = null;
         });
     }
-    RED.nodes.registerType("tibber-feed", tibberApiNode);
+    TibberFeedNode.tibberFeed = [];
+    
+    RED.nodes.registerType("tibber-feed", TibberFeedNode);
 };

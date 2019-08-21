@@ -1,5 +1,5 @@
-var WebSocket = require('ws');
-var events = require('events');
+const WebSocket = require('ws');
+const events = require('events');
 
 class TibberFeed {
     constructor(config) {
@@ -8,10 +8,9 @@ class TibberFeed {
         self.apikey = config.apikey;
         self.homeid = config.homeid;
 
-        if (!TibberFeed.ws)
-            TibberFeed.ws = new WebSocket(config.apiUrl, ['graphql-ws']);
+        self.webSocket = new WebSocket(config.apiUrl, ['graphql-ws']);
 
-        var gql = 'subscription{\nliveMeasurement(homeId:\"' + self.homeid + '\"){\n';
+        var gql = 'subscription{\nliveMeasurement(homeId:"' + self.homeid + '"){\n';
         if (config.timestamp == 1)
             gql += 'timestamp\n';
         if (config.power == 1)
@@ -70,20 +69,22 @@ class TibberFeed {
 
         self.events = new events.EventEmitter();
 
-        TibberFeed.ws.on('open', function () {
-            TibberFeed.ws.send('{"type":"connection_init","payload":"token=' + self.apikey + '"}')
+        self.webSocket.on('open', function () {
+            self.webSocket.send('{"type":"connection_init","payload":"token=' + self.apikey + '"}');
             self.events.emit('connected', "Connected to Tibber feed");
         });
 
-        TibberFeed.ws.on('message', function (message) {
+        self.webSocket.on('message', function (message) {
             if (message.startsWith('{')) {
                 var msg = JSON.parse(message);
                 if (msg.type == 'connection_ack') {
                     self.events.emit('connection_ack', msg);
                     var str = JSON.stringify(self.query);
-                    TibberFeed.ws.send(str);
+                    self.webSocket.send(str);
                 } else if (msg.type == "connection_error") {
                     self.events.emit('error', msg);
+                    if (self.webSocket)
+                        self.webSocket.close();
                 } else if (msg.type == "data") {
                     if (!msg.payload.data)
                         return;
@@ -93,19 +94,22 @@ class TibberFeed {
             }
         });
 
-        TibberFeed.ws.on('close', function () {
+        self.webSocket.on('close', function () {
             self.events.emit('disconnected', "Disconnected from Tibber feed");
         });
 
-        TibberFeed.ws.on('error', function (error) {
+        self.webSocket.on('error', function (error) {
             self.events.emit('error', error);
+            if (self.webSocket)
+                self.webSocket.close();
         });
 
         self.close = function () {
-            TibberFeed.ws.close();
-            TibberFeed.ws.terminate();
-            TibberFeed.ws = null;
+            self.webSocket.close();
+            self.webSocket.terminate();
+            self.webSocket = null;
         };
     }
 }
+
 module.exports = TibberFeed;
