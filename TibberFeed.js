@@ -108,6 +108,7 @@ class TibberFeed {
             self.webSocket.close();
             self.webSocket.terminate();
             self.webSocket = null;
+            console.log('Closed Tibber Feed.');
         };
     }
 }

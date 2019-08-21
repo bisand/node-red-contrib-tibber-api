@@ -37,11 +37,13 @@ module.exports = function (RED) {
         });
 
         node.on('close', function () {
+            if (!TibberFeedNode.tibberFeed[config.apikey])
+                return;
             TibberFeedNode.tibberFeed[config.apikey].close();
             TibberFeedNode.tibberFeed[config.apikey] = null;
         });
     }
     TibberFeedNode.tibberFeed = [];
-    
+
     RED.nodes.registerType("tibber-feed", TibberFeedNode);
 };
