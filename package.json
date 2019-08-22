@@ -1,9 +1,15 @@
 {
   "name": "node-red-contrib-tibber-api",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Node Red module for integrating with Tibber api",
-  "main": "client.js",
+  "repository": {
+    "url": "https://github.com/bisand/node-red-contrib-tibber-api"
+  },
+  "bugs": {
+    "url": "https://github.com/bisand/node-red-contrib-tibber-api/issues"
+  },
   "dependencies": {
+    "mocha": "^6.2.0",
     "uuid": "^3.3.3",
     "websocket": "^1.0.29",
     "ws": "^7.1.2"
@@ -11,19 +17,27 @@
   "devDependencies": {
     "eslint": "^6.2.1"
   },
+  "directories": {
+    "test": "tests",
+    "nodes": "nodes"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha tests/test*.js"
   },
   "keywords": [
-    "Tibber",
-    "Power",
-    "HomeAutomation"
+    "node-red",
+    "tibber",
+    "iot",
+    "power",
+    "home-automation",
+    "smarthome",
+    "energy"
   ],
   "author": "André Biseth",
   "license": "MIT",
   "node-red": {
     "nodes": {
-      "tibber-api": "tibber-api.js"
+      "tibber-feed": "nodes/tibber-feed.js"
     }
   }
 }
