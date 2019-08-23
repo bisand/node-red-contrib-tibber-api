@@ -13,6 +13,12 @@ module.exports = function (RED) {
         if (!TibberFeedNode.tibberFeed[config.apikey])
             TibberFeedNode.tibberFeed[config.apikey] = new TibberFeed(config);
 
+        if (!config.active) {
+            TibberFeedNode.tibberFeed[config.apikey].close();
+            TibberFeedNode.tibberFeed[config.apikey] = null;
+            return;
+        }
+
         TibberFeedNode.tibberFeed[config.apikey].events.on('data', function (data) {
             var msg = {
                 payload: data

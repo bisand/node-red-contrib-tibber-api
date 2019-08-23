@@ -1,3 +1,5 @@
+const TibberQuery = require('./TibberQuery');
+
 module.exports = function (RED) {
     function TibberQueryNode(config) {
         RED.nodes.createNode(this, config);
@@ -7,6 +9,8 @@ module.exports = function (RED) {
             node.error('Missing mandatory parameters');
             return;
         }
+
+        node.query = new TibberQuery();
 
     }
 
