@@ -4,8 +4,11 @@ const { GraphQLClient }  = require('graphql-request');
 class TibberQuery {
     constructor(config) {
         var self = this;
-        request();
-        self.client = new GraphQLClient();
+        self.active = false;
+        //request();
+        //self.client = new GraphQLClient();
 
     }
 }
+
+module.exports = TibberQuery;
