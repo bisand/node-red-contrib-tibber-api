@@ -1,12 +1,13 @@
-const { request } = require('graphql-request')
+const { request } = require('graphql-request');
 const { GraphQLClient }  = require('graphql-request');
 
 class TibberQuery {
     constructor(config) {
-        var self = this;
-        self.active = false;
+        var node = this;
+        node._config = config;
+        node.active = false;
         //request();
-        //self.client = new GraphQLClient();
+        //node.client = new GraphQLClient();
 
     }
 }
