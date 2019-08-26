@@ -9,11 +9,31 @@ class TibberFeed {
 
         if (!config.apikey || !config.homeid || !config.apiUrl)
             return;
-        
+
         self.apikey = config.apikey;
         self.homeid = config.homeid;
 
-        self.webSocket = new WebSocket(config.apiUrl, ['graphql-ws']);
+        self.connect = function () {
+            self.webSocket = new WebSocket(config.apiUrl, ['graphql-ws']);
+        };
+
+        self.close = function () {
+            self.webSocket.close();
+            self.webSocket.terminate();
+            self.webSocket = null;
+            console.log('Closed Tibber Feed.');
+        };
+
+        self.heartbeat = function () {
+            clearTimeout(self.pingTimeout);
+            // Use `WebSocket#terminate()`, which immediately destroys the connection,
+            // instead of `WebSocket#close()`, which waits for the close timer.
+            // Delay should be equal to the interval at which your server
+            // sends out pings plus a conservative assumption of the latency.
+            self.pingTimeout = setTimeout(() => {
+                self.webSocket.terminate();
+            }, 30000 + 1000);
+        }
 
         var gql = 'subscription{\nliveMeasurement(homeId:"' + self.homeid + '"){\n';
         if (config.timestamp == 1)
@@ -95,26 +115,21 @@ class TibberFeed {
                         return;
                     var data = msg.payload.data.liveMeasurement;
                     self.events.emit('data', data);
+                    self.heartbeat();
                 }
             }
         });
 
         self.webSocket.on('close', function () {
             self.events.emit('disconnected', "Disconnected from Tibber feed");
+            clearTimeout(self.pingTimeout);
         });
 
         self.webSocket.on('error', function (error) {
             self.events.emit('error', error);
-            if (self.webSocket)
-                self.webSocket.close();
         });
 
-        self.close = function () {
-            self.webSocket.close();
-            self.webSocket.terminate();
-            self.webSocket = null;
-            console.log('Closed Tibber Feed.');
-        };
+        self.connect();
     }
 }
 
