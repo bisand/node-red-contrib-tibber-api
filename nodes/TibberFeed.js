@@ -4,132 +4,132 @@ const events = require('events');
 class TibberFeed {
     constructor(config) {
 
-        var self = this;
-        self.active = false;
+        var node = this;
+        node._config = config;
+        node.active = false;
 
         if (!config.apikey || !config.homeid || !config.apiUrl)
             return;
 
-        self.apikey = config.apikey;
-        self.homeid = config.homeid;
-
-        self.connect = function () {
-            self.webSocket = new WebSocket(config.apiUrl, ['graphql-ws']);
-        };
-
-        self.close = function () {
-            self.webSocket.close();
-            self.webSocket.terminate();
-            self.webSocket = null;
-            console.log('Closed Tibber Feed.');
-        };
-
-        self.heartbeat = function () {
-            clearTimeout(self.pingTimeout);
-            // Use `WebSocket#terminate()`, which immediately destroys the connection,
-            // instead of `WebSocket#close()`, which waits for the close timer.
-            // Delay should be equal to the interval at which your server
-            // sends out pings plus a conservative assumption of the latency.
-            self.pingTimeout = setTimeout(() => {
-                self.webSocket.terminate();
-            }, 30000 + 1000);
-        }
-
-        var gql = 'subscription{\nliveMeasurement(homeId:"' + self.homeid + '"){\n';
-        if (config.timestamp == 1)
-            gql += 'timestamp\n';
-        if (config.power == 1)
-            gql += 'power\n';
-        if (config.lastMeterConsumption == 1)
-            gql += 'lastMeterConsumption\n';
-        if (config.accumulatedConsumption == 1)
-            gql += 'accumulatedConsumption\n';
-        if (config.accumulatedProduction == 1)
-            gql += 'accumulatedProduction\n';
-        if (config.accumulatedCost == 1)
-            gql += 'accumulatedCost\n';
-        if (config.accumulatedReward == 1)
-            gql += 'accumulatedReward\n';
-        if (config.currency == 1)
-            gql += 'currency\n';
-        if (config.minPower == 1)
-            gql += 'minPower\n';
-        if (config.averagePower == 1)
-            gql += 'averagePower\n';
-        if (config.maxPower == 1)
-            gql += 'maxPower\n';
-        if (config.powerProduction == 1)
-            gql += 'powerProduction\n';
-        if (config.minPowerProduction == 1)
-            gql += 'minPowerProduction\n';
-        if (config.maxPowerProduction == 1)
-            gql += 'maxPowerProduction\n';
-        if (config.lastMeterProduction == 1)
-            gql += 'lastMeterProduction\n';
-        if (config.powerFactor == 1)
-            gql += 'powerFactor\n';
-        if (config.voltagePhase1 == 1)
-            gql += 'voltagePhase1\n';
-        if (config.voltagePhase2 == 1)
-            gql += 'voltagePhase2\n';
-        if (config.voltagePhase3 == 1)
-            gql += 'voltagePhase3\n';
-        if (config.currentPhase1 == 1)
-            gql += 'currentPhase1\n';
-        if (config.currentPhase2 == 1)
-            gql += 'currentPhase2\n';
-        if (config.currentPhase3 == 1)
-            gql += 'currentPhase3\n';
-        gql += '}}';
-        self.query = {
+        var _gql = 'subscription{\nliveMeasurement(homeId:"' + node._config.homeid + '"){\n';
+        if (node._config.timestamp == 1)
+            _gql += 'timestamp\n';
+        if (node._config.power == 1)
+            _gql += 'power\n';
+        if (node._config.lastMeterConsumption == 1)
+            _gql += 'lastMeterConsumption\n';
+        if (node._config.accumulatedConsumption == 1)
+            _gql += 'accumulatedConsumption\n';
+        if (node._config.accumulatedProduction == 1)
+            _gql += 'accumulatedProduction\n';
+        if (node._config.accumulatedCost == 1)
+            _gql += 'accumulatedCost\n';
+        if (node._config.accumulatedReward == 1)
+            _gql += 'accumulatedReward\n';
+        if (node._config.currency == 1)
+            _gql += 'currency\n';
+        if (node._config.minPower == 1)
+            _gql += 'minPower\n';
+        if (node._config.averagePower == 1)
+            _gql += 'averagePower\n';
+        if (node._config.maxPower == 1)
+            _gql += 'maxPower\n';
+        if (node._config.powerProduction == 1)
+            _gql += 'powerProduction\n';
+        if (node._config.minPowerProduction == 1)
+            _gql += 'minPowerProduction\n';
+        if (node._config.maxPowerProduction == 1)
+            _gql += 'maxPowerProduction\n';
+        if (node._config.lastMeterProduction == 1)
+            _gql += 'lastMeterProduction\n';
+        if (node._config.powerFactor == 1)
+            _gql += 'powerFactor\n';
+        if (node._config.voltagePhase1 == 1)
+            _gql += 'voltagePhase1\n';
+        if (node._config.voltagePhase2 == 1)
+            _gql += 'voltagePhase2\n';
+        if (node._config.voltagePhase3 == 1)
+            _gql += 'voltagePhase3\n';
+        if (node._config.currentPhase1 == 1)
+            _gql += 'currentPhase1\n';
+        if (node._config.currentPhase2 == 1)
+            _gql += 'currentPhase2\n';
+        if (node._config.currentPhase3 == 1)
+            _gql += 'currentPhase3\n';
+        _gql += '}}';
+        node._query = {
             id: "1",
             type: "start",
             payload: {
                 variables: {},
                 extensions: {},
                 operationName: null,
-                query: gql
+                query: _gql
             }
         };
 
-        self.events = new events.EventEmitter();
+        node.events = new events.EventEmitter();
 
-        self.webSocket.on('open', function () {
-            self.webSocket.send('{"type":"connection_init","payload":"token=' + self.apikey + '"}');
-            self.events.emit('connected', "Connected to Tibber feed");
+        node._webSocket.on('open', function () {
+            node._webSocket.send('{"type":"connection_init","payload":"token=' + node.apikey + '"}');
+            node.events.emit('connected', "Connected to Tibber feed");
         });
 
-        self.webSocket.on('message', function (message) {
+        node._webSocket.on('message', function (message) {
             if (message.startsWith('{')) {
                 var msg = JSON.parse(message);
                 if (msg.type == 'connection_ack') {
-                    self.events.emit('connection_ack', msg);
-                    var str = JSON.stringify(self.query);
-                    self.webSocket.send(str);
+                    node.events.emit('connection_ack', msg);
+                    var str = JSON.stringify(node._query);
+                    node._webSocket.send(str);
                 } else if (msg.type == "connection_error") {
-                    self.events.emit('error', msg);
-                    if (self.webSocket)
-                        self.webSocket.close();
+                    node.events.emit('error', msg);
+                    if (node._webSocket)
+                        node._webSocket.close();
                 } else if (msg.type == "data") {
                     if (!msg.payload.data)
                         return;
                     var data = msg.payload.data.liveMeasurement;
-                    self.events.emit('data', data);
-                    self.heartbeat();
+                    node.events.emit('data', data);
+                    node.heartbeat();
                 }
             }
         });
 
-        self.webSocket.on('close', function () {
-            self.events.emit('disconnected', "Disconnected from Tibber feed");
-            clearTimeout(self.pingTimeout);
+        node._webSocket.on('close', function () {
+            node.events.emit('disconnected', "Disconnected from Tibber feed");
+            clearTimeout(node._pingTimeout);
         });
 
-        self.webSocket.on('error', function (error) {
-            self.events.emit('error', error);
+        node._webSocket.on('error', function (error) {
+            node.events.emit('error', error);
         });
 
-        self.connect();
+        node.connect();
+    }
+
+    connect() {
+        this._webSocket = new WebSocket(this._config.apiUrl, ['graphql-ws']);
+    }
+
+    close() {
+        this._webSocket.close();
+        this._webSocket.terminate();
+        this._webSocket = null;
+        console.log('Closed Tibber Feed.');
+    }
+
+    heartbeat() {
+        var node = this;
+        clearTimeout(this._pingTimeout);
+        // Use `WebSocket#terminate()`, which immediately destroys the connection,
+        // instead of `WebSocket#close()`, which waits for the close timer.
+        // Delay should be equal to the interval at which your server
+        // sends out pings plus a conservative assumption of the latency.
+        this._pingTimeout = setTimeout(() => {
+            node._webSocket.terminate();
+            this.connect();
+        }, 30000 + 1000);
     }
 }
 
