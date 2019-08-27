@@ -13,7 +13,7 @@ module.exports = function (RED) {
 
         node.client = new TibberQuery(config);
 
-        node.on('input', function(msg) {
+        node.on('input', async function(msg) {
             msg.payload = await node.client.query(msg.payload);
             node.send(msg);
         });

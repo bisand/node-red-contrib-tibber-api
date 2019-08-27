@@ -1,4 +1,3 @@
-const { request } = require('graphql-request');
 const { GraphQLClient } = require('graphql-request');
 
 class TibberQuery {
@@ -14,7 +13,8 @@ class TibberQuery {
     }
 
     async query(query) {
-        return await node.client(query);
+        var data = await this.client.request(query);
+        return data;
     }
 }
 
