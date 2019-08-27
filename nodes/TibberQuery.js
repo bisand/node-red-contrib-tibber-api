@@ -6,8 +6,8 @@ class TibberQuery {
         var node = this;
         node._config = config;
         node.active = false;
-        //request();
-        //node.client = new GraphQLClient();
+        request();
+        node.client = new GraphQLClient();
 
     }
 }
