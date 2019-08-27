@@ -8,7 +8,7 @@ class TibberFeed {
         node._config = config;
         node.active = false;
 
-        if (!config.apikey || !config.homeid || !config.apiUrl)
+        if (!config.apiToken || !config.homeid || !config.apiUrl)
             return;
 
         var _gql = 'subscription{\nliveMeasurement(homeId:"' + node._config.homeid + '"){\n';
@@ -71,7 +71,7 @@ class TibberFeed {
         node.events = new events.EventEmitter();
 
         node._webSocket.on('open', function () {
-            node._webSocket.send('{"type":"connection_init","payload":"token=' + node.apikey + '"}');
+            node._webSocket.send('{"type":"connection_init","payload":"token=' + node.apiToken + '"}');
             node.events.emit('connected', "Connected to Tibber feed");
         });
 

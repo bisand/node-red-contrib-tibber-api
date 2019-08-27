@@ -1,14 +1,20 @@
 const { request } = require('graphql-request');
-const { GraphQLClient }  = require('graphql-request');
+const { GraphQLClient } = require('graphql-request');
 
 class TibberQuery {
     constructor(config) {
         var node = this;
         node._config = config;
         node.active = false;
-        request();
-        node.client = new GraphQLClient();
+        node.client = new GraphQLClient(config.apiUrl, {
+            headers: {
+                authorization: 'Bearer ' + config.apiToken,
+            },
+        });
+    }
 
+    async query(query) {
+        return await node.client(query);
     }
 }
 

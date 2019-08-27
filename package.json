@@ -38,7 +38,8 @@
   "license": "MIT",
   "node-red": {
     "nodes": {
-      "tibber-feed": "nodes/tibber-feed.js"
+      "tibber-feed": "nodes/tibber-feed.js",
+      "tibber-query": "nodes/tibber-query.js"
     }
   }
 }
