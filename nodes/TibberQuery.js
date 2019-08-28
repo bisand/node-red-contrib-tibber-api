@@ -13,8 +13,11 @@ class TibberQuery {
     }
 
     async query(query) {
-        var data = await this.client.request(query);
-        return data;
+        try {
+            return await this.client.request(query);
+        } catch (error) {
+            return { error: error };
+        }
     }
 }
 

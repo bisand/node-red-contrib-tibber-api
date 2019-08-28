@@ -69,6 +69,11 @@ class TibberFeed {
         };
 
         node.events = new events.EventEmitter();
+    }
+
+    connect() {
+        var node = this;
+        this._webSocket = new WebSocket(this._config.apiUrl, ['graphql-ws']);
 
         node._webSocket.on('open', function () {
             node._webSocket.send('{"type":"connection_init","payload":"token=' + node.apiToken + '"}');
@@ -104,12 +109,6 @@ class TibberFeed {
         node._webSocket.on('error', function (error) {
             node.events.emit('error', error);
         });
-
-        node.connect();
-    }
-
-    connect() {
-        this._webSocket = new WebSocket(this._config.apiUrl, ['graphql-ws']);
     }
 
     close() {
@@ -128,6 +127,7 @@ class TibberFeed {
         // sends out pings plus a conservative assumption of the latency.
         this._pingTimeout = setTimeout(() => {
             node._webSocket.terminate();
+            node._webSocket = null;
             this.connect();
         }, 30000 + 1000);
     }

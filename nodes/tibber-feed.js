@@ -48,6 +48,8 @@ module.exports = function (RED) {
             TibberFeedNode.tibberFeed[config.apiToken].close();
             TibberFeedNode.tibberFeed[config.apiToken] = null;
         });
+
+        TibberFeedNode.tibberFeed[config.apiToken].connect();
     }
     TibberFeedNode.tibberFeed = [];
 
