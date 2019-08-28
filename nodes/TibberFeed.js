@@ -11,51 +11,51 @@ class TibberFeed {
         if (!config.apiToken || !config.homeid || !config.apiUrl)
             return;
 
-        var _gql = 'subscription{\nliveMeasurement(homeId:"' + node._config.homeid + '"){\n';
+        var _gql = 'subscription{liveMeasurement(homeId:"' + node._config.homeid + '"){';
         if (node._config.timestamp == 1)
-            _gql += 'timestamp\n';
+            _gql += 'timestamp ';
         if (node._config.power == 1)
-            _gql += 'power\n';
+            _gql += 'power ';
         if (node._config.lastMeterConsumption == 1)
-            _gql += 'lastMeterConsumption\n';
+            _gql += 'lastMeterConsumption ';
         if (node._config.accumulatedConsumption == 1)
-            _gql += 'accumulatedConsumption\n';
+            _gql += 'accumulatedConsumption ';
         if (node._config.accumulatedProduction == 1)
-            _gql += 'accumulatedProduction\n';
+            _gql += 'accumulatedProduction ';
         if (node._config.accumulatedCost == 1)
-            _gql += 'accumulatedCost\n';
+            _gql += 'accumulatedCost ';
         if (node._config.accumulatedReward == 1)
-            _gql += 'accumulatedReward\n';
+            _gql += 'accumulatedReward ';
         if (node._config.currency == 1)
-            _gql += 'currency\n';
+            _gql += 'currency ';
         if (node._config.minPower == 1)
-            _gql += 'minPower\n';
+            _gql += 'minPower ';
         if (node._config.averagePower == 1)
-            _gql += 'averagePower\n';
+            _gql += 'averagePower ';
         if (node._config.maxPower == 1)
-            _gql += 'maxPower\n';
+            _gql += 'maxPower ';
         if (node._config.powerProduction == 1)
-            _gql += 'powerProduction\n';
+            _gql += 'powerProduction ';
         if (node._config.minPowerProduction == 1)
-            _gql += 'minPowerProduction\n';
+            _gql += 'minPowerProduction ';
         if (node._config.maxPowerProduction == 1)
-            _gql += 'maxPowerProduction\n';
+            _gql += 'maxPowerProduction ';
         if (node._config.lastMeterProduction == 1)
-            _gql += 'lastMeterProduction\n';
+            _gql += 'lastMeterProduction ';
         if (node._config.powerFactor == 1)
-            _gql += 'powerFactor\n';
+            _gql += 'powerFactor ';
         if (node._config.voltagePhase1 == 1)
-            _gql += 'voltagePhase1\n';
+            _gql += 'voltagePhase1 ';
         if (node._config.voltagePhase2 == 1)
-            _gql += 'voltagePhase2\n';
+            _gql += 'voltagePhase2 ';
         if (node._config.voltagePhase3 == 1)
-            _gql += 'voltagePhase3\n';
+            _gql += 'voltagePhase3 ';
         if (node._config.currentPhase1 == 1)
-            _gql += 'currentPhase1\n';
+            _gql += 'currentPhase1 ';
         if (node._config.currentPhase2 == 1)
-            _gql += 'currentPhase2\n';
+            _gql += 'currentPhase2 ';
         if (node._config.currentPhase3 == 1)
-            _gql += 'currentPhase3\n';
+            _gql += 'currentPhase3 ';
         _gql += '}}';
         node._query = {
             id: "1",
