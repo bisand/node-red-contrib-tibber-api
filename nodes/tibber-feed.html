@@ -1,156 +1,159 @@
 <script type="text/javascript">
-    RED.nodes.registerType('tibber-feed', {
-        category: 'Tibber API',
-        color: '#23B8CC',
-        defaults: {
-            name: { value: "" },
-            apiUrl: { value: "wss://api.tibber.com/v1-beta/gql/subscriptions" },
-            apikey: { value: "" },
-            homeid: { value: "" },
-            timestamp: { value: "1" },
-            power: { value: "1" },
-            lastMeterConsumption: { value: "1" },
-            accumulatedConsumption: { value: "1" },
-            accumulatedProduction: { value: "1" },
-            accumulatedCost: { value: "1" },
-            accumulatedReward: { value: "1" },
-            currency: { value: "1" },
-            minPower: { value: "1" },
-            averagePower: { value: "1" },
-            maxPower: { value: "1" },
-            powerProduction: { value: "1" },
-            minPowerProduction: { value: "1" },
-            maxPowerProduction: { value: "1" },
-            lastMeterProduction: { value: "1" },
-            powerFactor: { value: "1" },
-            voltagePhase1: { value: "1" },
-            voltagePhase2: { value: "1" },
-            voltagePhase3: { value: "1" },
-            currentPhase1: { value: "1" },
-            currentPhase2: { value: "1" },
-            currentPhase3: { value: "1" }
-        },
-        inputs: 0,
-        outputs: 1,
-        icon: "feed.png",
-        label: function () {
-            return this.name || "tibber-feed";
-        }
-    });
+  RED.nodes.registerType("tibber-feed", {
+    category: "Tibber API",
+    color: "#23B8CC",
+    defaults: {
+      name: { value: "" },
+      active: { value: true },
+      apiUrl: { value: "wss://api.tibber.com/v1-beta/gql/subscriptions" },
+      apiToken: { value: "" },
+      homeid: { value: "" },
+      timestamp: { value: "1" },
+      power: { value: "1" },
+      lastMeterConsumption: { value: "1" },
+      accumulatedConsumption: { value: "1" },
+      accumulatedProduction: { value: "1" },
+      accumulatedCost: { value: "1" },
+      accumulatedReward: { value: "1" },
+      currency: { value: "1" },
+      minPower: { value: "1" },
+      averagePower: { value: "1" },
+      maxPower: { value: "1" },
+      powerProduction: { value: "1" },
+      minPowerProduction: { value: "1" },
+      maxPowerProduction: { value: "1" },
+      lastMeterProduction: { value: "1" },
+      powerFactor: { value: "1" },
+      voltagePhase1: { value: "1" },
+      voltagePhase2: { value: "1" },
+      voltagePhase3: { value: "1" },
+      currentPhase1: { value: "1" },
+      currentPhase2: { value: "1" },
+      currentPhase3: { value: "1" }
+    },
+    inputs: 0,
+    outputs: 1,
+    icon: "feed.png",
+    label: function() {
+      return this.name || "tibber-feed";
+    }
+  });
 </script>
 <style>
-    label {
-        white-space: nowrap;
-    }
-</style>>
+  label {
+    white-space: nowrap;
+  }</style
+>>
 
 <script type="text/x-red" data-template-name="tibber-feed">
-    <div class="form-row">
-        <label for="node-input-apiUrl"><i class="icon-tag"></i> API Url</label>
-        <input type="text" id="node-input-apiUrl" placeholder="API Url">
-    </div>
-    <div class="form-row">
-        <label for="node-input-apikey"><i class="icon-tag"></i> API key</label>
-        <input type="text" id="node-input-apikey" placeholder="API key">
-    </div>
-    <div class="form-row">
-        <label for="node-input-homeid"><i class="icon-tag"></i> Home id</label>
-        <input type="text" id="node-input-homeid" placeholder="Home id">
-    </div>
-    <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
-    </div>
-    <div class="form-row">
-        <label for="node-input-timestamp"><i class="icon-tag"></i> Timestamp</label>
-        <input type="checkbox" id="node-input-timestamp" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-power"><i class="icon-tag"></i> Power</label>
-        <input type="checkbox" id="node-input-power" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-lastMeterConsumption"><i class="icon-tag"></i> Last meter consumption</label>
-        <input type="checkbox" id="node-input-lastMeterConsumption" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-accumulatedConsumption"><i class="icon-tag"></i> Accumulated consumption</label>
-        <input type="checkbox" id="node-input-accumulatedConsumption" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-accumulatedProduction"><i class="icon-tag"></i> Accumulated production</label>
-        <input type="checkbox" id="node-input-accumulatedProduction" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-accumulatedCost"><i class="icon-tag"></i> Accumulated cost</label>
-        <input type="checkbox" id="node-input-accumulatedCost" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-accumulatedReward"><i class="icon-tag"></i> Accumulated reward</label>
-        <input type="checkbox" id="node-input-accumulatedReward" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-currency"><i class="icon-tag"></i> Currency</label>
-        <input type="checkbox" id="node-input-currency" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-minPower"><i class="icon-tag"></i> Min power</label>
-        <input type="checkbox" id="node-input-minPower" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-averagePower"><i class="icon-tag"></i> Average power</label>
-        <input type="checkbox" id="node-input-averagePower" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-maxPower"><i class="icon-tag"></i> Max power</label>
-        <input type="checkbox" id="node-input-maxPower" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-powerProduction"><i class="icon-tag"></i> Power production</label>
-        <input type="checkbox" id="node-input-powerProduction" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-minPowerProduction"><i class="icon-tag"></i> Min power production</label>
-        <input type="checkbox" id="node-input-minPowerProduction" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-maxPowerProduction"><i class="icon-tag"></i> Max power production</label>
-        <input type="checkbox" id="node-input-maxPowerProduction" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-lastMeterProduction"><i class="icon-tag"></i> Last meter production</label>
-        <input type="checkbox" id="node-input-lastMeterProduction" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-powerFactor"><i class="icon-tag"></i> Power factor</label>
-        <input type="checkbox" id="node-input-powerFactor" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-voltagePhase1"><i class="icon-tag"></i> Voltage phase 1</label>
-        <input type="checkbox" id="node-input-voltagePhase1" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-voltagePhase2"><i class="icon-tag"></i> Voltage phase 2</label>
-        <input type="checkbox" id="node-input-voltagePhase2" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-voltagePhase3"><i class="icon-tag"></i> Voltage phase 3</label>
-        <input type="checkbox" id="node-input-voltagePhase3" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-currentPhase1"><i class="icon-tag"></i> Current phase 1</label>
-        <input type="checkbox" id="node-input-currentPhase1" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-currentPhase2"><i class="icon-tag"></i> Current phase 2</label>
-        <input type="checkbox" id="node-input-currentPhase2" value="1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-currentPhase3"><i class="icon-tag"></i> Current phase 3</label>
-        <input type="checkbox" id="node-input-currentPhase3" value="1">
-    </div>
+  <div class="form-row">
+      <label for="node-input-apiUrl"><i class="icon-tag"></i> API Url</label>
+      <input type="text" id="node-input-apiUrl" placeholder="API Url">
+  </div>
+  <div class="form-row">
+      <label for="node-input-apiToken"><i class="icon-tag"></i> API key</label>
+      <input type="text" id="node-input-apiToken" placeholder="API key">
+  </div>
+  <div class="form-row">
+      <label for="node-input-homeid"><i class="icon-tag"></i> Home id</label>
+      <input type="text" id="node-input-homeid" placeholder="Home id">
+  </div>
+  <div class="form-row">
+      <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+      <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+
+  
+  <div class="form-row">
+      <label for="node-input-timestamp"><i class="icon-tag"></i> Timestamp</label>
+      <input type="checkbox" id="node-input-timestamp" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-power"><i class="icon-tag"></i> Power</label>
+      <input type="checkbox" id="node-input-power" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-lastMeterConsumption"><i class="icon-tag"></i> Last meter consumption</label>
+      <input type="checkbox" id="node-input-lastMeterConsumption" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-accumulatedConsumption"><i class="icon-tag"></i> Accumulated consumption</label>
+      <input type="checkbox" id="node-input-accumulatedConsumption" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-accumulatedProduction"><i class="icon-tag"></i> Accumulated production</label>
+      <input type="checkbox" id="node-input-accumulatedProduction" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-accumulatedCost"><i class="icon-tag"></i> Accumulated cost</label>
+      <input type="checkbox" id="node-input-accumulatedCost" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-accumulatedReward"><i class="icon-tag"></i> Accumulated reward</label>
+      <input type="checkbox" id="node-input-accumulatedReward" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-currency"><i class="icon-tag"></i> Currency</label>
+      <input type="checkbox" id="node-input-currency" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-minPower"><i class="icon-tag"></i> Min power</label>
+      <input type="checkbox" id="node-input-minPower" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-averagePower"><i class="icon-tag"></i> Average power</label>
+      <input type="checkbox" id="node-input-averagePower" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-maxPower"><i class="icon-tag"></i> Max power</label>
+      <input type="checkbox" id="node-input-maxPower" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-powerProduction"><i class="icon-tag"></i> Power production</label>
+      <input type="checkbox" id="node-input-powerProduction" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-minPowerProduction"><i class="icon-tag"></i> Min power production</label>
+      <input type="checkbox" id="node-input-minPowerProduction" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-maxPowerProduction"><i class="icon-tag"></i> Max power production</label>
+      <input type="checkbox" id="node-input-maxPowerProduction" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-lastMeterProduction"><i class="icon-tag"></i> Last meter production</label>
+      <input type="checkbox" id="node-input-lastMeterProduction" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-powerFactor"><i class="icon-tag"></i> Power factor</label>
+      <input type="checkbox" id="node-input-powerFactor" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-voltagePhase1"><i class="icon-tag"></i> Voltage phase 1</label>
+      <input type="checkbox" id="node-input-voltagePhase1" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-voltagePhase2"><i class="icon-tag"></i> Voltage phase 2</label>
+      <input type="checkbox" id="node-input-voltagePhase2" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-voltagePhase3"><i class="icon-tag"></i> Voltage phase 3</label>
+      <input type="checkbox" id="node-input-voltagePhase3" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-currentPhase1"><i class="icon-tag"></i> Current phase 1</label>
+      <input type="checkbox" id="node-input-currentPhase1" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-currentPhase2"><i class="icon-tag"></i> Current phase 2</label>
+      <input type="checkbox" id="node-input-currentPhase2" value="1">
+  </div>
+  <div class="form-row">
+      <label for="node-input-currentPhase3"><i class="icon-tag"></i> Current phase 3</label>
+      <input type="checkbox" id="node-input-currentPhase3" value="1">
+  </div>
 </script>
 
 <script type="text/x-red" data-help-name="tibber-api">
-    <p>A simple node that converts the message payloads into all tibber-api characters</p>
+  <p>A simple node that enables you to stream realtime data from tibber.</p>
 </script>

@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-tibber-api",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Node Red module for integrating with Tibber api",
   "repository": {
     "url": "https://github.com/bisand/node-red-contrib-tibber-api"
@@ -9,6 +9,7 @@
     "url": "https://github.com/bisand/node-red-contrib-tibber-api/issues"
   },
   "dependencies": {
+    "graphql-request": "^1.8.2",
     "mocha": "^6.2.0",
     "uuid": "^3.3.3",
     "websocket": "^1.0.29",
@@ -37,7 +38,8 @@
   "license": "MIT",
   "node-red": {
     "nodes": {
-      "tibber-feed": "nodes/tibber-feed.js"
+      "tibber-feed": "nodes/tibber-feed.js",
+      "tibber-query": "nodes/tibber-query.js"
     }
   }
 }
