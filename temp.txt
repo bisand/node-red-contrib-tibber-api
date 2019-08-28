@@ -154,4 +154,4 @@ if( config.currentPhase3 === '1' )
         <label for="node-input-currentPhase3"><i class="icon-tag"></i> Current phase 3</label>
         <input type="checkbox" id="node-input-currentPhase3" value="1">
     </div>
-            apiUrl: { value: "wss://api.tibber.com/v1-beta/gql/subscriptions" },
+            apiUrl: { value: "wss://api.tibber.com/v1-beta/gql/subscriptions" }, 
