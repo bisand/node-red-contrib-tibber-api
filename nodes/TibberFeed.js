@@ -73,7 +73,6 @@ class TibberFeed {
 
     connect() {
         var node = this;
-        console.log('Connecting...');
         node._webSocket = new WebSocket(node._config.apiUrl, ['graphql-ws']);
 
         node._webSocket.on('open', function () {
