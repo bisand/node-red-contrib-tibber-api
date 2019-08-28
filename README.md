@@ -23,10 +23,11 @@ Manual installation
 $ npm install node-red-contrib-tibber-api
 ```
 
-## Tibber Feed node
+## Nodes
+### Tibber Feed node
 Realtime power consuption data from Tibber Pulse. Provide API token, Home ID and select what kind of information you want to retrieve.
 
-## Tibber API call node
+### Tibber API call node
 Do basic calls to Tibber API using GraphQL queries. See Tibber API documentation and API Explorer for more informations.
 
 ## License
