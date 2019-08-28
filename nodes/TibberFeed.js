@@ -73,11 +73,12 @@ class TibberFeed {
 
     connect() {
         var node = this;
-        this._webSocket = new WebSocket(this._config.apiUrl, ['graphql-ws']);
+        console.log('Connecting...');
+        node._webSocket = new WebSocket(node._config.apiUrl, ['graphql-ws']);
 
         node._webSocket.on('open', function () {
-            node._webSocket.send('{"type":"connection_init","payload":"token=' + node.apiToken + '"}');
-            node.events.emit('connected', "Connected to Tibber feed");
+            node._webSocket.send('{"type":"connection_init","payload":"token=' + node._config.apiToken + '"}');
+            node.events.emit('connected', "Connected to Tibber feed.");
         });
 
         node._webSocket.on('message', function (message) {
@@ -112,23 +113,24 @@ class TibberFeed {
     }
 
     close() {
-        this._webSocket.close();
-        this._webSocket.terminate();
-        this._webSocket = null;
+        var node = this;
+        node._webSocket.close();
+        node._webSocket.terminate();
+        node._webSocket = null;
         console.log('Closed Tibber Feed.');
     }
 
     heartbeat() {
         var node = this;
-        clearTimeout(this._pingTimeout);
+        clearTimeout(node._pingTimeout);
         // Use `WebSocket#terminate()`, which immediately destroys the connection,
         // instead of `WebSocket#close()`, which waits for the close timer.
         // Delay should be equal to the interval at which your server
         // sends out pings plus a conservative assumption of the latency.
-        this._pingTimeout = setTimeout(() => {
+        node._pingTimeout = setTimeout(() => {
             node._webSocket.terminate();
             node._webSocket = null;
-            this.connect();
+            node.connect();
         }, 30000 + 1000);
     }
 }

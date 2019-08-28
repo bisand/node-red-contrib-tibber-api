@@ -31,7 +31,7 @@ module.exports = function (RED) {
         });
 
         TibberFeedNode.tibberFeed[config.apiToken].events.on('connection_ack', function (data) {
-            node.log(JSON.stringify(data));
+            node.log(data);
         });
 
         TibberFeedNode.tibberFeed[config.apiToken].events.on('disconnected', function (data) {
