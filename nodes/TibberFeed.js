@@ -10,10 +10,12 @@ class TibberFeed {
         node._config = config;
         node._active = config.active;
 
+        node.events = new events.EventEmitter();
+
         if (!config.apiToken || !config.homeId || !config.apiUrl) {
             node._active = false;
             config.active = false;
-            node.error('Missing mandatory parameters. Execution will halt.')
+            node.warn('Missing mandatory parameters. Execution will halt.')
             return;
         }
 
@@ -73,8 +75,6 @@ class TibberFeed {
                 query: _gql
             }
         };
-
-        node.events = new events.EventEmitter();
     }
 
     get active() {
