@@ -5,7 +5,7 @@ module.exports = function (RED) {
         RED.nodes.createNode(this, config);
         var node = this;
 
-        if (!config.apiUrl || !config.apiToken || !config.homeid) {
+        if (!config.apiUrl || !config.apiToken || !config.homeId) {
             node.error('Missing mandatory parameters');
             return;
         }

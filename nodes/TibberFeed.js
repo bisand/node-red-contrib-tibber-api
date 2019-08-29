@@ -2,16 +2,21 @@ const WebSocket = require('ws');
 const events = require('events');
 
 class TibberFeed {
-    constructor(config) {
+
+    constructor(config, timeout = 30000) {
 
         var node = this;
+        node._timeout = timeout;
         node._config = config;
-        node.active = false;
+        node._active = config.active;
 
-        if (!config.apiToken || !config.homeid || !config.apiUrl)
+        if (!config.apiToken || !config.homeId || !config.apiUrl) {
+            node._active = false;
+            config.active = false;
             return;
+        }
 
-        var _gql = 'subscription{liveMeasurement(homeId:"' + node._config.homeid + '"){';
+        var _gql = 'subscription{liveMeasurement(homeId:"' + node._config.homeId + '"){';
         if (node._config.timestamp == 1)
             _gql += 'timestamp ';
         if (node._config.power == 1)
@@ -69,6 +74,20 @@ class TibberFeed {
         };
 
         node.events = new events.EventEmitter();
+    }
+
+    get active() {
+        return this._active;
+    }
+
+    set active(active) {
+        if (active == this._active)
+            return;
+        this._active = active;
+        if (this._active)
+            this.connect();
+        else
+            this.close();
     }
 
     connect() {
@@ -133,8 +152,9 @@ class TibberFeed {
                 node._webSocket.terminate();
                 node._webSocket = null;
             }
+            // node.events.emit('disconnected', 'Connection timed out after ' + node._timeout + ' ms');
             node.connect();
-        }, 30000 + 1000);
+        }, node._timeout);
     }
 }
 
