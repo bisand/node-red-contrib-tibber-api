@@ -14,6 +14,8 @@ module.exports = function (RED) {
             TibberFeedNode.tibberFeed[config.apiToken] = new TibberFeed(config);
 
         if (!config.active) {
+            if (!TibberFeedNode.tibberFeed[config.apiToken])
+                return;
             TibberFeedNode.tibberFeed[config.apiToken].close();
             TibberFeedNode.tibberFeed[config.apiToken] = null;
             return;

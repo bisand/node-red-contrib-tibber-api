@@ -113,9 +113,11 @@ class TibberFeed {
 
     close() {
         var node = this;
-        node._webSocket.close();
-        node._webSocket.terminate();
-        node._webSocket = null;
+        if (node._webSocket) {
+            node._webSocket.close();
+            node._webSocket.terminate();
+            node._webSocket = null;
+        }
         console.log('Closed Tibber Feed.');
     }
 
@@ -127,8 +129,10 @@ class TibberFeed {
         // Delay should be equal to the interval at which your server
         // sends out pings plus a conservative assumption of the latency.
         node._pingTimeout = setTimeout(() => {
-            node._webSocket.terminate();
-            node._webSocket = null;
+            if (node._webSocket) {
+                node._webSocket.terminate();
+                node._webSocket = null;
+            }
             node.connect();
         }, 30000 + 1000);
     }
