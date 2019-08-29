@@ -83,16 +83,37 @@ describe('TibberFeed', function () {
   });
 
   describe('timeout', function () {
-    it('Should timeout after 1 sec', function (done) {
-      let feed = new TibberFeed({ apiUrl: 'http://localhost:1337', apiToken: '1337', homeId: '1337', active: true }, 1000);
+    it('Should timeout after 3 sec', function (done) {
+      this.timeout(10000);
+      let feed = new TibberFeed({ apiUrl: 'http://localhost:1337', apiToken: '1337', homeId: '1337', active: true }, 3000);
       let called = false;
       feed.events.on('disconnected', function (data) {
         assert.ok(data);
-        if (!called){
+        if (!called) {
           called = true;
           done();
         }
 
+      });
+      feed.connect();
+    });
+  });
+
+  describe('reconnect', function () {
+    it('Should reconnect 5 times after 1 sec. timeout', function (done) {
+      this.timeout(10000);
+      let feed = new TibberFeed({ apiUrl: 'http://localhost:1337', apiToken: '1337', homeId: '1337', active: true }, 1000);
+      let callCount = 0;
+      feed.events.on('connection_ack', function (data) {
+        assert.ok(data);
+        assert.equal(data.payload, 'token=1337');
+      });
+      feed.events.on('disconnected', function (data) {
+        assert.ok(data);
+        if (callCount == 4) {
+          done();
+        }
+        callCount++;
       });
       feed.connect();
     });
