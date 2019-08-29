@@ -6,7 +6,7 @@ module.exports = function (RED) {
         var node = this;
 
         if (!config.apiUrl || !config.apiToken || !config.homeId) {
-            node.error('Missing mandatory parameters');
+            node.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
             return;
         }
 
@@ -42,6 +42,14 @@ module.exports = function (RED) {
 
         TibberFeedNode.tibberFeed[config.apiToken].events.on('error', function (data) {
             node.error(data);
+        });
+
+        TibberFeedNode.tibberFeed[config.apiToken].events.on('warn', function (data) {
+            node.warn(data);
+        });
+
+        TibberFeedNode.tibberFeed[config.apiToken].events.on('log', function (data) {
+            node.log(data);
         });
 
         node.on('close', function () {

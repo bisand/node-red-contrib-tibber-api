@@ -13,6 +13,7 @@ class TibberFeed {
         if (!config.apiToken || !config.homeId || !config.apiUrl) {
             node._active = false;
             config.active = false;
+            node.error('Missing mandatory parameters. Execution will halt.')
             return;
         }
 
@@ -107,7 +108,7 @@ class TibberFeed {
                     var str = JSON.stringify(node._query);
                     node._webSocket.send(str);
                 } else if (msg.type == "connection_error") {
-                    node.events.emit('error', msg);
+                    node.error(msg);
                     if (node._webSocket)
                         node._webSocket.close();
                 } else if (msg.type == "data") {
@@ -126,7 +127,7 @@ class TibberFeed {
         });
 
         node._webSocket.on('error', function (error) {
-            node.events.emit('error', error);
+            node.error(error);
         });
     }
 
@@ -137,7 +138,7 @@ class TibberFeed {
             node._webSocket.terminate();
             node._webSocket = null;
         }
-        console.log('Closed Tibber Feed.');
+        node.log('Closed Tibber Feed.');
     }
 
     heartbeat() {
@@ -152,9 +153,21 @@ class TibberFeed {
                 node._webSocket.terminate();
                 node._webSocket = null;
             }
-            // node.events.emit('disconnected', 'Connection timed out after ' + node._timeout + ' ms');
+            node.warn('Connection timed out after ' + node._timeout + ' ms. Reconnecting...');
             node.connect();
         }, node._timeout);
+    }
+
+    log(message){
+        this.events.emit('log', message);
+    }
+
+    warn(message){
+        this.events.emit('warn', message);
+    }
+
+    error(message){
+        this.events.emit('error', message);
     }
 }
 
