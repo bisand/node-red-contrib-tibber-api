@@ -109,8 +109,8 @@ class TibberFeed {
                     node._webSocket.send(str);
                 } else if (msg.type == "connection_error") {
                     node.error(msg);
-                    if (node._webSocket)
-                        node._webSocket.close();
+                    node.close();
+                    node.heartbeat();
                 } else if (msg.type == "data") {
                     if (!msg.payload.data)
                         return;
@@ -123,11 +123,13 @@ class TibberFeed {
 
         node._webSocket.on('close', function () {
             node.events.emit('disconnected', "Disconnected from Tibber feed");
-            clearTimeout(node._pingTimeout);
+            node.heartbeat();
         });
 
         node._webSocket.on('error', function (error) {
             node.error(error);
+            node.close();
+            node.heartbeat();
         });
     }
 
@@ -138,6 +140,7 @@ class TibberFeed {
             node._webSocket.terminate();
             node._webSocket = null;
         }
+        clearTimeout(node._pingTimeout);
         node.log('Closed Tibber Feed.');
     }
 
