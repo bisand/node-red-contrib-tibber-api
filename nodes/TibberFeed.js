@@ -9,6 +9,7 @@ class TibberFeed {
         node._timeout = timeout;
         node._config = config;
         node._active = config.active;
+        node._isClosing = false;
 
         node.events = new events.EventEmitter();
 
@@ -93,6 +94,7 @@ class TibberFeed {
 
     connect() {
         var node = this;
+        node._isClosing = false;
         node._webSocket = new WebSocket(node._config.apiUrl, ['graphql-ws']);
 
         node._webSocket.on('open', function () {
@@ -122,11 +124,14 @@ class TibberFeed {
         });
 
         node._webSocket.on('close', function () {
+            node._isClosing = true;
             node.events.emit('disconnected', "Disconnected from Tibber feed");
             node.heartbeat();
         });
 
         node._webSocket.on('error', function (error) {
+            if (node._isClosing)
+                return;
             node.error(error);
             node.close();
             node.heartbeat();
@@ -135,6 +140,7 @@ class TibberFeed {
 
     close() {
         var node = this;
+        node._isClosing = true;
         if (node._webSocket) {
             node._webSocket.close();
             node._webSocket.terminate();
@@ -161,16 +167,19 @@ class TibberFeed {
         }, node._timeout);
     }
 
-    log(message){
-        this.events.emit('log', message);
+    log(message) {
+        if (this.events)
+            this.events.emit('log', message);
     }
 
-    warn(message){
-        this.events.emit('warn', message);
+    warn(message) {
+        if (this.events)
+            this.events.emit('warn', message);
     }
 
-    error(message){
-        this.events.emit('error', message);
+    error(message) {
+        if (this.events)
+            this.events.emit('error', message);
     }
 }
 
