@@ -83,6 +83,9 @@ describe('TibberFeed', function () {
       this.timeout(10000);
       let feed = new TibberFeed({ apiUrl: 'http://localhost:1337', apiToken: '1337', homeId: '1337', active: true }, 3000);
       let called = false;
+      feed.events.on('connection_ack', function (data) {
+        feed.heartbeat();
+      });
       feed.events.on('disconnected', function (data) {
         assert.ok(data);
         if (!called) {
@@ -103,6 +106,7 @@ describe('TibberFeed', function () {
       feed.events.on('connection_ack', function (data) {
         assert.ok(data);
         assert.equal(data.payload, 'token=1337');
+        feed.heartbeat();
       });
       feed.events.on('disconnected', function (data) {
         assert.ok(data);

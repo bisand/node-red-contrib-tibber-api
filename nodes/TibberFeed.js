@@ -121,7 +121,6 @@ class TibberFeed {
                         return;
                     var data = msg.payload.data.liveMeasurement;
                     node.events.emit('data', data);
-                    node.heartbeat();
                 }
             }
         });
@@ -152,10 +151,12 @@ class TibberFeed {
 
     heartbeat() {
         var node = this;
-        node._hearbeatTimeouts.forEach(timeout => {
+        for( var i = 0; i < node._hearbeatTimeouts.length; i++){ 
+            var timeout = node._hearbeatTimeouts[i];
             clearTimeout(timeout);
             node._hearbeatTimeouts.shift()
-        });
+            i--;
+        }
         node._hearbeatTimeouts.push(setTimeout(() => {
             if (node._webSocket) {
                 node._webSocket.terminate();
