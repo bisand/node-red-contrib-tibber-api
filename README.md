@@ -2,7 +2,7 @@
 
 Node Red module for integrating with Tibber api.
 
-*Warning! This is early stage deelopment.*
+*Warning! This is early stage development.*
 
 |  Branch  | Status           |
 |----------|------------------|

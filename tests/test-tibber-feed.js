@@ -5,13 +5,10 @@ const WebSocket = require('ws');
 
 describe('TibberFeed', function () {
   let server = undefined;
-  let sockets = [];
 
-  before(function (done) {
+  before(function () {
     server = new WebSocket.Server({ port: 1337 });
     server.on('connection', function (socket) {
-      sockets.push(socket);
-      // When you receive a message, send that message to every socket.
       socket.on('message', function (msg) {
         let obj = JSON.parse(msg);
         if (obj.type == 'connection_init' && obj.payload == 'token=1337') {
@@ -22,19 +19,16 @@ describe('TibberFeed', function () {
           socket.send(JSON.stringify(obj));
         }
       });
-      // When a socket closes, or disconnects, remove it from the array.
       socket.on('close', function () {
-        sockets = sockets.filter(s => s !== socket);
       });
     });
-    done();
   });
 
-  after(function (done) {
+  after(function () {
     if (server) {
       server.close();
+      server = null;
     }
-    done();
   });
 
   describe('create', function () {
@@ -50,6 +44,7 @@ describe('TibberFeed', function () {
       feed.events.on('connection_ack', function (data) {
         assert.ok(data);
         assert.equal(data.payload, 'token=1337');
+        feed.close();
         done();
       });
       feed.connect();
@@ -62,6 +57,7 @@ describe('TibberFeed', function () {
       feed.events.on('data', function (data) {
         assert.ok(data);
         assert.equal(data.value, 1337);
+        feed.close();
         done();
       });
       feed.connect();
@@ -87,13 +83,16 @@ describe('TibberFeed', function () {
       this.timeout(10000);
       let feed = new TibberFeed({ apiUrl: 'http://localhost:1337', apiToken: '1337', homeId: '1337', active: true }, 3000);
       let called = false;
+      feed.events.on('connection_ack', function (data) {
+        feed.heartbeat();
+      });
       feed.events.on('disconnected', function (data) {
         assert.ok(data);
         if (!called) {
           called = true;
+          feed.close();
           done();
         }
-
       });
       feed.connect();
     });
@@ -107,17 +106,17 @@ describe('TibberFeed', function () {
       feed.events.on('connection_ack', function (data) {
         assert.ok(data);
         assert.equal(data.payload, 'token=1337');
+        feed.heartbeat();
       });
       feed.events.on('disconnected', function (data) {
         assert.ok(data);
         if (callCount == 4) {
           done();
+          feed.close();
         }
         callCount++;
       });
       feed.connect();
     });
   });
-
-
 });

@@ -1,7 +1,7 @@
 const TibberQuery = require('./TibberQuery');
 
 module.exports = function (RED) {
-    function TibberQueryNode(config) {
+    function TibberDataNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
         node._config = config;
@@ -21,5 +21,5 @@ module.exports = function (RED) {
  
     }
 
-    RED.nodes.registerType("tibber-query", TibberQueryNode);
+    RED.nodes.registerType("tibber-data", TibberDataNode);
 };

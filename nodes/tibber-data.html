@@ -1,0 +1,42 @@
+<script type="text/javascript">
+  RED.nodes.registerType("tibber-data", {
+    category: "Tibber API",
+    color: "#23B8CC",
+    defaults: {
+      name: { value: "" },
+      active: { value: true },
+      apiUrl: { value: "https://api.tibber.com/v1-beta/gql" },
+      apiToken: { value: "" },
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "db.png",
+    label: function() {
+      return this.name || "tibber-data";
+    }
+  });
+</script>
+<style>
+  label {
+    white-space: nowrap;
+  }</style
+>>
+
+<script type="text/x-red" data-template-name="tibber-data">
+  <div class="form-row">
+      <label for="node-input-apiUrl"><i class="icon-tag"></i> API Url</label>
+      <input type="text" id="node-input-apiUrl" placeholder="API Url">
+  </div>
+  <div class="form-row">
+      <label for="node-input-apiToken"><i class="icon-tag"></i> API key</label>
+      <input type="text" id="node-input-apiToken" placeholder="API key">
+  </div>
+  <div class="form-row">
+      <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+      <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="tibber-api">
+  <p>A simple node that enables you to query Tibber API.</p>
+</script>
