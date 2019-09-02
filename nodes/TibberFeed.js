@@ -9,7 +9,8 @@ class TibberFeed {
         node._timeout = timeout;
         node._config = config;
         node._active = config.active;
-        node._isClosing = false;
+        node._hearbeatTimeouts = [];
+        node._isConnected = false;
 
         node.events = new events.EventEmitter();
 
@@ -94,10 +95,11 @@ class TibberFeed {
 
     connect() {
         var node = this;
-        node._isClosing = false;
         node._webSocket = new WebSocket(node._config.apiUrl, ['graphql-ws']);
 
         node._webSocket.on('open', function () {
+            if (!node._webSocket)
+                return;
             node._webSocket.send('{"type":"connection_init","payload":"token=' + node._config.apiToken + '"}');
             node.events.emit('connected', "Connected to Tibber feed.");
         });
@@ -106,13 +108,14 @@ class TibberFeed {
             if (message.startsWith('{')) {
                 var msg = JSON.parse(message);
                 if (msg.type == 'connection_ack') {
+                    node._isConnected = true;
                     node.events.emit('connection_ack', msg);
                     var str = JSON.stringify(node._query);
-                    node._webSocket.send(str);
+                    if (node._webSocket)
+                        node._webSocket.send(str);
                 } else if (msg.type == "connection_error") {
                     node.error(msg);
                     node.close();
-                    node.heartbeat();
                 } else if (msg.type == "data") {
                     if (!msg.payload.data)
                         return;
@@ -124,62 +127,70 @@ class TibberFeed {
         });
 
         node._webSocket.on('close', function () {
-            node._isClosing = true;
+            node._isConnected = false;
             node.events.emit('disconnected', "Disconnected from Tibber feed");
-            node.heartbeat();
         });
 
         node._webSocket.on('error', function (error) {
-            if (node._isClosing)
-                return;
             node.error(error);
-            node.close();
-            node.heartbeat();
         });
     }
 
     close() {
         var node = this;
-        node._isClosing = true;
+        node._hearbeatTimeouts.forEach(timeout => {
+            clearTimeout(timeout);
+        });
         if (node._webSocket) {
-            node._webSocket.close();
-            node._webSocket.terminate();
-            node._webSocket = null;
+            if (node._isConnected) {
+                node._webSocket.close();
+                node._webSocket = null;
+            }
         }
-        clearTimeout(node._pingTimeout);
         node.log('Closed Tibber Feed.');
     }
 
     heartbeat() {
         var node = this;
-        clearTimeout(node._pingTimeout);
-        // Use `WebSocket#terminate()`, which immediately destroys the connection,
-        // instead of `WebSocket#close()`, which waits for the close timer.
-        // Delay should be equal to the interval at which your server
-        // sends out pings plus a conservative assumption of the latency.
-        node._pingTimeout = setTimeout(() => {
+        node._hearbeatTimeouts.forEach(timeout => {
+            clearTimeout(timeout);
+            node._hearbeatTimeouts.shift()
+        });
+        node._hearbeatTimeouts.push(setTimeout(() => {
             if (node._webSocket) {
                 node._webSocket.terminate();
                 node._webSocket = null;
+                node.warn('Connection timed out after ' + node._timeout + ' ms. Reconnecting...');
+                node.connect();
             }
-            node.warn('Connection timed out after ' + node._timeout + ' ms. Reconnecting...');
-            node.connect();
-        }, node._timeout);
+        }, node._timeout));
     }
 
     log(message) {
-        if (this.events)
-            this.events.emit('log', message);
+        try {
+            if (this.events)
+                this.events.emit('log', message);
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     warn(message) {
-        if (this.events)
-            this.events.emit('warn', message);
+        try {
+            if (this.events)
+                this.events.emit('warn', message);
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     error(message) {
-        if (this.events)
-            this.events.emit('error', message);
+        try {
+            if (this.events)
+                this.events.emit('error', message);
+        } catch (error) {
+            console.error(error);
+        }
     }
 }
 
