@@ -26,7 +26,7 @@ module.exports = function (RED) {
                 payload: data
             };
             node.send(msg);
-            node.heartbeat();
+            TibberFeedNode.tibberFeed[config.apiToken].heartbeat();
         });
 
         TibberFeedNode.tibberFeed[config.apiToken].events.on('connected', function (data) {
@@ -39,7 +39,7 @@ module.exports = function (RED) {
 
         TibberFeedNode.tibberFeed[config.apiToken].events.on('disconnected', function (data) {
             node.log(data);
-            node.heartbeat();
+            TibberFeedNode.tibberFeed[config.apiToken].heartbeat();
         });
 
         TibberFeedNode.tibberFeed[config.apiToken].events.on('error', function (data) {
