@@ -41,7 +41,7 @@ describe('TibberFeed', function () {
   describe('connect', function () {
     it('Should be connected', function (done) {
       let feed = new TibberFeed({ apiUrl: 'http://localhost:1337', apiToken: '1337', homeId: '1337', active: true });
-      feed.events.on('connection_ack', function (data) {
+      feed.on('connection_ack', function (data) {
         assert.ok(data);
         assert.equal(data.payload, 'token=1337');
         feed.close();
@@ -54,7 +54,7 @@ describe('TibberFeed', function () {
   describe('receive', function () {
     it('Should receive data', function (done) {
       let feed = new TibberFeed({ apiUrl: 'http://localhost:1337', apiToken: '1337', homeId: '1337', active: true });
-      feed.events.on('data', function (data) {
+      feed.on('data', function (data) {
         assert.ok(data);
         assert.equal(data.value, 1337);
         feed.close();
@@ -83,10 +83,10 @@ describe('TibberFeed', function () {
       this.timeout(10000);
       let feed = new TibberFeed({ apiUrl: 'http://localhost:1337', apiToken: '1337', homeId: '1337', active: true }, 3000);
       let called = false;
-      feed.events.on('connection_ack', function (data) {
+      feed.on('connection_ack', function (data) {
         feed.heartbeat();
       });
-      feed.events.on('disconnected', function (data) {
+      feed.on('disconnected', function (data) {
         assert.ok(data);
         if (!called) {
           called = true;
@@ -103,12 +103,12 @@ describe('TibberFeed', function () {
       this.timeout(10000);
       let feed = new TibberFeed({ apiUrl: 'http://localhost:1337', apiToken: '1337', homeId: '1337', active: true }, 1000);
       let callCount = 0;
-      feed.events.on('connection_ack', function (data) {
+      feed.on('connection_ack', function (data) {
         assert.ok(data);
         assert.equal(data.payload, 'token=1337');
         feed.heartbeat();
       });
-      feed.events.on('disconnected', function (data) {
+      feed.on('disconnected', function (data) {
         assert.ok(data);
         if (callCount == 4) {
           done();
