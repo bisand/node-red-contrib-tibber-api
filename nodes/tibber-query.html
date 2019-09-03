@@ -3,15 +3,23 @@
     category: "Tibber API",
     color: "#23B8CC",
     defaults: {
-      name: { value: "" },
-      active: { value: true },
-      apiUrl: { value: "https://api.tibber.com/v1-beta/gql" },
-      apiToken: { value: "" },
+      name: {
+        value: ""
+      },
+      active: {
+        value: true
+      },
+      apiUrl: {
+        value: "https://api.tibber.com/v1-beta/gql"
+      },
+      apiToken: {
+        value: ""
+      },
     },
     inputs: 1,
     outputs: 1,
     icon: "bridge.png",
-    label: function() {
+    label: function () {
       return this.name || "tibber-query";
     }
   });
@@ -19,8 +27,8 @@
 <style>
   label {
     white-space: nowrap;
-  }</style
->>
+  }
+</style>
 
 <script type="text/x-red" data-template-name="tibber-query">
   <div class="form-row">
