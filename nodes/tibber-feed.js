@@ -4,6 +4,7 @@ module.exports = function (RED) {
     function TibberFeedNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
+        node.status({ fill: "red", shape: "ring", text: "disconnected" });
 
         if (!config.apiUrl || !config.apiToken || !config.homeId) {
             node.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
@@ -26,7 +27,8 @@ module.exports = function (RED) {
                 payload: data
             };
             node.send(msg);
-            TibberFeedNode.instances[config.apiToken].heartbeat();
+            if (TibberFeedNode.instances[config.apiToken])
+                TibberFeedNode.instances[config.apiToken].heartbeat();
         });
 
         TibberFeedNode.instances[config.apiToken].on('connected', function (data) {
@@ -34,12 +36,15 @@ module.exports = function (RED) {
         });
 
         TibberFeedNode.instances[config.apiToken].on('connection_ack', function (data) {
+            node.status({ fill: "green", shape: "dot", text: "connected" });
             node.log(data);
         });
 
         TibberFeedNode.instances[config.apiToken].on('disconnected', function (data) {
+            node.status({ fill: "red", shape: "ring", text: "disconnected" });
             node.log(data);
-            TibberFeedNode.instances[config.apiToken].heartbeat();
+            if (TibberFeedNode.instances[config.apiToken])
+                TibberFeedNode.instances[config.apiToken].heartbeat();
         });
 
         TibberFeedNode.instances[config.apiToken].on('error', function (data) {
@@ -57,6 +62,7 @@ module.exports = function (RED) {
         node.on('close', function () {
             if (!TibberFeedNode.instances[config.apiToken])
                 return;
+            node.status({ fill: "red", shape: "ring", text: "disconnected" });
             TibberFeedNode.instances[config.apiToken].close();
             TibberFeedNode.instances[config.apiToken] = null;
         });
