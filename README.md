@@ -197,7 +197,7 @@ Select from a set of predefined queries to retrieve data from Tibber API.
         "z": "4e0718b1.2af2a8",
         "name": "",
         "topic": "",
-        "payload": "{\"title\":\"Test\",\"message2\":\"Dette er en test\",\"screen\":\"HOME\"}",
+        "payload": "{\"title\":\"Test\",\"message\":\"This is a simple test\",\"screen\":\"HOME\"}",
         "payloadType": "json",
         "repeat": "",
         "crontab": "",
