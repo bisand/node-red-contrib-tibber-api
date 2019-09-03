@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-tibber-api",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "Node Red module for integrating with Tibber api",
   "repository": {
     "url": "https://github.com/bisand/node-red-contrib-tibber-api"
@@ -39,7 +39,8 @@
   "node-red": {
     "nodes": {
       "tibber-feed": "nodes/tibber-feed.js",
-      "tibber-query": "nodes/tibber-query.js"
+      "tibber-query": "nodes/tibber-query.js",
+      "tibber-notify": "nodes/tibber-notify.js"
     }
   }
 }

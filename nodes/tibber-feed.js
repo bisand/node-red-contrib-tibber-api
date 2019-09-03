@@ -4,66 +4,72 @@ module.exports = function (RED) {
     function TibberFeedNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
+        node.status({ fill: "red", shape: "ring", text: "disconnected" });
 
         if (!config.apiUrl || !config.apiToken || !config.homeId) {
             node.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
             return;
         }
 
-        if (!TibberFeedNode.tibberFeed[config.apiToken])
-            TibberFeedNode.tibberFeed[config.apiToken] = new TibberFeed(config);
+        if (!TibberFeedNode.instances[config.apiToken])
+            TibberFeedNode.instances[config.apiToken] = new TibberFeed(config);
 
         if (!config.active) {
-            if (!TibberFeedNode.tibberFeed[config.apiToken])
+            if (!TibberFeedNode.instances[config.apiToken])
                 return;
-            TibberFeedNode.tibberFeed[config.apiToken].close();
-            TibberFeedNode.tibberFeed[config.apiToken] = null;
+            TibberFeedNode.instances[config.apiToken].close();
+            TibberFeedNode.instances[config.apiToken] = null;
             return;
         }
 
-        TibberFeedNode.tibberFeed[config.apiToken].events.on('data', function (data) {
+        TibberFeedNode.instances[config.apiToken].on('data', function (data) {
             var msg = {
                 payload: data
             };
             node.send(msg);
-            TibberFeedNode.tibberFeed[config.apiToken].heartbeat();
+            if (TibberFeedNode.instances[config.apiToken])
+                TibberFeedNode.instances[config.apiToken].heartbeat();
         });
 
-        TibberFeedNode.tibberFeed[config.apiToken].events.on('connected', function (data) {
+        TibberFeedNode.instances[config.apiToken].on('connected', function (data) {
             node.log(data);
         });
 
-        TibberFeedNode.tibberFeed[config.apiToken].events.on('connection_ack', function (data) {
+        TibberFeedNode.instances[config.apiToken].on('connection_ack', function (data) {
+            node.status({ fill: "green", shape: "dot", text: "connected" });
             node.log(data);
         });
 
-        TibberFeedNode.tibberFeed[config.apiToken].events.on('disconnected', function (data) {
+        TibberFeedNode.instances[config.apiToken].on('disconnected', function (data) {
+            node.status({ fill: "red", shape: "ring", text: "disconnected" });
             node.log(data);
-            TibberFeedNode.tibberFeed[config.apiToken].heartbeat();
+            if (TibberFeedNode.instances[config.apiToken])
+                TibberFeedNode.instances[config.apiToken].heartbeat();
         });
 
-        TibberFeedNode.tibberFeed[config.apiToken].events.on('error', function (data) {
+        TibberFeedNode.instances[config.apiToken].on('error', function (data) {
             node.error(data);
         });
 
-        TibberFeedNode.tibberFeed[config.apiToken].events.on('warn', function (data) {
+        TibberFeedNode.instances[config.apiToken].on('warn', function (data) {
             node.warn(data);
         });
 
-        TibberFeedNode.tibberFeed[config.apiToken].events.on('log', function (data) {
+        TibberFeedNode.instances[config.apiToken].on('log', function (data) {
             node.log(data);
         });
 
         node.on('close', function () {
-            if (!TibberFeedNode.tibberFeed[config.apiToken])
+            if (!TibberFeedNode.instances[config.apiToken])
                 return;
-            TibberFeedNode.tibberFeed[config.apiToken].close();
-            TibberFeedNode.tibberFeed[config.apiToken] = null;
+            node.status({ fill: "red", shape: "ring", text: "disconnected" });
+            TibberFeedNode.instances[config.apiToken].close();
+            TibberFeedNode.instances[config.apiToken] = null;
         });
 
-        TibberFeedNode.tibberFeed[config.apiToken].connect();
+        TibberFeedNode.instances[config.apiToken].connect();
     }
-    TibberFeedNode.tibberFeed = [];
+    TibberFeedNode.instances = [];
 
     RED.nodes.registerType("tibber-feed", TibberFeedNode);
 };
