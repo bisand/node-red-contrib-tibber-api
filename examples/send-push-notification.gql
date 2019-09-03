@@ -1,0 +1,1 @@
+mutation{sendPushNotification(input: {title: "Notification through API", message: "Hello from me!!", screenToOpen: CONSUMPTION}){successful pushedToNumberOfDevices}}
