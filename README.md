@@ -10,10 +10,11 @@ Node Red module for integrating with Tibber api.
 | master | [![Build Status](https://travis-ci.org/bisand/node-red-contrib-tibber-api.svg?branch=master)](https://travis-ci.org/bisand/node-red-contrib-tibber-api) |
  
 ## General
-This Node-Red module is used for communication with Tipper API.
+This Node-Red module is used for communication with [Tibber API](https://developer.tibber.com/) through [GraphQL](https://developer.tibber.com/docs/overview) queries and for retrieving data from Tibber Pulse via websocket.
+[Tibber](https://tibber.com) is a norwegian technology focused power company which is providing tools to get more insight and controll over your home and its power consumption.
 
 ## Prerequisites
-You will need an API token. Register here
+You will need an API token from Tibber. Register here
 
 > https://developer.tibber.com/
 
