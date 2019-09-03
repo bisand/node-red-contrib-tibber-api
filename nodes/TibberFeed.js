@@ -1,7 +1,7 @@
 const WebSocket = require('ws');
-const events = require('events');
+const EventEmitter = require('events').EventEmitter;
 
-class TibberFeed {
+class TibberFeed extends EventEmitter {
 
     constructor(config, timeout = 30000) {
 
@@ -11,8 +11,6 @@ class TibberFeed {
         node._active = config.active;
         node._hearbeatTimeouts = [];
         node._isConnected = false;
-
-        node.events = new events.EventEmitter();
 
         if (!config.apiToken || !config.homeId || !config.apiUrl) {
             node._active = false;
@@ -101,7 +99,7 @@ class TibberFeed {
             if (!node._webSocket)
                 return;
             node._webSocket.send('{"type":"connection_init","payload":"token=' + node._config.apiToken + '"}');
-            node.events.emit('connected', "Connected to Tibber feed.");
+            node.emit('connected', "Connected to Tibber feed.");
         });
 
         node._webSocket.on('message', function (message) {
@@ -109,7 +107,7 @@ class TibberFeed {
                 var msg = JSON.parse(message);
                 if (msg.type == 'connection_ack') {
                     node._isConnected = true;
-                    node.events.emit('connection_ack', msg);
+                    node.emit('connection_ack', msg);
                     var str = JSON.stringify(node._query);
                     if (node._webSocket)
                         node._webSocket.send(str);
@@ -120,14 +118,14 @@ class TibberFeed {
                     if (!msg.payload.data)
                         return;
                     var data = msg.payload.data.liveMeasurement;
-                    node.events.emit('data', data);
+                    node.emit('data', data);
                 }
             }
         });
 
         node._webSocket.on('close', function () {
             node._isConnected = false;
-            node.events.emit('disconnected', "Disconnected from Tibber feed");
+            node.emit('disconnected', "Disconnected from Tibber feed");
         });
 
         node._webSocket.on('error', function (error) {
@@ -151,7 +149,7 @@ class TibberFeed {
 
     heartbeat() {
         var node = this;
-        for( var i = 0; i < node._hearbeatTimeouts.length; i++){ 
+        for (var i = 0; i < node._hearbeatTimeouts.length; i++) {
             var timeout = node._hearbeatTimeouts[i];
             clearTimeout(timeout);
             node._hearbeatTimeouts.shift()
@@ -169,8 +167,7 @@ class TibberFeed {
 
     log(message) {
         try {
-            if (this.events)
-                this.events.emit('log', message);
+            this.emit('log', message);
         } catch (error) {
             console.error(error);
         }
@@ -178,8 +175,7 @@ class TibberFeed {
 
     warn(message) {
         try {
-            if (this.events)
-                this.events.emit('warn', message);
+            this.emit('warn', message);
         } catch (error) {
             console.error(error);
         }
@@ -187,8 +183,7 @@ class TibberFeed {
 
     error(message) {
         try {
-            if (this.events)
-                this.events.emit('error', message);
+            this.emit('error', message);
         } catch (error) {
             console.error(error);
         }
