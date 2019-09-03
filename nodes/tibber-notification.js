@@ -16,7 +16,6 @@ module.exports = function (RED) {
         node.on('input', async function(msg) {
             var payload = await node.client.query(msg.payload);
             msg.payload = payload;
-            node.send(msg);
         });
  
     }

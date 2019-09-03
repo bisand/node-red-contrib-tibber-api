@@ -4,6 +4,8 @@ const EventEmitter = require('events').EventEmitter;
 class TibberFeed extends EventEmitter {
 
     constructor(config, timeout = 30000) {
+        
+        super();
 
         var node = this;
         node._timeout = timeout;
