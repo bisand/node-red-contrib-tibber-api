@@ -1,5 +1,5 @@
 <script type="text/javascript">
-  RED.nodes.registerType('tibber-notification', {
+  RED.nodes.registerType('tibber-notify', {
     category: 'Tibber API',
     color: '#23B8CC',
     defaults: {
@@ -15,14 +15,22 @@
       apiToken: {
         value: ''
       },
-      notifyTitle:{value:''}
+      notifyTitle: {
+        value: ''
+      },
+      notifyMessage: {
+        value: ''
+      },
+      notifyScreen: {
+        value: ''
+      },
     },
     inputs: 1,
     outputs: 0,
     align: 'right',
     icon: 'envelope.png',
     label: function () {
-      return this.name || 'tibber-notification';
+      return this.name || 'tibber-notify';
     }
   });
 </script>
@@ -32,7 +40,7 @@
   }
 </style>
 
-<script type="text/x-red" data-template-name="tibber-notification">
+<script type="text/x-red" data-template-name="tibber-notify">
   <div class="form-row">
       <label for="node-input-apiUrl"><i class="icon-tag"></i> API Url</label>
       <input type="text" id="node-input-apiUrl" placeholder="API Url">
@@ -45,6 +53,22 @@
       <label for="node-input-name"><i class="icon-tag"></i> Name</label>
       <input type="text" id="node-input-name" placeholder="Name">
   </div>
+
+  <hr>
+
+  <div class="form-row">
+    <label for="node-input-notifyTitle"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-notifyTitle" placeholder="Notification title">
+  </div>
+  <div class="form-row">
+    <label for="node-input-notifyMessage"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-notifyMessage" placeholder="Notification message">
+  </div>
+  <div class="form-row">
+    <label for="node-input-notifyScreen"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-notifyScreen" placeholder="Landing screen">
+  </div>
+
 </script>
 
 <script type="text/x-red" data-help-name="tibber-api">

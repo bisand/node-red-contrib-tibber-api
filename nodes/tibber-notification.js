@@ -1,7 +1,7 @@
 const TibberQuery = require('./TibberQuery');
 
 module.exports = function (RED) {
-    function TibberNotificationNode(config) {
+    function TibberNotifyNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
         node._config = config;
@@ -20,5 +20,5 @@ module.exports = function (RED) {
  
     }
 
-    RED.nodes.registerType("tibber-notification", TibberNotificationNode);
+    RED.nodes.registerType("tibber-notify", TibberNotifyNode);
 };

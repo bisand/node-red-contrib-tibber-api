@@ -39,7 +39,8 @@
   "node-red": {
     "nodes": {
       "tibber-feed": "nodes/tibber-feed.js",
-      "tibber-query": "nodes/tibber-query.js"
+      "tibber-query": "nodes/tibber-query.js",
+      "tibber-notify": "nodes/tibber-notify.js"
     }
   }
 }
