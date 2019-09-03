@@ -7,7 +7,7 @@ module.exports = function (RED) {
         node._config = config;
 
         if (!config.apiUrl || !config.apiToken) {
-            node.error('Missing mandatory parameters');
+            node.error('Missing mandatory parameters (apiUrl and/or apiToken)');
             return;
         }
 
@@ -17,6 +17,13 @@ module.exports = function (RED) {
             var title = node._config.notifyTitle ? node._config.notifyTitle : msg.payload.title;
             var message = node._config.notifyMessage ? node._config.notifyMessage : msg.payload.message;
             var screen = node._config.notifyScreen ? node._config.notifyScreen : msg.payload.screen;
+            screen = screen ? screen : 'HOME';
+
+            if (!title || !message) {
+                node.error('Missing mandatory parameters (title and/or message)');
+                return;
+            }
+
             var query = 'mutation{sendPushNotification(input: {title: "' + title + '", message: "' + message + '", screenToOpen: ' + screen + '}){successful pushedToNumberOfDevices}}';
             var result = await node.client.query(query);
             if (result.error) {

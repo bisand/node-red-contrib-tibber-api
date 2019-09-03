@@ -35,38 +35,42 @@
   });
 </script>
 <style>
-  label {
+  .form-row label {
     white-space: nowrap;
+    width: 150px;
+  }
+  .form-row input {
+    width: 60%;
   }
 </style>
 
 <script type="text/x-red" data-template-name="tibber-notify">
   <div class="form-row">
       <label for="node-input-apiUrl"><i class="icon-tag"></i> API Url</label>
-      <input type="text" id="node-input-apiUrl" placeholder="API Url">
+      <input type="text" id="node-input-apiUrl" placeholder="API Url" />
   </div>
   <div class="form-row">
       <label for="node-input-apiToken"><i class="icon-tag"></i> API key</label>
-      <input type="text" id="node-input-apiToken" placeholder="API key">
+      <input type="text" id="node-input-apiToken" placeholder="API key" />
   </div>
   <div class="form-row">
       <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-      <input type="text" id="node-input-name" placeholder="Name">
+      <input type="text" id="node-input-name" placeholder="Name" />
   </div>
 
   <hr>
 
   <div class="form-row">
-    <label for="node-input-notifyTitle"><i class="icon-tag"></i> Name</label>
-    <input type="text" id="node-input-notifyTitle" placeholder="Notification title">
+    <label for="node-input-notifyTitle"><i class="icon-tag"></i> Notification title</label>
+    <input type="text" id="node-input-notifyTitle" placeholder="{payload.title}" />
   </div>
   <div class="form-row">
-    <label for="node-input-notifyMessage"><i class="icon-tag"></i> Name</label>
-    <input type="text" id="node-input-notifyMessage" placeholder="Notification message">
+    <label for="node-input-notifyMessage"><i class="icon-tag"></i> Notification message</label>
+    <input type="text" id="node-input-notifyMessage" placeholder="{payload.message}" />
   </div>
   <div class="form-row">
-    <label for="node-input-notifyScreen"><i class="icon-tag"></i> Name</label>
-    <input type="text" id="node-input-notifyScreen" placeholder="Landing screen">
+    <label for="node-input-notifyScreen"><i class="icon-tag"></i> Landing screen</label>
+    <input type="text" id="node-input-notifyScreen" placeholder="{payload.scren}" />
   </div>
 
 </script>
