@@ -18,8 +18,12 @@ module.exports = function (RED) {
             var message = node._config.notifyMessage ? node._config.notifyMessage : msg.payload.message;
             var screen = node._config.notifyScreen ? node._config.notifyScreen : msg.payload.screen;
             var query = 'mutation{sendPushNotification(input: {title: "' + title + '", message: "' + message + '", screenToOpen: ' + screen + '}){successful pushedToNumberOfDevices}}';
-            var payload = await node.client.query(query);
-            node.log(payload);
+            var result = await node.client.query(query);
+            if (result.error) {
+                node.error(JSON.stringify(result));
+            } else {
+                node.log(JSON.stringify(result));
+            }
         });
 
     }
