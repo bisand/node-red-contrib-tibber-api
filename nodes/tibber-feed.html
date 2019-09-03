@@ -1,95 +1,95 @@
 <script type="text/javascript">
-    RED.nodes.registerType("tibber-feed", {
-        category: "Tibber API",
-        color: "#23B8CC",
+    RED.nodes.registerType('tibber-feed', {
+        category: 'Tibber API',
+        color: '#23B8CC',
         defaults: {
             name: {
-                value: ""
+                value: ''
             },
             active: {
                 value: true
             },
             apiUrl: {
-                value: "wss://api.tibber.com/v1-beta/gql/subscriptions"
+                value: 'wss://api.tibber.com/v1-beta/gql/subscriptions'
             },
             apiToken: {
-                value: ""
+                value: ''
             },
             homeId: {
-                value: ""
+                value: ''
             },
             timestamp: {
-                value: "1"
+                value: '1'
             },
             power: {
-                value: "1"
+                value: '1'
             },
             lastMeterConsumption: {
-                value: "1"
+                value: '1'
             },
             accumulatedConsumption: {
-                value: "1"
+                value: '1'
             },
             accumulatedProduction: {
-                value: "1"
+                value: '1'
             },
             accumulatedCost: {
-                value: "1"
+                value: '1'
             },
             accumulatedReward: {
-                value: "1"
+                value: '1'
             },
             currency: {
-                value: "1"
+                value: '1'
             },
             minPower: {
-                value: "1"
+                value: '1'
             },
             averagePower: {
-                value: "1"
+                value: '1'
             },
             maxPower: {
-                value: "1"
+                value: '1'
             },
             powerProduction: {
-                value: "1"
+                value: '1'
             },
             minPowerProduction: {
-                value: "1"
+                value: '1'
             },
             maxPowerProduction: {
-                value: "1"
+                value: '1'
             },
             lastMeterProduction: {
-                value: "1"
+                value: '1'
             },
             powerFactor: {
-                value: "1"
+                value: '1'
             },
             voltagePhase1: {
-                value: "1"
+                value: '1'
             },
             voltagePhase2: {
-                value: "1"
+                value: '1'
             },
             voltagePhase3: {
-                value: "1"
+                value: '1'
             },
             currentPhase1: {
-                value: "1"
+                value: '1'
             },
             currentPhase2: {
-                value: "1"
+                value: '1'
             },
             currentPhase3: {
-                value: "1"
+                value: '1'
             }
         },
         inputs: 0,
         outputs: 1,
-        icon: "feed.png",
+        icon: 'feed.png',
         label: function () {
-            return this.name || "tibber-feed";
+            return this.name || 'tibber-feed';
         }
     });
 </script>
