@@ -43,7 +43,7 @@ $ npm install node-red-contrib-tibber-api
 ![tibber-feed](examples/images/tibber-feed.png)
 
 Realtime power consuption data from Tibber Pulse. Provide API token, Home ID and select what kind of information you want to retrieve.
-> Note! There can be only one instance of *tibber-feed* per API key. Doing otherwise may return unpredictable result, or even error response from the API.
+> Note! There should be only one instance running of *tibber-feed* per API key. Doing otherwise may return unpredictable result, or even error responses from the API.
 
 ### Tibber API call node (*tibber-query*)
 ![tibber-query](examples/images/tibber-query.png)
