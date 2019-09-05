@@ -14,7 +14,7 @@ class TibberFeed extends EventEmitter {
         node._hearbeatTimeouts = [];
         node._isConnected = false;
 
-        if (!config.apiToken || !config.homeId || !config.apiUrl) {
+        if (!config.apiEndpoint.apiKey || !config.homeId || !config.apiEndpoint.feedUrl) {
             node._active = false;
             config.active = false;
             node.warn('Missing mandatory parameters. Execution will halt.')
@@ -95,12 +95,12 @@ class TibberFeed extends EventEmitter {
 
     connect() {
         var node = this;
-        node._webSocket = new WebSocket(node._config.apiUrl, ['graphql-ws']);
+        node._webSocket = new WebSocket(node._config.apiEndpoint.feedUrl, ['graphql-ws']);
 
         node._webSocket.on('open', function () {
             if (!node._webSocket)
                 return;
-            node._webSocket.send('{"type":"connection_init","payload":"token=' + node._config.apiToken + '"}');
+            node._webSocket.send('{"type":"connection_init","payload":"token=' + node._config.apiEndpoint.apiKey + '"}');
             node.emit('connected', "Connected to Tibber feed.");
         });
 

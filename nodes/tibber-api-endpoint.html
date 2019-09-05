@@ -1,9 +1,8 @@
 <!-- <script type="text/javascript" src="tools.js"></script> -->
 <script type="text/javascript">
-  var urlFieldValidator = function(value) {
-    var feedUrl = $("#node-config-input-feedUrl").val();
-    var queryUrl = $("#node-config-input-queryUrl").val();
-    return urlValidator(feedUrl ? feedUrl : queryUrl) || urlValidator(value);
+  const urlValidator = function(url) {
+    var regExp = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/;
+    return new RegExp(regExp).test(url);
   };
 
   RED.nodes.registerType("tibber-api-endpoint", {
@@ -11,36 +10,51 @@
     defaults: {
       feedUrl: {
         value: "wss://api.tibber.com/v1-beta/gql/subscriptions",
-        required: true,
-        validate: urlFieldValidator
+        validate: function(value) {
+          var queryUrl = $("#node-config-input-queryUrl").val();
+          return (
+            urlValidator(value ? value : queryUrl) || urlValidator(value)
+          );
+        }
       },
       queryUrl: {
         value: "https://api.tibber.com/v1-beta/gql",
-        required: true,
-        validate: urlFieldValidator
+        validate: function(value) {
+          var feedUrl = $("#node-config-input-feedUrl").val();
+          return (
+            urlValidator(value ? value : feedUrl) || urlValidator(value)
+          );
+        }
       },
       apiKey: {
         value: "",
         required: true
+      },
+      name:{
+        value: ""
       }
     },
     label: function() {
-      return this.apiKey;
+      return this.name ? this.name : this.apiKey;
     }
   });
 </script>
 
 <script type="text/x-red" data-template-name="tibber-api-endpoint">
   <div class="form-row">
-      <label for="node-config-input-feedUrl"><i class="icon-bookmark"></i> Feed url</label>
-      <input type="text" id="node-config-input-feedUrl">
+      <label for="node-config-input-feedUrl"><i class="icon-bookmark"></i> WebSocket url</label>
+      <input type="text" id="node-config-input-feedUrl" placeholder="WebSocket Url">
   </div>
   <div class="form-row">
       <label for="node-config-input-queryUrl"><i class="icon-bookmark"></i> Query url</label>
-      <input type="text" id="node-config-input-queryUrl">
+      <input type="text" id="node-config-input-queryUrl" placeholder="Query url">
   </div>
   <div class="form-row">
     <label for="node-config-input-apiKey"><i class="icon-bookmark"></i> API key</label>
-    <input type="text" id="node-config-input-apiKey">
+    <input type="text" id="node-config-input-apiKey" placeholder="API key">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-name"><i class="icon-bookmark"></i> Name</label>
+    <input type="text" id="node-config-input-name" placeholder="Name">
   </div>
 </script>

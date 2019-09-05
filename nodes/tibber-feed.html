@@ -10,12 +10,12 @@
         value: true
       },
       apiEndpoint: { value: null, type: "tibber-api-endpoint" },
-      apiUrl: {
-        value: "wss://api.tibber.com/v1-beta/gql/subscriptions"
-      },
-      apiToken: {
-        value: ""
-      },
+      // apiUrl: {
+      //   value: "wss://api.tibber.com/v1-beta/gql/subscriptions"
+      // },
+      // apiToken: {
+      //   value: ""
+      // },
       homeId: {
         value: ""
       },
@@ -95,12 +95,11 @@
   });
 </script>
 <style>
+  .form-row {
+    white-space: nowrap;
+  }
   .form-row label {
     white-space: nowrap;
-    width: 150px;
-  }
-  .form-row input {
-    width: 60%;
   }
 </style>
 
@@ -113,14 +112,14 @@
       <label for="node-input-apiEndpoint"><i class="icon-tag"></i> API Endpoint</label>
       <input type="text" id="node-input-apiEndpoint" placeholder="API Endpoint">
   </div>
-  <div class="form-row">
+  <!-- <div class="form-row">
     <label for="node-input-apiUrl"><i class="icon-tag"></i> API Url</label>
-    <input type="text" id="node-input-apiUrl" placeholder="API Url">
+    <input type="text" id="node-input-apiUrl" placeholder="Websocket Url">
   </div>
   <div class="form-row">
       <label for="node-input-apiToken"><i class="icon-tag"></i> API key</label>
       <input type="text" id="node-input-apiToken" placeholder="API key">
-  </div>
+  </div> -->
   <div class="form-row">
       <label for="node-input-homeId"><i class="icon-tag"></i> Home id</label>
       <input type="text" id="node-input-homeId" placeholder="Home id">
