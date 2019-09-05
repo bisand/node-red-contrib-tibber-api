@@ -5,9 +5,9 @@ class TibberQuery {
         var node = this;
         node._config = config;
         node.active = false;
-        node.client = new GraphQLClient(config.apiUrl, {
+        node.client = new GraphQLClient(config.apiEndpoint.queryUrl, {
             headers: {
-                authorization: 'Bearer ' + config.apiToken,
+                authorization: 'Bearer ' + config.apiEndpoint.apiKey,
             },
         });
     }

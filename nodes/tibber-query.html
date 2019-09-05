@@ -9,12 +9,7 @@
       active: {
         value: true
       },
-      apiUrl: {
-        value: "https://api.tibber.com/v1-beta/gql"
-      },
-      apiToken: {
-        value: ""
-      }
+      apiEndpointRef: { value: null, type: "tibber-api-endpoint" }
     },
     inputs: 1,
     outputs: 1,
@@ -35,12 +30,8 @@
 
 <script type="text/x-red" data-template-name="tibber-query">
   <div class="form-row">
-      <label for="node-input-apiUrl"><i class="icon-tag"></i> API Url</label>
-      <input type="text" id="node-input-apiUrl" placeholder="API Url">
-  </div>
-  <div class="form-row">
-      <label for="node-input-apiToken"><i class="icon-tag"></i> API key</label>
-      <input type="text" id="node-input-apiToken" placeholder="API key">
+      <label for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+      <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
   </div>
   <div class="form-row">
       <label for="node-input-name"><i class="icon-tag"></i> Name</label>

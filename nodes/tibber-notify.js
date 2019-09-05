@@ -4,10 +4,11 @@ module.exports = function (RED) {
     function TibberNotifyNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
+        config.apiEndpoint = RED.nodes.getNode(config.apiEndpointRef);
         node._config = config;
 
-        if (!config.apiUrl || !config.apiToken) {
-            node.error('Missing mandatory parameters (apiUrl and/or apiToken)');
+        if (!config.apiEndpoint.queryUrl || !config.apiEndpoint.apiKey) {
+            node.error('Missing mandatory parameters (queryUrl and/or apiKey)');
             return;
         }
 
