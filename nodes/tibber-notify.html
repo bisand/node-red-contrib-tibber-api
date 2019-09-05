@@ -1,36 +1,36 @@
 <script type="text/javascript">
-  RED.nodes.registerType('tibber-notify', {
-    category: 'Tibber API',
-    color: '#23B8CC',
+  RED.nodes.registerType("tibber-notify", {
+    category: "Tibber API",
+    color: "#23B8CC",
     defaults: {
       name: {
-        value: ''
+        value: ""
       },
       active: {
         value: true
       },
       apiUrl: {
-        value: 'https://api.tibber.com/v1-beta/gql'
+        value: "https://api.tibber.com/v1-beta/gql"
       },
       apiToken: {
-        value: ''
+        value: ""
       },
       notifyTitle: {
-        value: ''
+        value: ""
       },
       notifyMessage: {
-        value: ''
+        value: ""
       },
       notifyScreen: {
-        value: ''
-      },
+        value: ""
+      }
     },
     inputs: 1,
     outputs: 0,
-    align: 'right',
-    icon: 'envelope.png',
-    label: function () {
-      return this.name || 'tibber-notify';
+    align: "right",
+    icon: "envelope.png",
+    label: function() {
+      return this.name || "tibber-notify";
     }
   });
 </script>
@@ -72,7 +72,6 @@
     <label for="node-input-notifyScreen"><i class="icon-tag"></i> Landing screen</label>
     <input type="text" id="node-input-notifyScreen" placeholder="{payload.scren}" />
   </div>
-
 </script>
 
 <script type="text/x-red" data-help-name="tibber-api">

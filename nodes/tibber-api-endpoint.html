@@ -1,23 +1,23 @@
+<!-- <script type="text/javascript" src="tools.js"></script> -->
 <script type="text/javascript">
-  var urlValidator = function(v) {
-    var regExp =
-      "/((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/";
+  var urlFieldValidator = function(value) {
     var feedUrl = $("#node-config-input-feedUrl").val();
     var queryUrl = $("#node-config-input-queryUrl").val();
-    return true; // Change this!!
+    return urlValidator(feedUrl ? feedUrl : queryUrl) || urlValidator(value);
   };
+
   RED.nodes.registerType("tibber-api-endpoint", {
     category: "config",
     defaults: {
       feedUrl: {
         value: "wss://api.tibber.com/v1-beta/gql/subscriptions",
         required: true,
-        validate: urlValidator
+        validate: urlFieldValidator
       },
       queryUrl: {
         value: "https://api.tibber.com/v1-beta/gql",
         required: true,
-        validate: urlValidator
+        validate: urlFieldValidator
       },
       apiKey: {
         value: "",
@@ -25,7 +25,7 @@
       }
     },
     label: function() {
-      return this.host + ":" + this.port;
+      return this.apiKey;
     }
   });
 </script>

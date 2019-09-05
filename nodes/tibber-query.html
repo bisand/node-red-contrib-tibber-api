@@ -1,26 +1,26 @@
 <script type="text/javascript">
-  RED.nodes.registerType('tibber-query', {
-    category: 'Tibber API',
-    color: '#23B8CC',
+  RED.nodes.registerType("tibber-query", {
+    category: "Tibber API",
+    color: "#23B8CC",
     defaults: {
       name: {
-        value: ''
+        value: ""
       },
       active: {
         value: true
       },
       apiUrl: {
-        value: 'https://api.tibber.com/v1-beta/gql'
+        value: "https://api.tibber.com/v1-beta/gql"
       },
       apiToken: {
-        value: ''
-      },
+        value: ""
+      }
     },
     inputs: 1,
     outputs: 1,
-    icon: 'bridge.png',
-    label: function () {
-      return this.name || 'tibber-query';
+    icon: "bridge.png",
+    label: function() {
+      return this.name || "tibber-query";
     }
   });
 </script>
