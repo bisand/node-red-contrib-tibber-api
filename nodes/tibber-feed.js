@@ -6,6 +6,8 @@ module.exports = function (RED) {
         var node = this;
         node.status({ fill: "red", shape: "ring", text: "disconnected" });
 
+        config.apiEndpoint = RED.nodes.getNode(config.apiEndpointRef);
+
         if (!config.apiEndpoint.feedUrl || !config.apiEndpoint.apiKey || !config.homeId) {
             node.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
             return;

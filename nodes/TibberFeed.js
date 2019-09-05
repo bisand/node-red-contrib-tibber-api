@@ -14,7 +14,7 @@ class TibberFeed extends EventEmitter {
         node._hearbeatTimeouts = [];
         node._isConnected = false;
 
-        if (!config.apiEndpoint.apiKey || !config.homeId || !config.apiEndpoint.feedUrl) {
+        if (!config.apiEndpoint || !config.apiEndpoint.apiKey || !config.homeId || !config.apiEndpoint.feedUrl) {
             node._active = false;
             config.active = false;
             node.warn('Missing mandatory parameters. Execution will halt.')
