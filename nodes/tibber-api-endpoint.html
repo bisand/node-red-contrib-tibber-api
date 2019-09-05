@@ -1,24 +1,46 @@
 <script type="text/javascript">
-    RED.nodes.registerType('tibber-api-endpoint',{
-        category: 'config',
-        defaults: {
-            feedUrl:{value:"localhost",required:true},
-            queryUrl: {value:"localhost",required:true},
-            port: {value:1234,required:true,validate:RED.validators.number()},
-        },
-        label: function() {
-            return this.host+":"+this.port;
-        }
-    });
+  var urlValidator = function(v) {
+    var regExp =
+      "/((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/";
+    var feedUrl = $("#node-config-input-feedUrl").val();
+    var queryUrl = $("#node-config-input-queryUrl").val();
+    return true; // Change this!!
+  };
+  RED.nodes.registerType("tibber-api-endpoint", {
+    category: "config",
+    defaults: {
+      feedUrl: {
+        value: "wss://api.tibber.com/v1-beta/gql/subscriptions",
+        required: true,
+        validate: urlValidator
+      },
+      queryUrl: {
+        value: "https://api.tibber.com/v1-beta/gql",
+        required: true,
+        validate: urlValidator
+      },
+      apiKey: {
+        value: "",
+        required: true
+      }
+    },
+    label: function() {
+      return this.host + ":" + this.port;
+    }
+  });
 </script>
 
 <script type="text/x-red" data-template-name="tibber-api-endpoint">
-    <div class="form-row">
-        <label for="node-config-input-host"><i class="icon-bookmark"></i> Host</label>
-        <input type="text" id="node-config-input-host">
-    </div>
-    <div class="form-row">
-        <label for="node-config-input-port"><i class="icon-bookmark"></i> Port</label>
-        <input type="text" id="node-config-input-port">
-    </div>
+  <div class="form-row">
+      <label for="node-config-input-feedUrl"><i class="icon-bookmark"></i> Feed url</label>
+      <input type="text" id="node-config-input-feedUrl">
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-queryUrl"><i class="icon-bookmark"></i> Query url</label>
+      <input type="text" id="node-config-input-queryUrl">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-apiKey"><i class="icon-bookmark"></i> API key</label>
+    <input type="text" id="node-config-input-apiKey">
+  </div>
 </script>
