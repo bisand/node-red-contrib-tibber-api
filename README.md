@@ -13,6 +13,8 @@ Node Red module for integrating with Tibber api.
 This Node-Red module is used for communication with [Tibber API](https://developer.tibber.com/) through [GraphQL](https://developer.tibber.com/docs/overview) queries and for retrieving data from Tibber Pulse via websocket.
 [Tibber](https://tibber.com) is a norwegian technology focused power company which is providing tools to get more insight and controll over your home and its power consumption.
 
+> From version 0.4.0 the nodes rely on configuration nodes. This means that any nodes configured prior to this version will have to be reconfigured. Use of configuration nodes will actually simplify configuration.
+
 ## Prerequisites
 You will need an API token from Tibber. Register here
 
@@ -58,6 +60,9 @@ Send push nofifications to connected TIbber apps via Tibber API using GraphQL qu
 ### Tibber data (*tibber-data*)
 **TODO!**
 Select from a set of predefined queries to retrieve data from Tibber API.
+
+### Configuration node (*tibber-api-endpoint*)
+When configuring regular tibber nodes, you will have to create or select the configuration from the property **API Endpoint**. Here you can specify **Query URL**, **WebSocket URL** and **API Key**. This configuration can easily be used by any Tibber nodes. This will greatly simplyfy changing of urls and API key, since the change happens on all nodes using the configuration.
 
 ## Examples
 <details>
