@@ -1,43 +1,37 @@
 <script type="text/javascript">
-  RED.nodes.registerType('tibber-query', {
-    category: 'Tibber API',
-    color: '#23B8CC',
+  RED.nodes.registerType("tibber-query", {
+    category: "Tibber API",
+    color: "#23B8CC",
     defaults: {
       name: {
-        value: ''
+        value: ""
       },
       active: {
         value: true
       },
-      apiUrl: {
-        value: 'https://api.tibber.com/v1-beta/gql'
-      },
-      apiToken: {
-        value: ''
-      },
+      apiEndpointRef: { value: null, type: "tibber-api-endpoint" }
     },
     inputs: 1,
     outputs: 1,
-    icon: 'bridge.png',
-    label: function () {
-      return this.name || 'tibber-query';
+    icon: "bridge.png",
+    label: function() {
+      return this.name || "tibber-query";
     }
   });
 </script>
 <style>
-  label {
+  .form-row {
+    white-space: nowrap;
+  }
+  .form-row label {
     white-space: nowrap;
   }
 </style>
 
 <script type="text/x-red" data-template-name="tibber-query">
   <div class="form-row">
-      <label for="node-input-apiUrl"><i class="icon-tag"></i> API Url</label>
-      <input type="text" id="node-input-apiUrl" placeholder="API Url">
-  </div>
-  <div class="form-row">
-      <label for="node-input-apiToken"><i class="icon-tag"></i> API key</label>
-      <input type="text" id="node-input-apiToken" placeholder="API key">
+      <label for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+      <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
   </div>
   <div class="form-row">
       <label for="node-input-name"><i class="icon-tag"></i> Name</label>

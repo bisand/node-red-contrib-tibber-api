@@ -1,31 +1,34 @@
 <script type="text/javascript">
-  RED.nodes.registerType('tibber-data', {
-    category: 'Tibber API',
-    color: '#23B8CC',
+  RED.nodes.registerType("tibber-data", {
+    category: "Tibber API",
+    color: "#23B8CC",
     defaults: {
       name: {
-        value: ''
+        value: ""
       },
       active: {
         value: true
       },
       apiUrl: {
-        value: 'https://api.tibber.com/v1-beta/gql'
+        value: "https://api.tibber.com/v1-beta/gql"
       },
       apiToken: {
-        value: ''
-      },
+        value: ""
+      }
     },
     inputs: 1,
     outputs: 1,
-    icon: 'db.png',
-    label: function () {
-      return this.name || 'tibber-data';
+    icon: "db.png",
+    label: function() {
+      return this.name || "tibber-data";
     }
   });
 </script>
 <style>
-  label {
+  .form-row {
+    white-space: nowrap;
+  }
+  .form-row label {
     white-space: nowrap;
   }
 </style>

@@ -6,68 +6,70 @@ module.exports = function (RED) {
         var node = this;
         node.status({ fill: "red", shape: "ring", text: "disconnected" });
 
-        if (!config.apiUrl || !config.apiToken || !config.homeId) {
+        config.apiEndpoint = RED.nodes.getNode(config.apiEndpointRef);
+
+        if (!config.apiEndpoint.feedUrl || !config.apiEndpoint.apiKey || !config.homeId) {
             node.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
             return;
         }
 
-        if (!TibberFeedNode.instances[config.apiToken])
-            TibberFeedNode.instances[config.apiToken] = new TibberFeed(config);
+        if (!TibberFeedNode.instances[config.apiEndpoint.apiKey])
+            TibberFeedNode.instances[config.apiEndpoint.apiKey] = new TibberFeed(config);
 
         if (!config.active) {
-            if (!TibberFeedNode.instances[config.apiToken])
+            if (!TibberFeedNode.instances[config.apiEndpoint.apiKey])
                 return;
-            TibberFeedNode.instances[config.apiToken].close();
-            TibberFeedNode.instances[config.apiToken] = null;
+            TibberFeedNode.instances[config.apiEndpoint.apiKey].close();
+            TibberFeedNode.instances[config.apiEndpoint.apiKey] = null;
             return;
         }
 
-        TibberFeedNode.instances[config.apiToken].on('data', function (data) {
+        TibberFeedNode.instances[config.apiEndpoint.apiKey].on('data', function (data) {
             var msg = {
                 payload: data
             };
             node.send(msg);
-            if (TibberFeedNode.instances[config.apiToken])
-                TibberFeedNode.instances[config.apiToken].heartbeat();
+            if (TibberFeedNode.instances[config.apiEndpoint.apiKey])
+                TibberFeedNode.instances[config.apiEndpoint.apiKey].heartbeat();
         });
 
-        TibberFeedNode.instances[config.apiToken].on('connected', function (data) {
+        TibberFeedNode.instances[config.apiEndpoint.apiKey].on('connected', function (data) {
             node.log(data);
         });
 
-        TibberFeedNode.instances[config.apiToken].on('connection_ack', function (data) {
+        TibberFeedNode.instances[config.apiEndpoint.apiKey].on('connection_ack', function (data) {
             node.status({ fill: "green", shape: "dot", text: "connected" });
             node.log(data);
         });
 
-        TibberFeedNode.instances[config.apiToken].on('disconnected', function (data) {
+        TibberFeedNode.instances[config.apiEndpoint.apiKey].on('disconnected', function (data) {
             node.status({ fill: "red", shape: "ring", text: "disconnected" });
             node.log(data);
-            if (TibberFeedNode.instances[config.apiToken])
-                TibberFeedNode.instances[config.apiToken].heartbeat();
+            if (TibberFeedNode.instances[config.apiEndpoint.apiKey])
+                TibberFeedNode.instances[config.apiEndpoint.apiKey].heartbeat();
         });
 
-        TibberFeedNode.instances[config.apiToken].on('error', function (data) {
+        TibberFeedNode.instances[config.apiEndpoint.apiKey].on('error', function (data) {
             node.error(data);
         });
 
-        TibberFeedNode.instances[config.apiToken].on('warn', function (data) {
+        TibberFeedNode.instances[config.apiEndpoint.apiKey].on('warn', function (data) {
             node.warn(data);
         });
 
-        TibberFeedNode.instances[config.apiToken].on('log', function (data) {
+        TibberFeedNode.instances[config.apiEndpoint.apiKey].on('log', function (data) {
             node.log(data);
         });
 
         node.on('close', function () {
-            if (!TibberFeedNode.instances[config.apiToken])
+            if (!TibberFeedNode.instances[config.apiEndpoint.apiKey])
                 return;
             node.status({ fill: "red", shape: "ring", text: "disconnected" });
-            TibberFeedNode.instances[config.apiToken].close();
-            TibberFeedNode.instances[config.apiToken] = null;
+            TibberFeedNode.instances[config.apiEndpoint.apiKey].close();
+            TibberFeedNode.instances[config.apiEndpoint.apiKey] = null;
         });
 
-        TibberFeedNode.instances[config.apiToken].connect();
+        TibberFeedNode.instances[config.apiEndpoint.apiKey].connect();
     }
     TibberFeedNode.instances = [];
 
