@@ -1,57 +1,48 @@
 <script type="text/javascript">
-  RED.nodes.registerType('tibber-notify', {
-    category: 'Tibber API',
-    color: '#23B8CC',
+  RED.nodes.registerType("tibber-notify", {
+    category: "Tibber API",
+    color: "#23B8CC",
     defaults: {
       name: {
-        value: ''
+        value: ""
       },
       active: {
         value: true
       },
-      apiUrl: {
-        value: 'https://api.tibber.com/v1-beta/gql'
-      },
-      apiToken: {
-        value: ''
-      },
+      apiEndpointRef: { value: null, type: "tibber-api-endpoint" },
       notifyTitle: {
-        value: ''
+        value: ""
       },
       notifyMessage: {
-        value: ''
+        value: ""
       },
       notifyScreen: {
-        value: ''
-      },
+        value: ""
+      }
     },
     inputs: 1,
     outputs: 0,
-    align: 'right',
-    icon: 'envelope.png',
-    label: function () {
-      return this.name || 'tibber-notify';
+    align: "right",
+    icon: "envelope.png",
+    label: function() {
+      return this.name || "tibber-notify";
     }
   });
 </script>
 <style>
+  .form-row {
+    white-space: nowrap;
+  }
   .form-row label {
     white-space: nowrap;
     width: 150px;
-  }
-  .form-row input {
-    width: 60%;
   }
 </style>
 
 <script type="text/x-red" data-template-name="tibber-notify">
   <div class="form-row">
-      <label for="node-input-apiUrl"><i class="icon-tag"></i> API Url</label>
-      <input type="text" id="node-input-apiUrl" placeholder="API Url" />
-  </div>
-  <div class="form-row">
-      <label for="node-input-apiToken"><i class="icon-tag"></i> API key</label>
-      <input type="text" id="node-input-apiToken" placeholder="API key" />
+      <label for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+      <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
   </div>
   <div class="form-row">
       <label for="node-input-name"><i class="icon-tag"></i> Name</label>
@@ -72,7 +63,6 @@
     <label for="node-input-notifyScreen"><i class="icon-tag"></i> Landing screen</label>
     <input type="text" id="node-input-notifyScreen" placeholder="{payload.scren}" />
   </div>
-
 </script>
 
 <script type="text/x-red" data-help-name="tibber-api">
