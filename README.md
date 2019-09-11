@@ -16,7 +16,11 @@ This Node-Red module is used for communication with [Tibber API](https://develop
 > From version 0.4.0 the nodes rely on configuration nodes. This means that any nodes configured prior to this version will have to be reconfigured. Use of configuration nodes will actually simplify configuration.
 
 ## Prerequisites
-You will need an API token from Tibber. Register here
+
+Sign up here:
+> https://invite.tibber.com/9136154c
+
+You will also need an API token from Tibber. Get it here:
 
 > https://developer.tibber.com/
 
