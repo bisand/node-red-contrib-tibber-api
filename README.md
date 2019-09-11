@@ -66,6 +66,8 @@ Send push nofifications to connected TIbber apps via Tibber API using GraphQL qu
 Select from a set of predefined queries to retrieve data from Tibber API.
 
 ### Configuration node (*tibber-api-endpoint*)
+![tibber-api-endpoint](examples/images/tibber-api-endpoint.png)
+
 When configuring regular tibber nodes, you will have to create or select the configuration from the property **API Endpoint**. Here you can specify **Query URL**, **WebSocket URL** and **API Key**. This configuration can easily be used by any Tibber nodes. This will greatly simplyfy changing of urls and API key, since the change happens on all nodes using the configuration.
 
 ## Examples
