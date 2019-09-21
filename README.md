@@ -25,6 +25,7 @@ You will also need an API token from Tibber. Get it here:
 
 > https://developer.tibber.com/
 
+> Note! In order to use the included Grafana dashboard example you will need Grafana 6.x or higher.
 
 ## Installation
 
