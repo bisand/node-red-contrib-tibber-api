@@ -12,11 +12,11 @@
     "graphql-request": "^1.8.2",
     "mocha": "^6.2.0",
     "uuid": "^3.3.3",
-    "websocket": "^1.0.29",
+    "websocket": "^1.0.30",
     "ws": "^7.1.2"
   },
   "devDependencies": {
-    "eslint": "^6.3.0"
+    "eslint": "^6.4.0"
   },
   "directories": {
     "test": "tests",
