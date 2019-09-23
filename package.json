@@ -23,7 +23,10 @@
     "nodes": "nodes"
   },
   "scripts": {
-    "test": "mocha tests/test*.js"
+    "test": "mocha tests/test*.js",
+    "preversion": "npm test",
+    "version": "",
+    "postversion": ""
   },
   "keywords": [
     "node-red",

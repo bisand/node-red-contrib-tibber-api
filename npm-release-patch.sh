@@ -1,5 +1,8 @@
 #!/bin/sh
 MESSAGE="$1"
+DEV_BRANCH_NAME="develop"
+MASTER_BRANCH_NAME="MASTER"
+RELEASE_TYPE="patch"
 
 confirm() {
     # call with a prompt string or use a default
@@ -15,16 +18,46 @@ confirm() {
 }
 
 execute() {
-    if git checkout develop &&
-        git fetch origin develop &&
-        [ `git rev-list HEAD...origin/develop --count` != 0 ] &&
-        git merge origin/develop
+    if git checkout ${DEV_BRANCH_NAME} &&
+        git fetch origin ${DEV_BRANCH_NAME} &&
+        [ `git rev-list HEAD...origin/${DEV_BRANCH_NAME} --count` != 0 ] &&
+        git merge origin/${DEV_BRANCH_NAME}
     then
-        echo 'Updated!'
-        npm version patch -m "Release version %s"
+        echo "Performing ${RELEASE_TYPE} release preparations..."
+        if npm version ${RELEASE_TYPE} -m "Release version %s"
+        then
+            echo "NPM version done!"
+            if git add . && 
+                git push && 
+                git checkout ${MASTER_BRANCH_NAME} && 
+                git pull && 
+                git merge ${DEV_BRANCH_NAME} && 
+                git push && 
+                git push --tags
+            then
+                echo "Changes merged to ${MASTER_BRANCH_NAME} branch and pushed to origin."
+                true
+            else
+                echo "Failed to merge to ${MASTER_BRANCH_NAME} branch and push to origin."
+                false
+            fi
+        else
+            echo "NPM version failed!"
+            false
+        fi
     else
-        echo 'Not updated.'
+        echo "Could not prepare for new release. Please make sure the repository is up to date with the origin before you continue."
+        false
     fi
 }
 
-confirm && execute
+run() {
+    if confirm && execute
+    then
+        echo "Successfully completed!"
+    else
+        echo "Failed to complete!"
+    fi
+}
+
+run
