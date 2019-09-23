@@ -26,7 +26,7 @@ execute() {
         echo "Performing ${RELEASE_TYPE} release preparations..."
         if npm version ${RELEASE_TYPE} -m "Release version %s"
         then
-            echo "NPM version done!"
+            echo "NPM version done. Proceeding with git operations..."
             if git add . && 
                 git push && 
                 git checkout ${MASTER_BRANCH_NAME} && 
