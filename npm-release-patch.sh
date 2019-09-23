@@ -1,7 +1,7 @@
 #!/bin/sh
 MESSAGE="$1"
 DEV_BRANCH_NAME="develop"
-MASTER_BRANCH_NAME="MASTER"
+MASTER_BRANCH_NAME="master"
 RELEASE_TYPE="patch"
 
 confirm() {
