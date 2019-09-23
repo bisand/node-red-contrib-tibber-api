@@ -1,4 +1,4 @@
-const TibberQuery = require("./TibberQuery");
+const TibberQuery = require("tibber-api").TibberQuery;
 
 module.exports = function(RED) {
   function TibberNotifyNode(config) {

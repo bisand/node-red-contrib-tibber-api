@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-let TibberQuery = require("../nodes/TibberQuery");
+let TibberQuery = require("tibber-api").TibberQuery;
 let assert = require("assert");
 describe("TibberQuery", function() {
   describe("create", function() {
