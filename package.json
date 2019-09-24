@@ -9,7 +9,7 @@
     "url": "https://github.com/bisand/node-red-contrib-tibber-api/issues"
   },
   "dependencies": {
-    "tibber-api": "^0.0.1",
+    "tibber-api": "^0.0.6",
     "graphql-request": "^1.8.2",
     "mocha": "^6.2.0",
     "uuid": "^3.3.3",
