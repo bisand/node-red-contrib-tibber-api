@@ -16,8 +16,8 @@
     "mocha": "^6.2.0"
   },
   "directories": {
-    "test": "tests",
-    "nodes": "nodes"
+    "examples": "./examples",
+    "nodes": "./nodes"
   },
   "scripts": {
     "test": "mocha tests/test*.js",

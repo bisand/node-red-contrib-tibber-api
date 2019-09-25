@@ -3,3 +3,5 @@
 .vscode/
 _config.yml
 npm-release*
+tests/
+node-red-contrib-tibber-api-*.tgz
