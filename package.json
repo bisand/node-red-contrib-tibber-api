@@ -9,7 +9,7 @@
     "url": "https://github.com/bisand/node-red-contrib-tibber-api/issues"
   },
   "dependencies": {
-    "tibber-api": "^0.5.1"
+    "tibber-api": "^0.5.4"
   },
   "devDependencies": {
     "eslint": "^6.5.1",
@@ -23,7 +23,7 @@
     "test": "mocha tests/test*.js",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "eslint -c .eslintrc.json .",
-    "prepare": "tsc",
+    "prepare": "",
     "preversion": "npm test",
     "version": "",
     "postversion": ""

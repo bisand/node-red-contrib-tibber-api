@@ -1,53 +1,55 @@
 <script type="text/javascript">
-  RED.nodes.registerType("tibber-data", {
-    category: "Tibber API",
-    color: "#23B8CC",
-    defaults: {
-      name: {
-        value: ""
-      },
-      active: {
-        value: true
-      },
-      apiUrl: {
-        value: "https://api.tibber.com/v1-beta/gql"
-      },
-      apiToken: {
-        value: ""
-      }
-    },
-    inputs: 1,
-    outputs: 1,
-    icon: "db.png",
-    label: function() {
-      return this.name || "tibber-data";
-    }
-  });
+    RED.nodes.registerType('tibber-data', {
+        category: 'Tibber API',
+        color: '#23B8CC',
+        defaults: {
+            name: {
+                value: '',
+            },
+            active: {
+                value: true,
+            },
+            apiEndpointRef: { value: null, type: 'tibber-api-endpoint' },
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'db.png',
+        label: function() {
+            return this.name || 'tibber-data';
+        },
+    });
 </script>
 <style>
-  .form-row {
-    white-space: nowrap;
-  }
-  .form-row label {
-    white-space: nowrap;
-  }
+    .form-row {
+        white-space: nowrap;
+    }
+    .form-row label {
+        white-space: nowrap;
+    }
 </style>
 
 <script type="text/x-red" data-template-name="tibber-data">
-  <div class="form-row">
-      <label for="node-input-apiUrl"><i class="icon-tag"></i> API Url</label>
-      <input type="text" id="node-input-apiUrl" placeholder="API Url">
-  </div>
-  <div class="form-row">
-      <label for="node-input-apiToken"><i class="icon-tag"></i> API key</label>
-      <input type="text" id="node-input-apiToken" placeholder="API key">
-  </div>
-  <div class="form-row">
+    <div class="form-row">
+      <label for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+      <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
+    </div>
+    <div class="form-row">
       <label for="node-input-name"><i class="icon-tag"></i> Name</label>
       <input type="text" id="node-input-name" placeholder="Name">
-  </div>
+    </div>
+    <div class="form-row">
+      <label for="node-input-query"><i class="fa fa-calculator"></i> Query</label>
+      <select id="node-input-query">
+        <option value="getHome">getHome(homeId)</option>
+        <option value="getHomes">getHomes()</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="node-input-homeId"><i class="icon-tag"></i> Home ID</label>
+      <input type="text" id="node-input-homeId" placeholder="{payload.homeId}">
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="tibber-api">
-  <p>A simple node that enables you to query Tibber API.</p>
+    <p>A simple node that enables you to query Tibber API.</p>
 </script>
