@@ -20,7 +20,7 @@ confirm() {
 execute() {
     if git checkout ${DEV_BRANCH_NAME} &&
         git fetch origin ${DEV_BRANCH_NAME} &&
-        [ `git rev-list HEAD origin/${DEV_BRANCH_NAME} --count` != 0 ] &&
+        # [ `git rev-list HEAD...origin/${DEV_BRANCH_NAME} --count` != 0 ] &&
         git merge origin/${DEV_BRANCH_NAME}
     then
         echo "Performing ${RELEASE_TYPE} release preparations..."
@@ -63,9 +63,10 @@ run() {
     fi
 }
 
-if [ "${RELEASE_TYPE}" = "patch" ] || [ "${RELEASE_TYPE}" = "minor" ] || [ "${RELEASE_TYPE}" = "major" ]
+if [ "${RELEASE_TYPE}" = "patch" ] || [ "${RELEASE_TYPE}" = "minor" ] || [ "${RELEASE_TYPE}" = "major" ] ||
+    [ "${RELEASE_TYPE}" = "prepatch" ] || [ "${RELEASE_TYPE}" = "preminor" ] || [ "${RELEASE_TYPE}" = "premajor" ] || [ "${RELEASE_TYPE}" = "prerelease" ]
 then
     run
 else
-    echo "'${RELEASE_TYPE}' is not a valid release type. Please use 'patch', 'minor' or 'major'"
+    echo "'${RELEASE_TYPE}' is not a valid release type. Please use 'patch', 'minor', 'major', 'prepatch', 'preminor' or 'premajor'"
 fi
