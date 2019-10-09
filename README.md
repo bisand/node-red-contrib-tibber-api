@@ -72,8 +72,84 @@ Send push nofifications to connected TIbber apps via Tibber API using GraphQL qu
 
 ### Tibber data (*tibber-data*)
 
-**TODO!**
 Select from a set of predefined queries to retrieve data from Tibber API.
+The additional parameters can be provided either by the message payload or by configuring the node itself. By using the message payload you will be able to select query and parameters provided by other nodes in the flow.
+
+Payload example:
+```json
+{
+    "queryName": "getTomorrowsEnergyPrices",
+    "homeId": "c70dcbe5-4485-4821-933d-a8a86452737b",
+    "energyResolution": "DAILY",
+    "lastCount": 14
+}
+```
+
+Available queries:
+```javascript
+    /**
+     * Get selected home with some selected properties, including address and owner.
+     * @param homeId Tibber home ID
+     * @return IHome object
+     */
+    getHome(homeId: string): IHome;
+    
+    /**
+     * Get homes with all properties, including energy price, consumption and production.
+     * @param homeId Tibber home ID
+     * @return IHome object
+     */
+    getHomeComplete(homeId: string): IHome;
+    
+    /**
+     * Get homes with some selected properties, including address and owner.
+     * @return Array of IHome.
+     */
+    getHomes(): IHome[];
+    
+    /**
+     * Get homes with all properties, including energy price, consumption and production.
+     * @return Array of IHome
+     */
+    getHomesComplete(): IHome[];
+    
+    /**
+     * Get current energy price for selected home.
+     * @param homeId Tibber home ID
+     * @return IPrice object
+     */
+    getCurrentEnergyPrice(homeId: string): IPrice;
+    
+    /**
+     * Get current energy prices from all homes registered to current user
+     * @return Array of IPrice
+     */
+    getCurrentEnergyPrices(): IPrice[];
+    
+    /**
+     * Get energy prices for today.
+     * @param homeId Tibber home ID
+     * @return Array of IPrice
+     */
+    getTodaysEnergyPrices(homeId: string): IPrice[];
+    
+    /**
+     * Get energy prices for tomorrow. These will only be available between 12:00 and 23:59
+     * @param homeId Tibber home ID
+     * @return Array of IPrice
+     */
+    getTomorrowsEnergyPrices(homeId: string): IPrice[];
+    
+    /**
+     * Get energy consumption for one or more homes.
+     * Returns an array of IConsumption
+     * @param energyResolution EnergyResolution. Valid values: HOURLY, DAILY, WEEKLY, MONTHLY, ANNUAL
+     * @param lastCount Return the last number of records
+     * @param homeId Tibber home ID. Optional parameter. Empty parameter will return all registered homes.
+     * @return Array of IConsumption
+     */
+    getConsumption(energyResolution: EnergyResolution, lastCount: number, homeId?: string): IConsumption[];
+```
 
 ### Configuration node (*tibber-api-endpoint*)
 

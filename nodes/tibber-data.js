@@ -22,7 +22,7 @@ module.exports = function(RED) {
             var lastCount = Number(node._config.lastCount ? node._config.lastCount : msg.payload.lastCount);
 
             // Preserve default values.
-            energyResolution ? energyResolution : 'HOURLY';
+            energyResolution = energyResolution ? energyResolution : 'HOURLY';
             if (isNaN(lastCount)) {
                 lastCount = 10;
             }
@@ -36,6 +36,13 @@ module.exports = function(RED) {
                         payload = error;
                     }
                     break;
+                case 'getHomeComplete':
+                    try {
+                        payload = await node.client.getHomeComplete(homeId);
+                    } catch (error) {
+                        payload = error;
+                    }
+                    break;
                 case 'getHomes':
                     try {
                         payload = await node.client.getHomes();
@@ -43,14 +50,50 @@ module.exports = function(RED) {
                         payload = error;
                     }
                     break;
+                case 'getHomesComplete':
+                    try {
+                        payload = await node.client.getHomesComplete();
+                    } catch (error) {
+                        payload = error;
+                    }
+                    break;
+                case 'getCurrentEnergyPrice':
+                    try {
+                        payload = await node.client.getCurrentEnergyPrice(homeId);
+                    } catch (error) {
+                        payload = error;
+                    }
+                    break;
+                case 'getCurrentEnergyPrices':
+                    try {
+                        payload = await node.client.getCurrentEnergyPrices();
+                    } catch (error) {
+                        payload = error;
+                    }
+                    break;
+                case 'getTodaysEnergyPrices':
+                    try {
+                        payload = await node.client.getTodaysEnergyPrices(homeId);
+                    } catch (error) {
+                        payload = error;
+                    }
+                    break;
+                case 'getTomorrowsEnergyPrices':
+                    try {
+                        payload = await node.client.getTomorrowsEnergyPrices(homeId);
+                    } catch (error) {
+                        payload = error;
+                    }
+                    break;
                 case 'getConsumption':
                     try {
-                        payload = await node.client.getConsumption(energyResolution, lastCount, homeId);
+                        payload = await node.client.getConsumption(energyResolution, lastCount, homeId ? homeId : undefined);
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 default:
+                    payload = { error: 'Unknown query: ' + queryName };
                     break;
             }
             if (payload) {

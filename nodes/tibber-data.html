@@ -53,19 +53,26 @@
     <div class="form-row">
       <label for="node-input-queryName"><i class="fa fa-cogs"></i> Query</label>
       <select id="node-input-queryName">
+        <option value="">{ payload.queryName }</option>
         <option value="getHome">getHome(homeId)</option>
+        <option value="getHomeComplete">getHomeComplete(homeId)</option>
         <option value="getHomes">getHomes()</option>
+        <option value="getHomesComplete">getHomesComplete()</option>
+        <option value="getCurrentEnergyPrice">getCurrentEnergyPrice(homeId)</option>
+        <option value="getCurrentEnergyPrices">getCurrentEnergyPrices()</option>
+        <option value="getTodaysEnergyPrices">getTodaysEnergyPrices(homeId)</option>
+        <option value="getTomorrowsEnergyPrices">getTomorrowsEnergyPrices(homeId)</option>
         <option value="getConsumption">getConsumption(EnergyResolution, lastCount, homeId?)</option>
       </select>
     </div>
     <div class="form-row">
       <label for="node-input-homeId"><i class="fa fa-home"></i> Home ID</label>
-      <input type="text" id="node-input-homeId" placeholder="{payload.homeId}">
+      <input type="text" id="node-input-homeId" placeholder="{ payload.homeId }">
     </div>
     <div class="form-row">
       <label for="node-input-energyResolution"><i class="fa fa-eye"></i> Energy Resolution</label>
       <select id="node-input-energyResolution">
-        <option value="">{payload.energyResolution}</option>
+        <option value="">{ payload.energyResolution }</option>
         <option value="HOURLY">HOURLY</option>
         <option value="DAILY">DAILY</option>
         <option value="WEEKLY">WEEKLY</option>
@@ -75,7 +82,7 @@
     </div>
     <div class="form-row">
       <label for="node-input-lastCount"><i class="fa fa-tachometer"></i> Last COunt</label>
-      <input type="number" id="node-input-lastCount" placeholder="{payload.lastCount}">
+      <input type="number" id="node-input-lastCount" placeholder="{ payload.lastCount }">
     </div>
 </script>
 
