@@ -19,18 +19,36 @@ module.exports = function(RED) {
             var queryName = node._config.queryName ? node._config.queryName : msg.payload.queryName;
             var homeId = node._config.homeId ? node._config.homeId : msg.payload.homeId;
             var energyResolution = node._config.energyResolution ? node._config.energyResolution : msg.payload.energyResolution;
-            var lastCount = node._config.lastCount ? node._config.lastCount : msg.payload.lastCount;
+            var lastCount = Number(node._config.lastCount ? node._config.lastCount : msg.payload.lastCount);
+
+            // Preserve default values.
+            energyResolution ? energyResolution : 'HOURLY';
+            if (isNaN(lastCount)) {
+                lastCount = 10;
+            }
 
             var payload = {};
             switch (queryName) {
                 case 'getHome':
-                    payload = await node.client.getHome(homeId);
+                    try {
+                        payload = await node.client.getHome(homeId);
+                    } catch (error) {
+                        payload = error;
+                    }
                     break;
                 case 'getHomes':
-                    payload = await node.client.getHomes();
+                    try {
+                        payload = await node.client.getHomes();
+                    } catch (error) {
+                        payload = error;
+                    }
                     break;
                 case 'getConsumption':
-                    payload = await node.client.getConsumption(energyResolution, lastCount, homeId);
+                    try {
+                        payload = await node.client.getConsumption(energyResolution, lastCount, homeId);
+                    } catch (error) {
+                        payload = error;
+                    }
                     break;
                 default:
                     break;
