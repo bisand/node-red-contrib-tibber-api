@@ -26,6 +26,12 @@ module.exports = function(RED) {
                 case 'getHome':
                     payload = await node.client.getHome(homeId);
                     break;
+                case 'getHomes':
+                    payload = await node.client.getHomes();
+                    break;
+                case 'getConsumption':
+                    payload = await node.client.getConsumption(energyResolution, lastCount, homeId);
+                    break;
                 default:
                     break;
             }

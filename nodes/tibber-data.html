@@ -10,6 +10,18 @@
                 value: true,
             },
             apiEndpointRef: { value: null, type: 'tibber-api-endpoint' },
+            queryName: {
+                value: '',
+            },
+            homeId: {
+                value: '',
+            },
+            energyResolution: {
+                value: 'DAILY',
+            },
+            lastCount: {
+                value: 10,
+            },
         },
         inputs: 1,
         outputs: 1,
@@ -42,6 +54,7 @@
       <select id="node-input-queryName">
         <option value="getHome">getHome(homeId)</option>
         <option value="getHomes">getHomes()</option>
+        <option value="getConsumption">getConsumption(EnergyResolution, lastCount, homeId?)</option>
       </select>
     </div>
     <div class="form-row">
