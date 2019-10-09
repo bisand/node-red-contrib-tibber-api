@@ -38,8 +38,8 @@
       <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-      <label for="node-input-query"><i class="fa fa-calculator"></i> Query</label>
-      <select id="node-input-query">
+      <label for="node-input-queryName"><i class="fa fa-calculator"></i> Query</label>
+      <select id="node-input-queryName">
         <option value="getHome">getHome(homeId)</option>
         <option value="getHomes">getHomes()</option>
       </select>
@@ -48,8 +48,22 @@
       <label for="node-input-homeId"><i class="icon-tag"></i> Home ID</label>
       <input type="text" id="node-input-homeId" placeholder="{payload.homeId}">
     </div>
+    <div class="form-row">
+      <label for="node-input-energyResolution"><i class="icon-tag"></i> Energy Resolution</label>
+      <select id="node-input-energyResolution">
+        <option value="HOURLY">HOURLY</option>
+        <option value="DAILY">DAILY</option>
+        <option value="WEEKLY">WEEKLY</option>
+        <option value="MONTHLY">MONTHLY</option>
+        <option value="ANNUAL">ANNUAL</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="node-input-lastCount"><i class="icon-tag"></i> Last COunt</label>
+      <input type="number" id="node-input-lastCount" placeholder="{payload.lastCount}">
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="tibber-api">
-    <p>A simple node that enables you to query Tibber API.</p>
+    <p>A simple node that enables you to query Tibber API with pre-defined queries.</p>
 </script>

@@ -44,6 +44,7 @@
       "tibber-api-endpoint": "nodes/tibber-api-endpoint.js",
       "tibber-feed": "nodes/tibber-feed.js",
       "tibber-query": "nodes/tibber-query.js",
+      "tibber-data": "nodes/tibber-data.js",
       "tibber-notify": "nodes/tibber-notify.js"
     }
   }

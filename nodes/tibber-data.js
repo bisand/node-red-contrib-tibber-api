@@ -1,6 +1,6 @@
 const TibberQuery = require('tibber-api').TibberQuery;
 
-module.exports = function (RED) {
+module.exports = function(RED) {
     function TibberDataNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
@@ -16,12 +16,25 @@ module.exports = function (RED) {
 
         node.on('input', async function(msg) {
             var message = msg;
-            var payload = await node.client.query(message.payload);
-            message.payload = payload;
-            node.send(message);
+            var queryName = node._config.queryName ? node._config.queryName : msg.payload.queryName;
+            var homeId = node._config.homeId ? node._config.homeId : msg.payload.homeId;
+            var energyResolution = node._config.energyResolution ? node._config.energyResolution : msg.payload.energyResolution;
+            var lastCount = node._config.lastCount ? node._config.lastCount : msg.payload.lastCount;
+
+            var payload = {};
+            switch (queryName) {
+                case 'getHome':
+                    payload = await node.client.getHome(homeId);
+                    break;
+                default:
+                    break;
+            }
+            if (payload) {
+                message.payload = payload;
+                node.send(message);
+            }
         });
- 
     }
 
-    RED.nodes.registerType("tibber-data", TibberDataNode);
+    RED.nodes.registerType('tibber-data', TibberDataNode);
 };
