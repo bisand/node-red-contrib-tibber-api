@@ -1,53 +1,91 @@
 <script type="text/javascript">
-  RED.nodes.registerType("tibber-data", {
-    category: "Tibber API",
-    color: "#23B8CC",
-    defaults: {
-      name: {
-        value: ""
-      },
-      active: {
-        value: true
-      },
-      apiUrl: {
-        value: "https://api.tibber.com/v1-beta/gql"
-      },
-      apiToken: {
-        value: ""
-      }
-    },
-    inputs: 1,
-    outputs: 1,
-    icon: "db.png",
-    label: function() {
-      return this.name || "tibber-data";
-    }
-  });
+    RED.nodes.registerType('tibber-data', {
+        category: 'Tibber API',
+        color: '#23B8CC',
+        defaults: {
+            name: {
+                value: '',
+            },
+            active: {
+                value: true,
+            },
+            apiEndpointRef: { value: null, type: 'tibber-api-endpoint' },
+            queryName: {
+                value: '',
+            },
+            homeId: {
+                value: '',
+            },
+            energyResolution: {
+                value: 'DAILY',
+            },
+            lastCount: {
+                value: 10,
+            },
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'db.png',
+        label: function() {
+            return this.name || 'tibber-data';
+        },
+    });
 </script>
 <style>
-  .form-row {
-    white-space: nowrap;
-  }
-  .form-row label {
-    white-space: nowrap;
-  }
+    .red-ui-editor .form-row {
+        white-space: nowrap;
+    }
+    .red-ui-editor .form-row label {
+        white-space: nowrap;
+        width: 150px;
+    }
 </style>
 
 <script type="text/x-red" data-template-name="tibber-data">
-  <div class="form-row">
-      <label for="node-input-apiUrl"><i class="icon-tag"></i> API Url</label>
-      <input type="text" id="node-input-apiUrl" placeholder="API Url">
-  </div>
-  <div class="form-row">
-      <label for="node-input-apiToken"><i class="icon-tag"></i> API key</label>
-      <input type="text" id="node-input-apiToken" placeholder="API key">
-  </div>
-  <div class="form-row">
+    <div class="form-row">
+      <label for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+      <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
+    </div>
+    <div class="form-row">
       <label for="node-input-name"><i class="icon-tag"></i> Name</label>
       <input type="text" id="node-input-name" placeholder="Name">
-  </div>
+    </div>
+    <div class="form-row">
+      <label for="node-input-queryName"><i class="fa fa-cogs"></i> Query</label>
+      <select id="node-input-queryName">
+        <option value="">{ payload.queryName }</option>
+        <option value="getHome">getHome(homeId)</option>
+        <option value="getHomeComplete">getHomeComplete(homeId)</option>
+        <option value="getHomes">getHomes()</option>
+        <option value="getHomesComplete">getHomesComplete()</option>
+        <option value="getCurrentEnergyPrice">getCurrentEnergyPrice(homeId)</option>
+        <option value="getCurrentEnergyPrices">getCurrentEnergyPrices()</option>
+        <option value="getTodaysEnergyPrices">getTodaysEnergyPrices(homeId)</option>
+        <option value="getTomorrowsEnergyPrices">getTomorrowsEnergyPrices(homeId)</option>
+        <option value="getConsumption">getConsumption(EnergyResolution, lastCount, homeId?)</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="node-input-homeId"><i class="fa fa-home"></i> Home ID</label>
+      <input type="text" id="node-input-homeId" placeholder="{ payload.homeId }">
+    </div>
+    <div class="form-row">
+      <label for="node-input-energyResolution"><i class="fa fa-eye"></i> Energy Resolution</label>
+      <select id="node-input-energyResolution">
+        <option value="">{ payload.energyResolution }</option>
+        <option value="HOURLY">HOURLY</option>
+        <option value="DAILY">DAILY</option>
+        <option value="WEEKLY">WEEKLY</option>
+        <option value="MONTHLY">MONTHLY</option>
+        <option value="ANNUAL">ANNUAL</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="node-input-lastCount"><i class="fa fa-tachometer"></i> Last COunt</label>
+      <input type="number" id="node-input-lastCount" placeholder="{ payload.lastCount }">
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="tibber-api">
-  <p>A simple node that enables you to query Tibber API.</p>
+    <p>A simple node that enables you to query Tibber API with pre-defined queries.</p>
 </script>
