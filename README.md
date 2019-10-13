@@ -162,8 +162,8 @@ To easily test out the examples, you should use a server stack containing Node-R
 Installation instructions:
 
 ```sh
-git clone git@github.com:bisand/IoTServer.git
-cd IoTServer
+git clone https://github.com/bisand/IoTServer.git iotserver
+cd iotserver
 sudo ./init.sh
 ```
 
