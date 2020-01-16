@@ -1,12 +1,16 @@
 language: node_js
+os: linux
 node_js:
 - '10'
 deploy:
   provider: npm
+  edge: true
   email: "$NPM_EMAIL"
   api_key: "$NPM_TOKEN"
+  api_token: "$NPM_TOKEN"
+  cleanup: false
   on:
     branch: master
     tags: true
     repo: bisand/node-red-contrib-tibber-api
-    tag: next
+  tag: next
