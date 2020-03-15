@@ -7,6 +7,11 @@
 
   RED.nodes.registerType("tibber-api-endpoint", {
     category: "config",
+    credentials: {
+        secureApiKey: { 
+          type: 'text', 
+        },
+    },
     defaults: {
       feedUrl: {
         value: "wss://api.tibber.com/v1-beta/gql/subscriptions",
@@ -28,7 +33,6 @@
       },
       apiKey: {
         value: "",
-        required: true
       },
       name:{
         value: ""
@@ -50,9 +54,13 @@
       <input type="text" id="node-config-input-queryUrl" placeholder="Query url">
   </div>
   <div class="form-row">
-    <label for="node-config-input-apiKey"><i class="icon-bookmark"></i> API key</label>
-    <input type="text" id="node-config-input-apiKey" placeholder="API key">
+    <label for="node-config-input-secureApiKey"><i class="icon-bookmark"></i> API key</label>
+    <input type="text" id="node-config-input-secureApiKey" placeholder="Secure API key">
   </div>
+  <!-- <div class="form-row">
+    <label for="node-config-input-apiKey"><i class="icon-bookmark"></i> API key (deprecated)</label>
+    <input type="text" id="node-config-input-apiKey" placeholder="API key">
+  </div> -->
   <div class="form-row">
     <label for="node-config-input-name"><i class="icon-bookmark"></i> Name</label>
     <input type="text" id="node-config-input-name" placeholder="Name">
