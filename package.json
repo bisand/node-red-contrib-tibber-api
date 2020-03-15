@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "eslint": "^6.8.0",
-    "mocha": "^6.2.2"
+    "mocha": "^7.1.0"
   },
   "directories": {
     "examples": "./examples",
