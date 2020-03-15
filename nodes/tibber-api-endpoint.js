@@ -10,14 +10,17 @@ module.exports = function(RED) {
 
         if (this.credentials && !this.credentials.secureApiKey && config.apiKey) {
             RED.nodes.addCredentials(this.id, { secureApiKey: config.apiKey });
-            this.apiKey = config.apiKey = '';
-        } else {
-            this.credentials.secureApiKey = 'Test 123';
-        }
+            this.apiKey = '';
+            config.apiKey = '';
+        } 
+        console.log(this.credentials);
     }
     RED.nodes.registerType('tibber-api-endpoint', TibberApiEndpointNode, {
         credentials: {
-            secureApiKey: { type: 'text', required: true },
+            secureApiKey: { 
+                type: 'text', 
+                required: true 
+            },
         },
     });
 };

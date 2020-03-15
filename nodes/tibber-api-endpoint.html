@@ -9,7 +9,8 @@
     category: "config",
     credentials: {
         secureApiKey: { 
-          type: 'text', 
+          type: 'text',
+          required: true,
         },
     },
     defaults: {
@@ -57,10 +58,10 @@
     <label for="node-config-input-secureApiKey"><i class="icon-bookmark"></i> API key</label>
     <input type="text" id="node-config-input-secureApiKey" placeholder="Secure API key">
   </div>
-  <!-- <div class="form-row">
+  <div class="form-row">
     <label for="node-config-input-apiKey"><i class="icon-bookmark"></i> API key (deprecated)</label>
     <input type="text" id="node-config-input-apiKey" placeholder="API key">
-  </div> -->
+  </div>
   <div class="form-row">
     <label for="node-config-input-name"><i class="icon-bookmark"></i> Name</label>
     <input type="text" id="node-config-input-name" placeholder="Name">
