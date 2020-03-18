@@ -8,9 +8,8 @@
   RED.nodes.registerType("tibber-api-endpoint", {
     category: "config",
     credentials: {
-        secureApiKey: { 
+        accessToken: { 
           type: 'text',
-          required: true,
         },
     },
     defaults: {
@@ -40,7 +39,13 @@
       }
     },
     label: function() {
-      return this.name ? this.name : this.apiKey;
+      return this.name ? this.name : 'Access Token';
+    },
+    oneditprepare: function() {
+      if (this.credentials.accessToken){
+        delete this.apiKey;
+        $("#node-config-input-apiKey").val('');
+      }
     }
   });
 </script>
@@ -55,8 +60,8 @@
       <input type="text" id="node-config-input-queryUrl" placeholder="Query url">
   </div>
   <div class="form-row">
-    <label for="node-config-input-secureApiKey"><i class="icon-bookmark"></i> API key</label>
-    <input type="text" id="node-config-input-secureApiKey" placeholder="Secure API key">
+    <label for="node-config-input-accessToken"><i class="icon-bookmark"></i> Access Token</label>
+    <input type="text" id="node-config-input-accessToken" placeholder="Accss Token">
   </div>
   <div class="form-row">
     <label for="node-config-input-apiKey"><i class="icon-bookmark"></i> API key (deprecated)</label>

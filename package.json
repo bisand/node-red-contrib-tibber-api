@@ -12,6 +12,7 @@
     "tibber-api": "^1.2.9"
   },
   "devDependencies": {
+    "node-red": "^1.0.4",
     "eslint": "^6.8.0",
     "mocha": "^7.1.0"
   },
@@ -26,7 +27,9 @@
     "prepare": "",
     "preversion": "npm test",
     "version": "",
-    "postversion": ""
+    "postversion": "",
+    "start": "node node_modules/node-red/red.js -v -u . -s settings.js",
+    "debug": "node --nolazy --inspect-brk=9229 node_modules/node-red/red.js -v -u . -s settings.js"
   },
   "keywords": [
     "node-red",
