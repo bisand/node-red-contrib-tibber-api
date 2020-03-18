@@ -28,8 +28,8 @@
     "preversion": "npm test",
     "version": "",
     "postversion": "",
-    "start": "node node_modules/node-red/red.js -v -u . -s settings.js",
-    "debug": "node --nolazy --inspect-brk=9229 node_modules/node-red/red.js -v -u . -s settings.js"
+    "start": "node node_modules/node-red/red.js -v -u . -s node-red-settings.js",
+    "debug": "node --nolazy --inspect-brk=9229 node_modules/node-red/red.js -v -u . -s node-red-settings.js"
   },
   "keywords": [
     "node-red",
