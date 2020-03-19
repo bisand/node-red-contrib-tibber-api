@@ -12,7 +12,7 @@ Node Red module for integrating with Tibber Pulse through Tibber api.
 This Node-Red module is used for communication with [Tibber API](https://developer.tibber.com/) through [GraphQL](https://developer.tibber.com/docs/overview) queries and for retrieving data from Tibber Pulse via websocket.
 [Tibber](https://tibber.com) is a norwegian technology focused power company which is providing tools to get more insight and controll over your home and its power consumption.
 
-> From version 0.4.0 the nodes rely on configuration nodes. This means that any nodes configured prior to this version will have to be reconfigured. Use of configuration nodes will actually simplify configuration.
+> Note! From version 1.2.0 the API key has been moved to [Credentials](https://nodered.org/docs/creating-nodes/credentials) and renamed to Access Token. This has been done to prevent the Access Token to be exported when flows are exported. The transition should be seamless, and any stored API keys should be automatically converted to Access Token [Credentials](https://nodered.org/docs/creating-nodes/credentials). Please register an issue if you should experience any problems related to this.
 
 ## Prerequisites
 
