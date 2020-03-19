@@ -1,19 +1,21 @@
 module.exports = function (RED) {
     function TibberApiEndpointNode(config) {
         RED.nodes.createNode(this, config);
+        var node = this;
 
-        if (this.credentials && !this.credentials.accessToken && config.apiKey) {
-            RED.nodes.addCredentials(this.id, { accessToken: config.apiKey });
+        if (node.credentials && !node.credentials.accessToken && config.apiKey) {
+            RED.nodes.addCredentials(node.id, { accessToken: config.apiKey });
         }
 
         delete config.apiKey;
-        delete this.apiKey;
-        
-        this.feedUrl = config.feedUrl;
-        this.queryUrl = config.queryUrl;
+        delete node.apiKey;
 
-        console.log(config);
-        console.log(this.credentials);
+        node.feedUrl = config.feedUrl;
+        node.queryUrl = config.queryUrl;
+
+        node.on('export', () => {
+            alert('EXPORT!');
+        });
     }
     RED.nodes.registerType('tibber-api-endpoint', TibberApiEndpointNode, {
         credentials: {
