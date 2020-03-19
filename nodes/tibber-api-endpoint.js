@@ -7,6 +7,7 @@ module.exports = function (RED) {
             RED.nodes.addCredentials(node.id, { accessToken: config.apiKey });
         }
 
+        // delete properties, just in case.
         delete config.apiKey;
         delete node.apiKey;
 
