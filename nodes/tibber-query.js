@@ -7,11 +7,14 @@ module.exports = function (RED) {
         config.apiEndpoint = RED.nodes.getNode(config.apiEndpointRef);
         node._config = config;
 
-        if (!config.apiEndpoint.queryUrl || !config.apiEndpoint.apiKey) {
-            node.error('Missing mandatory parameters (queryUrl and/or apiKey)');
+        var credentials = RED.nodes.getCredentials(config.apiEndpointRef);
+        if (!config.apiEndpoint.queryUrl || !credentials || !credentials.accessToken) {
+            node.error('Missing mandatory parameters (queryUrl and/or accessToken)');
             return;
         }
 
+        // Assign access token to api key to meintain compatibility. This will not cause the access token to be exported.
+        config.apiEndpoint.apiKey = credentials.accessToken;
         node.client = new TibberQuery(config);
 
         node.on('input', async function(msg) {

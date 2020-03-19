@@ -8,10 +8,14 @@ module.exports = function (RED) {
 
         config.apiEndpoint = RED.nodes.getNode(config.apiEndpointRef);
 
-        if (!config.apiEndpoint.feedUrl || !config.apiEndpoint.apiKey || !config.homeId) {
+        var credentials = RED.nodes.getCredentials(config.apiEndpointRef);
+        if (!config.apiEndpoint.feedUrl || !credentials || !credentials.accessToken || !config.homeId) {
             node.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
             return;
         }
+        
+        // Assign access token to api key to meintain compatibility. This will not cause the access token to be exported.
+        config.apiEndpoint.apiKey = credentials.accessToken;
 
         if (!TibberFeedNode.instances[config.apiEndpoint.apiKey])
             TibberFeedNode.instances[config.apiEndpoint.apiKey] = new TibberFeed(config);
