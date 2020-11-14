@@ -63,9 +63,9 @@
     "voltagePhase1": "1",
     "voltagePhase2": "1",
     "voltagePhase3": "1",
-    "currentPhase1": "1",
-    "currentPhase2": "1",
-    "currentPhase3": "1",
+    "currentL1": "1",
+    "currentL2": "1",
+    "currentL3": "1",
     "x": 120,
     "y": 180,
     "wires": [["3eb3b3f1.899ecc"]]

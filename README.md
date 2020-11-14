@@ -248,9 +248,9 @@ Read the included [readme](https://github.com/bisand/IoTServer/blob/master/READM
         "voltagePhase1": "1",
         "voltagePhase2": "1",
         "voltagePhase3": "1",
-        "currentPhase1": "1",
-        "currentPhase2": "1",
-        "currentPhase3": "1",
+        "currentL1": "1",
+        "currentL2": "1",
+        "currentL3": "1",
         "x": 120,
         "y": 180,
         "wires": [
@@ -370,9 +370,9 @@ Read the included [readme](https://github.com/bisand/IoTServer/blob/master/READM
     "voltagePhase1": "1",
     "voltagePhase2": "1",
     "voltagePhase3": "1",
-    "currentPhase1": "1",
-    "currentPhase2": "1",
-    "currentPhase3": "1",
+    "currentL1": "1",
+    "currentL2": "1",
+    "currentL3": "1",
     "x": 140,
     "y": 300,
     "wires": [["1491f46.f317b0c"]]
@@ -453,7 +453,7 @@ Read the included [readme](https://github.com/bisand/IoTServer/blob/master/READM
     "type": "function",
     "z": "683fd7.e63da028",
     "name": "Transform payload",
-    "func": "let p = msg.payload;\n\nif (!p.voltagePhase1)\n    return null;\n\nfor (var prop in p) {\n    if (!p[prop])\n        p[prop] = 0;\n}\n\n// Meassurement\nlet data = \"power\";\n\n// Tag set\ndata += \",location=test\";\ndata += \",currency=\" + p.currency;\n\n// Field set\ndata += \" power=\" + p.power;\ndata += \",lastMeterConsumption=\" + p.lastMeterConsumption;\ndata += \",accumulatedConsumption=\" + p.accumulatedConsumption;\ndata += \",accumulatedProduction=\" + p.accumulatedProduction;\ndata += \",accumulatedCost=\" + p.accumulatedCost;\ndata += \",accumulatedReward=\" + p.accumulatedReward;\ndata += \",minPower=\" + p.minPower;\ndata += \",averagePower=\" + p.averagePower;\ndata += \",maxPower=\" + p.maxPower;\ndata += \",powerProduction=\" + p.powerProduction;\ndata += \",minPowerProduction=\" + p.minPowerProduction;\ndata += \",maxPowerProduction=\" + p.maxPowerProduction;\ndata += \",lastMeterProduction=\" + p.lastMeterProduction;\ndata += \",powerFactor=\" + p.powerFactor;\ndata += \",voltagePhase1=\" + p.voltagePhase1;\ndata += \",voltagePhase2=\" + p.voltagePhase2;\ndata += \",voltagePhase3=\" + p.voltagePhase3;\ndata += \",currentPhase1=\" + p.currentPhase1;\ndata += \",currentPhase2=\" + p.currentPhase2;\ndata += \",currentPhase3=\" + p.currentPhase3;\n\nmsg.payload = data;\n\nreturn msg;\n",
+    "func": "let p = msg.payload;\n\nif (!p.voltagePhase1)\n    return null;\n\nfor (var prop in p) {\n    if (!p[prop])\n        p[prop] = 0;\n}\n\n// Meassurement\nlet data = \"power\";\n\n// Tag set\ndata += \",location=test\";\ndata += \",currency=\" + p.currency;\n\n// Field set\ndata += \" power=\" + p.power;\ndata += \",lastMeterConsumption=\" + p.lastMeterConsumption;\ndata += \",accumulatedConsumption=\" + p.accumulatedConsumption;\ndata += \",accumulatedProduction=\" + p.accumulatedProduction;\ndata += \",accumulatedCost=\" + p.accumulatedCost;\ndata += \",accumulatedReward=\" + p.accumulatedReward;\ndata += \",minPower=\" + p.minPower;\ndata += \",averagePower=\" + p.averagePower;\ndata += \",maxPower=\" + p.maxPower;\ndata += \",powerProduction=\" + p.powerProduction;\ndata += \",minPowerProduction=\" + p.minPowerProduction;\ndata += \",maxPowerProduction=\" + p.maxPowerProduction;\ndata += \",lastMeterProduction=\" + p.lastMeterProduction;\ndata += \",powerFactor=\" + p.powerFactor;\ndata += \",voltagePhase1=\" + p.voltagePhase1;\ndata += \",voltagePhase2=\" + p.voltagePhase2;\ndata += \",voltagePhase3=\" + p.voltagePhase3;\ndata += \",currentL1=\" + p.currentL1;\ndata += \",currentL2=\" + p.currentL2;\ndata += \",currentL3=\" + p.currentL3;\n\nmsg.payload = data;\n\nreturn msg;\n",
     "outputs": 1,
     "noerr": 0,
     "x": 390,
@@ -977,7 +977,7 @@ Read the included [readme](https://github.com/bisand/IoTServer/blob/master/READM
             [
               {
                 "params": [
-                  "currentPhase1"
+                  "currentL1"
                 ],
                 "type": "field"
               }
@@ -997,7 +997,7 @@ Read the included [readme](https://github.com/bisand/IoTServer/blob/master/READM
             [
               {
                 "params": [
-                  "currentPhase2"
+                  "currentL2"
                 ],
                 "type": "field"
               }
@@ -1017,7 +1017,7 @@ Read the included [readme](https://github.com/bisand/IoTServer/blob/master/READM
             [
               {
                 "params": [
-                  "currentPhase3"
+                  "currentL3"
                 ],
                 "type": "field"
               }

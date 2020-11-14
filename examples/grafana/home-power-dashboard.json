@@ -376,7 +376,7 @@
             [
               {
                 "params": [
-                  "currentPhase1"
+                  "currentL1"
                 ],
                 "type": "field"
               }
@@ -396,7 +396,7 @@
             [
               {
                 "params": [
-                  "currentPhase2"
+                  "currentL2"
                 ],
                 "type": "field"
               }
@@ -416,7 +416,7 @@
             [
               {
                 "params": [
-                  "currentPhase3"
+                  "currentL3"
                 ],
                 "type": "field"
               }
