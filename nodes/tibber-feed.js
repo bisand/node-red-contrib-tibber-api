@@ -38,6 +38,7 @@ module.exports = function (RED) {
         });
 
         TibberFeedNode.instances[config.apiEndpoint.apiKey].on('connected', function (data) {
+            node.status({ fill: "green", shape: "dot", text: "connected" });
             node.log(data);
         });
 
