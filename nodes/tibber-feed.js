@@ -13,18 +13,28 @@ module.exports = function (RED) {
             node.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
             return;
         }
-        
+
         // Assign access token to api key to meintain compatibility. This will not cause the access token to be exported.
         config.apiEndpoint.apiKey = credentials.accessToken;
 
-        if (!TibberFeedNode.instances[config.apiEndpoint.apiKey])
+        if (TibberFeedNode.instances.indexOf(config.apiEndpoint.apiKey) === -1)
             TibberFeedNode.instances[config.apiEndpoint.apiKey] = new TibberFeed(config);
 
+        node.log('Config ' + config.apiEndpoint.apiKey + ' active: ' + TibberFeedNode.instances[config.apiEndpoint.apiKey].active);
+
         if (!config.active) {
-            if (!TibberFeedNode.instances[config.apiEndpoint.apiKey])
+            node.status({ fill: "red", shape: "ring", text: "disconnected" });
+            if (TibberFeedNode.instances.indexOf(config.apiEndpoint.apiKey) === -1)
                 return;
             TibberFeedNode.instances[config.apiEndpoint.apiKey].close();
+            node.log(TibberFeedNode.instances[config.apiEndpoint.apiKey].active);
+            TibberFeedNode.instances[config.apiEndpoint.apiKey].active = false;
+            node.log(TibberFeedNode.instances[config.apiEndpoint.apiKey].active);
             TibberFeedNode.instances[config.apiEndpoint.apiKey] = null;
+            TibberFeedNode.instances = TibberFeedNode.instances.filter(function (value) {
+                return value !== config.apiEndpoint.apiKey;
+            });
+
             return;
         }
 
