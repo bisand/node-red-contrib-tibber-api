@@ -17,23 +17,16 @@ module.exports = function (RED) {
         // Assign access token to api key to meintain compatibility. This will not cause the access token to be exported.
         config.apiEndpoint.apiKey = credentials.accessToken;
 
-        if (TibberFeedNode.instances.indexOf(config.apiEndpoint.apiKey) === -1)
+        if (config.active && !TibberFeedNode.instances[config.apiEndpoint.apiKey])
             TibberFeedNode.instances[config.apiEndpoint.apiKey] = new TibberFeed(config);
-
-        node.log('Config ' + config.apiEndpoint.apiKey + ' active: ' + TibberFeedNode.instances[config.apiEndpoint.apiKey].active);
 
         if (!config.active) {
             node.status({ fill: "red", shape: "ring", text: "disconnected" });
-            if (TibberFeedNode.instances.indexOf(config.apiEndpoint.apiKey) === -1)
+            if (!TibberFeedNode.instances[config.apiEndpoint.apiKey])
                 return;
             TibberFeedNode.instances[config.apiEndpoint.apiKey].close();
-            node.log(TibberFeedNode.instances[config.apiEndpoint.apiKey].active);
             TibberFeedNode.instances[config.apiEndpoint.apiKey].active = false;
-            node.log(TibberFeedNode.instances[config.apiEndpoint.apiKey].active);
-            TibberFeedNode.instances[config.apiEndpoint.apiKey] = null;
-            TibberFeedNode.instances = TibberFeedNode.instances.filter(function (value) {
-                return value !== config.apiEndpoint.apiKey;
-            });
+            delete TibberFeedNode.instances[config.apiEndpoint.apiKey];
 
             return;
         }
@@ -42,6 +35,11 @@ module.exports = function (RED) {
             var msg = {
                 payload: data
             };
+            if (TibberFeedNode.instances[config.apiEndpoint.apiKey].connected) {
+                node.status({ fill: "green", shape: "dot", text: "connected" });
+            } else {
+                node.status({ fill: "red", shape: "ring", text: "disconnected" });
+            }
             node.send(msg);
             if (TibberFeedNode.instances[config.apiEndpoint.apiKey])
                 TibberFeedNode.instances[config.apiEndpoint.apiKey].heartbeat();
@@ -77,16 +75,15 @@ module.exports = function (RED) {
         });
 
         node.on('close', function () {
+            node.status({ fill: "red", shape: "ring", text: "disconnected" });
             if (!TibberFeedNode.instances[config.apiEndpoint.apiKey])
                 return;
-            node.status({ fill: "red", shape: "ring", text: "disconnected" });
             TibberFeedNode.instances[config.apiEndpoint.apiKey].close();
-            TibberFeedNode.instances[config.apiEndpoint.apiKey] = null;
         });
 
         TibberFeedNode.instances[config.apiEndpoint.apiKey].connect();
     }
-    TibberFeedNode.instances = [];
+    TibberFeedNode.instances = {};
 
     RED.nodes.registerType("tibber-feed", TibberFeedNode);
 };
