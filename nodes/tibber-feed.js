@@ -9,6 +9,42 @@ module.exports = function (RED) {
 
         _config.apiEndpoint = RED.nodes.getNode(_config.apiEndpointRef);
 
+        // Use this config to get all fields from feed and use the 
+        // original config to map the values in the response.
+        const tibberFeedConfig = {
+            // Values from original config.
+            active: config.active,
+            apiEndpointRef: config.apiEndpointRef,
+            apiEndpoint: config.apiEndpoint,
+            homeId: config.homeId,
+            // Get all values from feed.
+            timestamp: true,
+            power: true,
+            lastMeterConsumption: true,
+            accumulatedConsumption: true,
+            accumulatedProduction: true,
+            accumulatedProductionLastHour: true,
+            accumulatedConsumptionLastHour: true,
+            accumulatedCost: true,
+            accumulatedReward: true,
+            currency: true,
+            minPower: true,
+            averagePower: true,
+            maxPower: true,
+            powerProduction: true,
+            minPowerProduction: true,
+            maxPowerProduction: true,
+            lastMeterProduction: true,
+            powerFactor: true,
+            voltagePhase1: true,
+            voltagePhase2: true,
+            voltagePhase3: true,
+            currentL1: true,
+            currentL2: true,
+            currentL3: true,
+            signalStrength: true
+        };
+
         var credentials = RED.nodes.getCredentials(_config.apiEndpointRef);
         if (!_config.apiEndpoint.feedUrl || !credentials || !credentials.accessToken || !_config.homeId) {
             node.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
@@ -23,7 +59,7 @@ module.exports = function (RED) {
         _config.apiEndpoint.apiKey = credentials.accessToken;
 
         if (!TibberFeedNode.instances[_config.apiEndpoint.apiKey]) {
-            TibberFeedNode.instances[_config.apiEndpoint.apiKey] = new TibberFeed(config);
+            TibberFeedNode.instances[_config.apiEndpoint.apiKey] = new TibberFeed(tibberFeedConfig);
         }
         node._feed = TibberFeedNode.instances[_config.apiEndpoint.apiKey];
 
@@ -34,7 +70,7 @@ module.exports = function (RED) {
             };
             if (_config.active && node._feed.connected) {
                 node.status({ fill: "green", shape: "dot", text: "connected" });
-                node.send(msg);
+                node.mapAndsend(msg);
                 node._feed.heartbeat();
             } else {
                 node.status({ fill: "red", shape: "ring", text: "disconnected" });
@@ -83,13 +119,22 @@ module.exports = function (RED) {
             node.listeners = null;
         });
 
+        node.mapAndsend = (msg) => {
+            const returnMsg = { payload: {} };
+            if (msg && msg.payload)
+                for (const property in msg.payload) {
+                    if (_config[property])
+                        returnMsg.payload[property] = msg.payload[property];
+                }
+            node.send(returnMsg);
+        }
+
         if (!node._feed.connected) {
             node._feed.connect();
         }
 
     }
     TibberFeedNode.instances = {};
-    TibberFeedNode.functions = {};
 
     RED.nodes.registerType("tibber-feed", TibberFeedNode);
 };
