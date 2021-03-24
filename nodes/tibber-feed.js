@@ -9,42 +9,6 @@ module.exports = function (RED) {
 
         _config.apiEndpoint = RED.nodes.getNode(_config.apiEndpointRef);
 
-        // Use this config to get all fields from feed and use the 
-        // original config to map the values in the response.
-        const tibberFeedConfig = {
-            // Values from original config.
-            active: config.active,
-            apiEndpointRef: config.apiEndpointRef,
-            apiEndpoint: config.apiEndpoint,
-            homeId: config.homeId,
-            // Get all values from feed.
-            timestamp: true,
-            power: true,
-            lastMeterConsumption: true,
-            accumulatedConsumption: true,
-            accumulatedProduction: true,
-            accumulatedProductionLastHour: true,
-            accumulatedConsumptionLastHour: true,
-            accumulatedCost: true,
-            accumulatedReward: true,
-            currency: true,
-            minPower: true,
-            averagePower: true,
-            maxPower: true,
-            powerProduction: true,
-            minPowerProduction: true,
-            maxPowerProduction: true,
-            lastMeterProduction: true,
-            powerFactor: true,
-            voltagePhase1: true,
-            voltagePhase2: true,
-            voltagePhase3: true,
-            currentL1: true,
-            currentL2: true,
-            currentL3: true,
-            signalStrength: true
-        };
-
         var credentials = RED.nodes.getCredentials(_config.apiEndpointRef);
         if (!_config.apiEndpoint.feedUrl || !credentials || !credentials.accessToken || !_config.homeId) {
             node.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
@@ -59,7 +23,7 @@ module.exports = function (RED) {
         _config.apiEndpoint.apiKey = credentials.accessToken;
 
         if (!TibberFeedNode.instances[_config.apiEndpoint.apiKey]) {
-            TibberFeedNode.instances[_config.apiEndpoint.apiKey] = new TibberFeed(tibberFeedConfig);
+            TibberFeedNode.instances[_config.apiEndpoint.apiKey] = new TibberFeed(_config, 30000, true);
         }
         node._feed = TibberFeedNode.instances[_config.apiEndpoint.apiKey];
 
