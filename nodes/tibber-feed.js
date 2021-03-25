@@ -1,13 +1,34 @@
 const TibberFeed = require('tibber-api').TibberFeed;
+const StatusEnum = Object.freeze({ 'unknown': -1, 'disconnected': 0, 'connected': 1 });
 
 module.exports = function (RED) {
     function TibberFeedNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
         var _config = config;
-        node.status({ fill: "red", shape: "ring", text: "disconnected" });
-
         _config.apiEndpoint = RED.nodes.getNode(_config.apiEndpointRef);
+
+        node._lastStatus = StatusEnum.unknown;
+        node._setStatus = status => {
+            if (status !== node._lastStatus) {
+                switch (status) {
+                    case StatusEnum.unknown:
+                        node.status({ fill: "grey", shape: "ring", text: "unknown" });
+                        break;
+                    case StatusEnum.disconnected:
+                        node.status({ fill: "red", shape: "ring", text: "disconnected" });
+                        break;
+                    case StatusEnum.connected:
+                        node.status({ fill: "green", shape: "dot", text: "connected" });
+                        break;
+
+                    default:
+                        break;
+                }
+                node._lastStatus = status;
+            }
+        };
+        node._setStatus(StatusEnum.disconnected);
 
         var credentials = RED.nodes.getCredentials(_config.apiEndpointRef);
         if (!_config.apiEndpoint.feedUrl || !credentials || !credentials.accessToken || !_config.homeId) {
@@ -33,19 +54,19 @@ module.exports = function (RED) {
                 payload: data
             };
             if (_config.active && node._feed.connected) {
-                node.status({ fill: "green", shape: "dot", text: "connected" });
-                node.mapAndsend(msg);
+                node._setStatus(StatusEnum.connected);
+                node._mapAndsend(msg);
                 node._feed.heartbeat();
             } else {
-                node.status({ fill: "red", shape: "ring", text: "disconnected" });
+                node._setStatus(StatusEnum.disconnected);
             }
         };
         node.listeners.onConnected = function onConnected(data) {
-            node.status({ fill: "green", shape: "dot", text: "connected" });
+            node._setStatus(StatusEnum.connected);
             node.log(data);
         };
         node.listeners.onDisconnected = function onDisconnected(data) {
-            node.status({ fill: "red", shape: "ring", text: "disconnected" });
+            node._setStatus(StatusEnum.disconnected);
             node.log(data);
             node._feed.heartbeat();
         };
@@ -68,8 +89,8 @@ module.exports = function (RED) {
             node._feed.on('warn', node.listeners.onWarn);
             node._feed.on('log', node.listeners.onLog);
         }
-        node.on('close', function () {
-            node.status({ fill: "red", shape: "ring", text: "disconnected" });
+        node.on('close', function (removed, done) {
+            node._setStatus(StatusEnum.disconnected);
             if (!node._feed)
                 return;
             node._feed.off('data', node.listeners.onDataReceived);
@@ -81,9 +102,15 @@ module.exports = function (RED) {
             node._feed.off('log', node.listeners.onLog);
             node._feed = null;
             node.listeners = null;
+            if (removed) {
+                // This node has been disabled/deleted
+            } else {
+                // This node is being restarted
+            }
+            done();
         });
 
-        node.mapAndsend = (msg) => {
+        node._mapAndsend = (msg) => {
             const returnMsg = { payload: {} };
             if (msg && msg.payload)
                 for (const property in msg.payload) {
