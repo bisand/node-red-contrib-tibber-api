@@ -15,7 +15,7 @@ describe("TibberQuery", function() {
     it("Should be inactive", function() {
       let query = new TibberQuery({
         apiEndpoint: { queryUrl: "https://test.com", apiKey: "1337" },
-        active: false
+        active: false 
       });
       assert.equal(query.active, false);
     });

@@ -37,7 +37,7 @@ describe('TibberFeed', function() {
         it('Should be created', function() {
             let feed = new TibberFeed({
                 apiEndpoint: {
-                    feedUrl: 'http://localhost:1337',
+                    feedUrl: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
@@ -51,7 +51,7 @@ describe('TibberFeed', function() {
         it('Should be connected', function(done) {
             let feed = new TibberFeed({
                 apiEndpoint: {
-                    feedUrl: 'http://localhost:1337',
+                    feedUrl: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
@@ -71,7 +71,7 @@ describe('TibberFeed', function() {
         it('Should receive data', function(done) {
             let feed = new TibberFeed({
                 apiEndpoint: {
-                    feedUrl: 'http://localhost:1337',
+                    feedUrl: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
@@ -91,7 +91,7 @@ describe('TibberFeed', function() {
         it('Should be active', function() {
             let feed = new TibberFeed({
                 apiEndpoint: {
-                    feedUrl: 'http://localhost:1337',
+                    feedUrl: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
@@ -114,7 +114,7 @@ describe('TibberFeed', function() {
             let feed = new TibberFeed(
                 {
                     apiEndpoint: {
-                        feedUrl: 'http://localhost:1337',
+                        feedUrl: 'ws://localhost:1337',
                         apiKey: '1337',
                     },
                     homeId: '1337',
@@ -145,7 +145,7 @@ describe('TibberFeed', function() {
             let feed = new TibberFeed(
                 {
                     apiEndpoint: {
-                        feedUrl: 'http://localhost:1337',
+                        feedUrl: 'ws://localhost:1337',
                         apiKey: '1337',
                     },
                     homeId: '1337',
