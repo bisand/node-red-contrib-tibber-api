@@ -4,8 +4,8 @@ const StatusEnum = Object.freeze({ 'unknown': -1, 'disconnected': 0, 'connected'
 module.exports = function (RED) {
     function TibberFeedNode(config) {
         RED.nodes.createNode(this, config);
-        var node = this;
-        var _config = config;
+        const node = this;
+        const _config = config;
         _config.apiEndpoint = RED.nodes.getNode(_config.apiEndpointRef);
 
         node._lastStatus = StatusEnum.unknown;
@@ -30,7 +30,7 @@ module.exports = function (RED) {
         };
         node._setStatus(StatusEnum.disconnected);
 
-        var credentials = RED.nodes.getCredentials(_config.apiEndpointRef);
+        const credentials = RED.nodes.getCredentials(_config.apiEndpointRef);
         if (!_config.apiEndpoint.feedUrl || !credentials || !credentials.accessToken || !_config.homeId) {
             node.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
             return;
@@ -41,12 +41,13 @@ module.exports = function (RED) {
         }
 
         // Assign access token to api key to meintain compatibility. This will not cause the access token to be exported.
-        _config.apiEndpoint.apiKey = credentials.accessToken;
+        const key = _config.apiEndpoint.apiKey = credentials.accessToken;
+        const home = _config.homeId;
 
-        if (!TibberFeedNode.instances[_config.apiEndpoint.apiKey]) {
-            TibberFeedNode.instances[_config.apiEndpoint.apiKey] = new TibberFeed(_config, 30000, true);
+        if (!TibberFeedNode.instances[key][home]) {
+            TibberFeedNode.instances[key][home] = new TibberFeed(_config, 30000, true);
         }
-        node._feed = TibberFeedNode.instances[_config.apiEndpoint.apiKey];
+        node._feed = TibberFeedNode.instances[key][home];
 
         node.listeners = {};
         node.listeners.onDataReceived = function onDataReceived(data) {
