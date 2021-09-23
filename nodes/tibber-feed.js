@@ -44,6 +44,9 @@ module.exports = function (RED) {
         const key = _config.apiEndpoint.apiKey = credentials.accessToken;
         const home = _config.homeId;
 
+        if (!TibberFeedNode.instances[key]) {
+            TibberFeedNode.instances[key] = {};
+        }
         if (!TibberFeedNode.instances[key][home]) {
             TibberFeedNode.instances[key][home] = new TibberFeed(_config, 30000, true);
         }
