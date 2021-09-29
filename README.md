@@ -16,8 +16,9 @@ This Node-Red module is used for communication with [Tibber API](https://develop
 
 ## Prerequisites
 
-Sign up here:
-> https://invite.tibber.com/9136154c
+Click the link below to sign up, and receive 500 NOK to shop smart home gadgets from [Tibber Store](https://tibber.com/no/store):
+
+> https://invite.tibber.com/3ea6e31f
 
 You will also need an API token from Tibber. Get it here:
 
