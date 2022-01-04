@@ -4,8 +4,8 @@ Node Red module for integrating with Tibber Pulse through Tibber api.
 
 |  Branch  | Status           |
 |----------|------------------|
-|develop   | [![Build Status](https://travis-ci.org/bisand/node-red-contrib-tibber-api.svg?branch=develop)](https://travis-ci.org/bisand/node-red-contrib-tibber-api) |
-| master | [![Build Status](https://travis-ci.org/bisand/node-red-contrib-tibber-api.svg?branch=master)](https://travis-ci.org/bisand/node-red-contrib-tibber-api) |
+| develop  | [![Build Status](https://app.travis-ci.com/bisand/node-red-contrib-tibber-api.svg?branch=develop)](https://app.travis-ci.com/bisand/node-red-contrib-tibber-api) |
+| master | [![Build Status](https://app.travis-ci.com/bisand/node-red-contrib-tibber-api.svg?branch=master)](https://app.travis-ci.com/bisand/node-red-contrib-tibber-api) |
  
 ## General
 

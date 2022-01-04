@@ -51,6 +51,8 @@ module.exports = function (RED) {
             TibberFeedNode.instances[key][home] = new TibberFeed(_config, 30000, true);
         }
         node._feed = TibberFeedNode.instances[key][home];
+        node.log('Making sure we are disconnected from Tibber feed...');
+        node._feed.close();
 
         node.listeners = {};
         node.listeners.onDataReceived = function onDataReceived(data) {
@@ -67,21 +69,21 @@ module.exports = function (RED) {
         };
         node.listeners.onConnected = function onConnected(data) {
             node._setStatus(StatusEnum.connected);
-            node.log(data);
+            node.log(JSON.stringify(data));
         };
         node.listeners.onDisconnected = function onDisconnected(data) {
             node._setStatus(StatusEnum.disconnected);
-            node.log(data);
+            node.log(JSON.stringify(data));
             node._feed.heartbeat();
         };
         node.listeners.onError = function onError(data) {
-            node.error(data);
+            node.error(JSON.stringify(data));
         };
         node.listeners.onWarn = function onWarn(data) {
-            node.warn(data);
+            node.warn(JSON.stringify(data));
         };
         node.listeners.onLog = function onLog(data) {
-            node.log(data);
+            node.log(JSON.stringify(data));
         };
 
         if (_config.active) {
@@ -94,9 +96,13 @@ module.exports = function (RED) {
             node._feed.on('log', node.listeners.onLog);
         }
         node.on('close', function (removed, done) {
+            node.log('Disconnecting from Tibber feed...');
+            node._feed.close();
             node._setStatus(StatusEnum.disconnected);
             if (!node._feed)
                 return;
+
+            node.log('Unregistering event handlers...');
             node._feed.off('data', node.listeners.onDataReceived);
             node._feed.off('connected', node.listeners.onConnected);
             node._feed.off('connection_ack', node.listeners.onConnected);
@@ -111,6 +117,7 @@ module.exports = function (RED) {
             } else {
                 // This node is being restarted
             }
+            node.log('Done.');
             done();
         });
 
