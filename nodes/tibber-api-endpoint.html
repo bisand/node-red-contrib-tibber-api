@@ -1,6 +1,6 @@
 <!-- <script type="text/javascript" src="tools.js"></script> -->
 <script type="text/javascript">
-  const urlValidator = function(url) {
+  const urlValidator = function (url) {
     var regExp = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/;
     return new RegExp(regExp).test(url);
   };
@@ -8,14 +8,14 @@
   RED.nodes.registerType("tibber-api-endpoint", {
     category: "config",
     credentials: {
-        accessToken: { 
-          type: 'text',
-        },
+      accessToken: {
+        type: 'text',
+      },
     },
     defaults: {
       feedUrl: {
         value: "wss://api.tibber.com/v1-beta/gql/subscriptions",
-        validate: function(value) {
+        validate: function (value) {
           var queryUrl = $("#node-config-input-queryUrl").val();
           return (
             urlValidator(value ? value : queryUrl) || urlValidator(value)
@@ -24,22 +24,25 @@
       },
       queryUrl: {
         value: "https://api.tibber.com/v1-beta/gql",
-        validate: function(value) {
+        validate: function (value) {
           var feedUrl = $("#node-config-input-feedUrl").val();
           return (
             urlValidator(value ? value : feedUrl) || urlValidator(value)
           );
         }
       },
-      name:{
+      feedTimeout: {
+        value: '60',
+      },
+      name: {
         value: ""
       }
     },
-    label: function() {
+    label: function () {
       return this.name ? this.name : 'Access Token';
     },
-    oneditprepare: function() {
-      if (this.credentials.accessToken){
+    oneditprepare: function () {
+      if (this.credentials.accessToken) {
         delete this.apiKey;
       }
     }
@@ -58,6 +61,10 @@
   <div class="form-row">
     <label for="node-config-input-accessToken"><i class="icon-bookmark"></i> Access Token</label>
     <input type="text" id="node-config-input-accessToken" placeholder="Accss Token">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-feedTimeout"><i class="icon-tag"></i> Feed Timeout (sec)</label>
+    <input type="number" id="node-config-input-feedTimeout" placeholder="Feed Timeout">
   </div>
   <div class="form-row">
     <label for="node-config-input-name"><i class="icon-bookmark"></i> Name</label>
