@@ -156,12 +156,12 @@ module.exports = function (RED) {
 
         if (!node._feed.connected && node._feed.refCount === 1) {
             node._setStatus(StatusEnum.waiting);
-            node.log('Preparing to connect to Tibber. Waiting for 5 seconds...');
+            node.log('Preparing to connect to Tibber...');
             node._connectionDelay = setTimeout(() => {
                 node._setStatus(StatusEnum.connecting);
                 node.log('Connecting to Tibber...');
                 node._feed.connect();
-            }, 5000);
+            }, 1000);
         }
 
     }
