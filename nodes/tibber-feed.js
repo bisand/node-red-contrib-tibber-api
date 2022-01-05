@@ -1,5 +1,5 @@
 const TibberFeed = require('tibber-api').TibberFeed;
-const StatusEnum = Object.freeze({ 'unknown': -1, 'disconnected': 0, 'connected': 1 });
+const StatusEnum = Object.freeze({ 'unknown': -1, 'disconnected': 0, 'waiting': 1, 'connecting': 2, 'connected': 100 });
 
 module.exports = function (RED) {
     function TibberFeedNode(config) {
@@ -8,6 +8,7 @@ module.exports = function (RED) {
         const _config = config;
         _config.apiEndpoint = RED.nodes.getNode(_config.apiEndpointRef);
 
+        node._connectionDelay = -1;
         node._lastStatus = StatusEnum.unknown;
         node._setStatus = status => {
             if (status !== node._lastStatus) {
@@ -17,6 +18,12 @@ module.exports = function (RED) {
                         break;
                     case StatusEnum.disconnected:
                         node.status({ fill: "red", shape: "ring", text: "disconnected" });
+                        break;
+                    case StatusEnum.waiting:
+                        node.status({ fill: "yellow", shape: "ring", text: "waiting" });
+                        break;
+                    case StatusEnum.connecting:
+                        node.status({ fill: "green", shape: "ring", text: "connecting" });
                         break;
                     case StatusEnum.connected:
                         node.status({ fill: "green", shape: "dot", text: "connected" });
@@ -43,16 +50,21 @@ module.exports = function (RED) {
         // Assign access token to api key to meintain compatibility. This will not cause the access token to be exported.
         const key = _config.apiEndpoint.apiKey = credentials.accessToken;
         const home = _config.homeId;
+        const feedTimeout = (_config.apiEndpoint.feedTimeout ? _config.apiEndpoint.feedTimeout : 60) * 1000;
 
         if (!TibberFeedNode.instances[key]) {
             TibberFeedNode.instances[key] = {};
         }
         if (!TibberFeedNode.instances[key][home]) {
-            TibberFeedNode.instances[key][home] = new TibberFeed(_config, 30000, true);
+            TibberFeedNode.instances[key][home] = new TibberFeed(_config, feedTimeout, true);
         }
         node._feed = TibberFeedNode.instances[key][home];
-        node.log('Making sure we are disconnected from Tibber feed...');
-        node._feed.close();
+        if (!node._feed.refCount || node._feed.refCount < 1) {
+            node._feed.refCount = 1;
+        }
+        else {
+            node._feed.refCount++;
+        }
 
         node.listeners = {};
         node.listeners.onDataReceived = function onDataReceived(data) {
@@ -60,7 +72,8 @@ module.exports = function (RED) {
                 payload: data
             };
             if (_config.active && node._feed.connected) {
-                node._setStatus(StatusEnum.connected);
+                if (node._lastStatus !== StatusEnum.connected)
+                    node._setStatus(StatusEnum.connected);
                 node._mapAndsend(msg);
                 node._feed.heartbeat();
             } else {
@@ -70,20 +83,22 @@ module.exports = function (RED) {
         node.listeners.onConnected = function onConnected(data) {
             node._setStatus(StatusEnum.connected);
             node.log(JSON.stringify(data));
+            node._feed.heartbeat();
         };
         node.listeners.onDisconnected = function onDisconnected(data) {
-            node._setStatus(StatusEnum.disconnected);
+            if (node._lastStatus !== StatusEnum.waiting && node._lastStatus !== StatusEnum.connecting)
+                node._setStatus(StatusEnum.disconnected);
             node.log(JSON.stringify(data));
             node._feed.heartbeat();
         };
         node.listeners.onError = function onError(data) {
-            node.error(JSON.stringify(data));
+            node.error(data);
         };
         node.listeners.onWarn = function onWarn(data) {
-            node.warn(JSON.stringify(data));
+            node.warn(data);
         };
         node.listeners.onLog = function onLog(data) {
-            node.log(JSON.stringify(data));
+            node.log(data);
         };
 
         if (_config.active) {
@@ -96,29 +111,37 @@ module.exports = function (RED) {
             node._feed.on('log', node.listeners.onLog);
         }
         node.on('close', function (removed, done) {
-            node.log('Disconnecting from Tibber feed...');
-            node._feed.close();
-            node._setStatus(StatusEnum.disconnected);
-            if (!node._feed)
+            clearTimeout(node._connectionDelay)
+            if (!node._feed) {
+                done();
                 return;
-
-            node.log('Unregistering event handlers...');
-            node._feed.off('data', node.listeners.onDataReceived);
-            node._feed.off('connected', node.listeners.onConnected);
-            node._feed.off('connection_ack', node.listeners.onConnected);
-            node._feed.off('disconnected', node.listeners.onDisconnected);
-            node._feed.off('error', node.listeners.onError);
-            node._feed.off('warn', node.listeners.onWarn);
-            node._feed.off('log', node.listeners.onLog);
-            node._feed = null;
-            node.listeners = null;
-            if (removed) {
-                // This node has been disabled/deleted
-            } else {
-                // This node is being restarted
             }
-            node.log('Done.');
-            done();
+
+            node._feed.refCount--;
+            node.log('Disconnecting from Tibber feed...');
+            node._setStatus(StatusEnum.disconnected);
+
+            setTimeout(() => {
+                node.log('Unregistering event handlers...');
+                node._feed.off('data', node.listeners.onDataReceived);
+                node._feed.off('connected', node.listeners.onConnected);
+                node._feed.off('connection_ack', node.listeners.onConnected);
+                node._feed.off('disconnected', node.listeners.onDisconnected);
+                node._feed.off('error', node.listeners.onError);
+                node._feed.off('warn', node.listeners.onWarn);
+                node._feed.off('log', node.listeners.onLog);
+                node._feed = null;
+                node.listeners = null;
+                if (removed) {
+                    if (node._feed.refCount < 1) {
+                        node._feed.close();
+                    }
+                } else {
+                    // This node is being restarted
+                }
+                node.log('Done.');
+                done();
+            }, 1000);
         });
 
         node._mapAndsend = (msg) => {
@@ -131,8 +154,14 @@ module.exports = function (RED) {
             node.send(returnMsg);
         }
 
-        if (!node._feed.connected) {
-            node._feed.connect();
+        if (!node._feed.connected && node._feed.refCount === 1) {
+            node._setStatus(StatusEnum.waiting);
+            node.log('Preparing to connect to Tibber...');
+            node._connectionDelay = setTimeout(() => {
+                node._setStatus(StatusEnum.connecting);
+                node.log('Connecting to Tibber...');
+                node._feed.connect();
+            }, 1000);
         }
 
     }

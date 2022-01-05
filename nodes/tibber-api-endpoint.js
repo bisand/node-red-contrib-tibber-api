@@ -13,6 +13,7 @@ module.exports = function (RED) {
 
         node.feedUrl = config.feedUrl;
         node.queryUrl = config.queryUrl;
+        node.feedTimeout = config.feedTimeout;
 
         node.on('export', () => {
             alert('EXPORT!');
