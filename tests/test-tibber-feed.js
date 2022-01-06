@@ -11,7 +11,7 @@ describe('TibberFeed', function () {
         server.on('connection', function (socket) {
             socket.on('message', function (msg) {
                 let obj = JSON.parse(msg);
-                if (obj.type == 'connection_init' && obj.payload.token === '1337') {
+                if (obj.type == 'connection_init' && obj.payload === 'token=1337') {
                     obj.type = 'connection_ack';
                     socket.send(JSON.stringify(obj));
                 } else if (obj.type == 'start' && obj.payload.query.startsWith('subscription{liveMeasurement(homeId:"1337"){')) {
@@ -65,7 +65,7 @@ describe('TibberFeed', function () {
             });
             feed.on('connection_ack', function (data) {
                 assert.ok(data);
-                assert.equal(data.payload.token, '1337');
+                assert.equal(data.payload, 'token=1337');
                 feed.close();
                 done();
             });
@@ -205,7 +205,7 @@ describe('TibberFeed', function () {
             let callCount = 0;
             feed.on('connection_ack', function (data) {
                 assert.ok(data);
-                assert.equal(data.payload.token, '1337');
+                assert.equal(data.payload, 'token=1337');
                 feed.heartbeat();
             });
             feed.on('disconnected', function (data) {
