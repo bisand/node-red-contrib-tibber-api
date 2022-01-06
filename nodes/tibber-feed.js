@@ -8,7 +8,6 @@ module.exports = function (RED) {
         const _config = config;
         _config.apiEndpoint = RED.nodes.getNode(_config.apiEndpointRef);
 
-        node._connectionDelay = -1;
         node._lastStatus = StatusEnum.unknown;
         node._setStatus = status => {
             if (status !== node._lastStatus) {
@@ -110,38 +109,36 @@ module.exports = function (RED) {
             node._feed.on('warn', node.listeners.onWarn);
             node._feed.on('log', node.listeners.onLog);
         }
+        
         node.on('close', function (removed, done) {
-            clearTimeout(node._connectionDelay)
             if (!node._feed) {
                 done();
                 return;
             }
 
             node._feed.refCount--;
-            node.log('Disconnecting from Tibber feed...');
-            node._setStatus(StatusEnum.disconnected);
-
-            setTimeout(() => {
-                node.log('Unregistering event handlers...');
-                node._feed.off('data', node.listeners.onDataReceived);
-                node._feed.off('connected', node.listeners.onConnected);
-                node._feed.off('connection_ack', node.listeners.onConnected);
-                node._feed.off('disconnected', node.listeners.onDisconnected);
-                node._feed.off('error', node.listeners.onError);
-                node._feed.off('warn', node.listeners.onWarn);
-                node._feed.off('log', node.listeners.onLog);
-                node._feed = null;
-                node.listeners = null;
-                if (removed) {
-                    if (node._feed && node._feed.refCount < 1) {
-                        node._feed.close();
-                    }
-                } else {
-                    // This node is being restarted
+            if (removed) {
+                node.log('Disconnecting from Tibber feed...');
+                node._setStatus(StatusEnum.disconnected);
+                if (node._feed && node._feed.refCount < 1) {
+                    node._feed.close();
                 }
-                node.log('Done.');
-                done();
-            }, 1000);
+            } else {
+                // This node is being restarted
+            }
+
+            node.log('Unregistering event handlers...');
+            node._feed.off('data', node.listeners.onDataReceived);
+            node._feed.off('connected', node.listeners.onConnected);
+            node._feed.off('connection_ack', node.listeners.onConnected);
+            node._feed.off('disconnected', node.listeners.onDisconnected);
+            node._feed.off('error', node.listeners.onError);
+            node._feed.off('warn', node.listeners.onWarn);
+            node._feed.off('log', node.listeners.onLog);
+            node._feed = null;
+            node.listeners = null;
+            node.log('Done.');
+            done();
         });
 
         node._mapAndsend = (msg) => {
@@ -155,13 +152,9 @@ module.exports = function (RED) {
         }
 
         if (!node._feed.connected && node._feed.refCount === 1) {
-            node._setStatus(StatusEnum.waiting);
-            node.log('Preparing to connect to Tibber...');
-            node._connectionDelay = setTimeout(() => {
-                node._setStatus(StatusEnum.connecting);
-                node.log('Connecting to Tibber...');
-                node._feed.connect();
-            }, 1000);
+            node._setStatus(StatusEnum.connecting);
+            node.log('Connecting to Tibber...');
+            node._feed.connect();
         }
 
     }
