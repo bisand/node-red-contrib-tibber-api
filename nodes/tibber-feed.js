@@ -133,7 +133,7 @@ module.exports = function (RED) {
                 node._feed = null;
                 node.listeners = null;
                 if (removed) {
-                    if (node._feed.refCount < 1) {
+                    if (node._feed && node._feed.refCount < 1) {
                         node._feed.close();
                     }
                 } else {
