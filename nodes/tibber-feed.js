@@ -8,6 +8,7 @@ module.exports = function (RED) {
         const _config = config;
         _config.apiEndpoint = RED.nodes.getNode(_config.apiEndpointRef);
 
+        node._connectionDelay = -1;
         node._lastStatus = StatusEnum.unknown;
         node._setStatus = status => {
             if (status !== node._lastStatus) {
@@ -109,8 +110,9 @@ module.exports = function (RED) {
             node._feed.on('warn', node.listeners.onWarn);
             node._feed.on('log', node.listeners.onLog);
         }
-        
+
         node.on('close', function (removed, done) {
+            clearTimeout(node._connectionDelay)
             if (!node._feed) {
                 done();
                 return;
@@ -118,13 +120,15 @@ module.exports = function (RED) {
 
             node._feed.refCount--;
             if (removed) {
-                node.log('Disconnecting from Tibber feed...');
-                node._setStatus(StatusEnum.disconnected);
-                if (node._feed && node._feed.refCount < 1) {
-                    node._feed.close();
-                }
+                // This node is being removed
             } else {
                 // This node is being restarted
+            }
+
+            node._setStatus(StatusEnum.disconnected);
+            if (node._feed && node._feed.refCount < 1) {
+                node.log('Disconnecting from Tibber feed...');
+                node._feed.close();
             }
 
             node.log('Unregistering event handlers...');
@@ -137,6 +141,7 @@ module.exports = function (RED) {
             node._feed.off('log', node.listeners.onLog);
             node._feed = null;
             node.listeners = null;
+
             node.log('Done.');
             done();
         });
@@ -151,10 +156,14 @@ module.exports = function (RED) {
             node.send(returnMsg);
         }
 
-        if (!node._feed.connected && node._feed.refCount === 1) {
-            node._setStatus(StatusEnum.connecting);
-            node.log('Connecting to Tibber...');
-            node._feed.connect();
+        if (node._feed && !node._feed.connected && node._feed.refCount === 1) {
+            node._setStatus(StatusEnum.waiting);
+            node.log('Preparing to connect to Tibber...');
+            node._connectionDelay = setTimeout(() => {
+                node._setStatus(StatusEnum.connecting);
+                node.log('Connecting to Tibber...');
+                node._feed.connect();
+            }, 1000);
         }
 
     }
