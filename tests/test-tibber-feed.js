@@ -14,13 +14,21 @@ describe('TibberFeed', function () {
                 if (obj.type == 'connection_init' && obj.payload === 'token=1337') {
                     obj.type = 'connection_ack';
                     socket.send(JSON.stringify(obj));
-                } else if (obj.type == 'start' && obj.payload.query.startsWith('subscription{liveMeasurement(homeId:"1337"){')) {
+                } else if (obj.type == 'start'
+                    && obj.payload.query
+                    && obj.payload.query.startsWith('subscription($homeId:ID!){liveMeasurement(homeId:$homeId){')
+                    && obj.payload.variables
+                    && obj.payload.variables.homeId === '1337') {
                     obj = {
                         type: 'data',
                         payload: { data: { liveMeasurement: { value: 1337 } } },
                     };
                     socket.send(JSON.stringify(obj));
-                } else if (obj.type == 'start' && obj.payload.query.startsWith('subscription{liveMeasurement(homeId:"42"){')) {
+                } else if (obj.type == 'start'
+                    && obj.payload.query
+                    && obj.payload.query.startsWith('subscription($homeId:ID!){liveMeasurement(homeId:$homeId){')
+                    && obj.payload.variables
+                    && obj.payload.variables.homeId === '42') {
                     obj = {
                         type: 'data',
                         payload: { data: { liveMeasurement: { value: 42 } } },
