@@ -59,9 +59,6 @@ module.exports = function (RED) {
             TibberFeedNode.instances[key][home] = new TibberFeed(_config, feedTimeout, true);
         }
         node._feed = TibberFeedNode.instances[key][home];
-        if (!node._feed.active) {
-            node._feed.active = true;
-        }
         if (!node._feed.refCount || node._feed.refCount < 1) {
             node._feed.refCount = 1;
         }
@@ -140,7 +137,6 @@ module.exports = function (RED) {
 
             if (node._feed && node._feed.refCount < 1) {
                 node.log('Disconnecting from Tibber feed...');
-                node._feed.active = false;
                 node._feed.close();
             }
             node._feed = null;
@@ -166,7 +162,7 @@ module.exports = function (RED) {
             node._feed.connect();
         };
 
-        if (node._feed && !node._feed.connected && node._feed.refCount === 1) {
+        if (node._feed && node._feed.refCount === 1) {
             node._setStatus(StatusEnum.waiting);
             node.log('Preparing to connect to Tibber...');
             node._connectionDelay = setTimeout(() => {

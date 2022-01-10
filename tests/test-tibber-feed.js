@@ -20,6 +20,7 @@ describe('TibberFeed', function () {
                     && obj.payload.variables
                     && obj.payload.variables.homeId === '1337') {
                     obj = {
+                        id: obj.id,
                         type: 'data',
                         payload: { data: { liveMeasurement: { value: 1337 } } },
                     };
@@ -30,6 +31,7 @@ describe('TibberFeed', function () {
                     && obj.payload.variables
                     && obj.payload.variables.homeId === '42') {
                     obj = {
+                        id: obj.id,
                         type: 'data',
                         payload: { data: { liveMeasurement: { value: 42 } } },
                     };
