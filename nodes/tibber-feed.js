@@ -59,6 +59,9 @@ module.exports = function (RED) {
             TibberFeedNode.instances[key][home] = new TibberFeed(_config, feedTimeout, true);
         }
         node._feed = TibberFeedNode.instances[key][home];
+        if (!node._feed.active) {
+            node._feed.active = true;
+        }
         if (!node._feed.refCount || node._feed.refCount < 1) {
             node._feed.refCount = 1;
         }
@@ -125,12 +128,6 @@ module.exports = function (RED) {
                 // This node is being restarted
             }
 
-            node._setStatus(StatusEnum.disconnected);
-            if (node._feed && node._feed.refCount < 1) {
-                node.log('Disconnecting from Tibber feed...');
-                node._feed.close();
-            }
-
             node.log('Unregistering event handlers...');
             node._feed.off('data', node.listeners.onDataReceived);
             node._feed.off('connected', node.listeners.onConnected);
@@ -139,9 +136,16 @@ module.exports = function (RED) {
             node._feed.off('error', node.listeners.onError);
             node._feed.off('warn', node.listeners.onWarn);
             node._feed.off('log', node.listeners.onLog);
-            node._feed = null;
             node.listeners = null;
 
+            if (node._feed && node._feed.refCount < 1) {
+                node.log('Disconnecting from Tibber feed...');
+                node._feed.active = false;
+                node._feed.close();
+            }
+            node._feed = null;
+
+            node._setStatus(StatusEnum.disconnected);
             node.log('Done.');
             done();
         });
@@ -156,16 +160,19 @@ module.exports = function (RED) {
             node.send(returnMsg);
         }
 
+        node.connect = () => {
+            node._setStatus(StatusEnum.connecting);
+            node.log('Connecting to Tibber...');
+            node._feed.connect();
+        };
+
         if (node._feed && !node._feed.connected && node._feed.refCount === 1) {
             node._setStatus(StatusEnum.waiting);
             node.log('Preparing to connect to Tibber...');
             node._connectionDelay = setTimeout(() => {
-                node._setStatus(StatusEnum.connecting);
-                node.log('Connecting to Tibber...');
-                node._feed.connect();
+                node.connect();
             }, 1000);
         }
-
     }
     TibberFeedNode.instances = {};
 
