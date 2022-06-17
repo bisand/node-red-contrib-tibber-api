@@ -1,6 +1,6 @@
 const TibberQuery = require("tibber-api").TibberQuery;
 
-module.exports = function(RED) {
+module.exports = function (RED) {
   function TibberNotifyNode(config) {
     RED.nodes.createNode(this, config);
     var node = this;
@@ -8,7 +8,7 @@ module.exports = function(RED) {
     node._config = config;
 
     var credentials = RED.nodes.getCredentials(config.apiEndpointRef);
-    if (!config.apiEndpoint.queryUrl || !credentials || !credentials.accessToken ) {
+    if (!config.apiEndpoint.queryUrl || !credentials || !credentials.accessToken) {
       node.error("Missing mandatory parameters (queryUrl and/or accessToken)");
       return;
     }
@@ -17,7 +17,7 @@ module.exports = function(RED) {
     config.apiEndpoint.apiKey = credentials.accessToken;
     node.client = new TibberQuery(config);
 
-    node.on("input", async function(msg) {
+    node.on("input", async function (msg) {
       var title = node._config.notifyTitle
         ? node._config.notifyTitle
         : msg.payload.title;
@@ -42,11 +42,15 @@ module.exports = function(RED) {
         '", screenToOpen: ' +
         screen +
         "}){successful pushedToNumberOfDevices}}";
-      var result = await node.client.query(query);
-      if (result.error) {
-        node.error(JSON.stringify(result));
-      } else {
-        node.log(JSON.stringify(result));
+      try {
+        var result = await node.client.query(query);
+        if (result.error) {
+          node.error(JSON.stringify(result));
+        } else {
+          node.log(JSON.stringify(result));
+        }
+      } catch (error) {
+        node.error(error);
       }
     });
   }

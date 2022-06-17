@@ -17,13 +17,17 @@ module.exports = function (RED) {
         config.apiEndpoint.apiKey = credentials.accessToken;
         node.client = new TibberQuery(config);
 
-        node.on('input', async function(msg) {
+        node.on('input', async function (msg) {
             var message = msg;
-            var payload = await node.client.query(message.payload);
-            message.payload = payload;
-            node.send(message);
+            try {
+                var payload = await node.client.query(message.payload);
+                message.payload = payload;
+                node.send(message);
+            } catch (error) {
+                node.error(error);
+            }
         });
- 
+
     }
 
     RED.nodes.registerType("tibber-query", TibberQueryNode);
