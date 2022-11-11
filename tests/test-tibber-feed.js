@@ -1,7 +1,25 @@
 /* eslint-env mocha */
-const TibberFeed = require('tibber-api').TibberFeed;
+const { TibberQueryBase, TibberFeed } = require('tibber-api');
 const assert = require('assert');
 const WebSocket = require('ws');
+
+class FakeTibberQuery extends TibberQueryBase {
+    /**
+     * Constructor
+     * Create an instace of TibberQuery class
+     * @param config IConfig object
+     * @see IConfig
+     */
+    constructor(config) {
+        super(config);
+    }
+
+    async getWebsocketSubscriptionUrl() {
+        return new URL(this.config.endpoint.url);
+    }
+
+}
+
 
 describe('TibberFeed', function () {
     let server = undefined;
@@ -11,28 +29,28 @@ describe('TibberFeed', function () {
         server.on('connection', function (socket) {
             socket.on('message', function (msg) {
                 let obj = JSON.parse(msg);
-                if (obj.type == 'connection_init' && obj.payload === 'token=1337') {
+                if (obj.type == 'connection_init' && obj.payload.token === '1337') {
                     obj.type = 'connection_ack';
                     socket.send(JSON.stringify(obj));
-                } else if (obj.type == 'start'
+                } else if (obj.type == 'subscribe'
                     && obj.payload.query
                     && obj.payload.query.startsWith('subscription($homeId:ID!){liveMeasurement(homeId:$homeId){')
                     && obj.payload.variables
                     && obj.payload.variables.homeId === '1337') {
                     obj = {
                         id: obj.id,
-                        type: 'data',
+                        type: 'next',
                         payload: { data: { liveMeasurement: { value: 1337 } } },
                     };
                     socket.send(JSON.stringify(obj));
-                } else if (obj.type == 'start'
+                } else if (obj.type == 'subscribe'
                     && obj.payload.query
                     && obj.payload.query.startsWith('subscription($homeId:ID!){liveMeasurement(homeId:$homeId){')
                     && obj.payload.variables
                     && obj.payload.variables.homeId === '42') {
                     obj = {
                         id: obj.id,
-                        type: 'data',
+                        type: 'next',
                         payload: { data: { liveMeasurement: { value: 42 } } },
                     };
                     socket.send(JSON.stringify(obj));
@@ -51,31 +69,33 @@ describe('TibberFeed', function () {
 
     describe('create', function () {
         it('Should be created', function () {
-            let feed = new TibberFeed({
-                apiEndpoint: {
-                    feedUrl: 'ws://localhost:1337',
+            const query = new FakeTibberQuery({
+                endpoint: {
+                    url: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
                 active: true,
             });
+            let feed = new TibberFeed(query);
             assert.ok(feed);
         });
     });
 
     describe('connect', function () {
         it('Should be connected', function (done) {
-            let feed = new TibberFeed({
-                apiEndpoint: {
-                    feedUrl: 'ws://localhost:1337',
+            const query = new FakeTibberQuery({
+                endpoint: {
+                    url: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
                 active: true,
             });
+            const feed = new TibberFeed(query);
             feed.on('connection_ack', function (data) {
                 assert.ok(data);
-                assert.equal(data.payload, 'token=1337');
+                assert.equal(data.payload.token, '1337');
                 feed.close();
                 done();
             });
@@ -85,14 +105,15 @@ describe('TibberFeed', function () {
 
     describe('receive', function () {
         it('Should receive data', function (done) {
-            let feed = new TibberFeed({
-                apiEndpoint: {
-                    feedUrl: 'ws://localhost:1337',
+            const query = new FakeTibberQuery({
+                endpoint: {
+                    url: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
                 active: true,
             });
+            const feed = new TibberFeed(query);
             feed.on('data', function (data) {
                 assert.ok(data);
                 assert.equal(data.value, 1337);
@@ -107,22 +128,24 @@ describe('TibberFeed', function () {
         it('Should receive data from two homes', function (done) {
             this.timeout(5000);
             let done1, done2 = false;
-            let feed1 = new TibberFeed({
-                apiEndpoint: {
-                    feedUrl: 'ws://localhost:1337',
+            const query1 = new FakeTibberQuery({
+                endpoint: {
+                    url: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
                 active: true,
             });
-            let feed2 = new TibberFeed({
-                apiEndpoint: {
-                    feedUrl: 'ws://localhost:1337',
+            const feed1 = new TibberFeed(query1);
+            const query2 = new FakeTibberQuery({
+                endpoint: {
+                    url: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '42',
                 active: true,
             });
+            const feed2 = new TibberFeed(query2);
             feed1.on('data', function (data) {
                 assert.ok(data);
                 assert.equal(data.value, 1337);
@@ -148,21 +171,30 @@ describe('TibberFeed', function () {
 
     describe('active', function () {
         it('Should be active', function () {
-            let feed = new TibberFeed({
-                apiEndpoint: {
-                    feedUrl: 'ws://localhost:1337',
+            const query = new FakeTibberQuery({
+                endpoint: {
+                    url: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
                 active: true,
             });
+            const feed = new TibberFeed(query);
             assert.equal(feed.active, true);
         });
     });
 
     describe('inactive', function () {
         it('Should be inactive', function () {
-            let feed = new TibberFeed({});
+            const query = new FakeTibberQuery({
+                endpoint: {
+                    url: 'ws://localhost:1337',
+                    apiKey: '1337',
+                },
+                homeId: '1337',
+                active: false,
+            });
+            let feed = new TibberFeed(query);
             assert.equal(feed.active, false);
         });
     });
@@ -170,10 +202,10 @@ describe('TibberFeed', function () {
     describe('timeout', function () {
         it('Should timeout after 3 sec', function (done) {
             this.timeout(10000);
-            let feed = new TibberFeed(
+            const query = new FakeTibberQuery(
                 {
-                    apiEndpoint: {
-                        feedUrl: 'ws://localhost:1337',
+                    endpoint: {
+                        url: 'ws://localhost:1337',
                         apiKey: '1337',
                     },
                     homeId: '1337',
@@ -182,6 +214,7 @@ describe('TibberFeed', function () {
                 3000,
             );
             let called = false;
+            const feed = new TibberFeed(query);
             feed.on('connection_ack', function (data) {
                 assert.ok(data);
                 feed.heartbeat();
@@ -200,29 +233,29 @@ describe('TibberFeed', function () {
 
     describe('reconnect', function () {
         it('Should reconnect 5 times after 1 sec. timeout', function (done) {
-            this.timeout(10000);
-            let feed = new TibberFeed(
+            this.timeout(60000);
+            const query = new FakeTibberQuery(
                 {
-                    apiEndpoint: {
-                        feedUrl: 'ws://localhost:1337',
+                    endpoint: {
+                        url: 'ws://localhost:1337',
                         apiKey: '1337',
                     },
                     homeId: '1337',
                     active: true,
                 },
-                1000,
             );
             let callCount = 0;
+            const feed = new TibberFeed(query, 1000);
             feed.on('connection_ack', function (data) {
                 assert.ok(data);
-                assert.equal(data.payload, 'token=1337');
+                assert.equal(data.payload.token, '1337');
                 feed.heartbeat();
             });
             feed.on('disconnected', function (data) {
                 assert.ok(data);
                 if (callCount == 4) {
-                    done();
                     feed.close();
+                    done();
                 }
                 callCount++;
             });
