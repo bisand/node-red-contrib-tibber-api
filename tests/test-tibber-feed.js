@@ -211,10 +211,9 @@ describe('TibberFeed', function () {
                     homeId: '1337',
                     active: true,
                 },
-                3000,
             );
             let called = false;
-            const feed = new TibberFeed(query);
+            const feed = new TibberFeed(query, 3000);
             feed.on('connection_ack', function (data) {
                 assert.ok(data);
                 feed.heartbeat();
@@ -223,6 +222,7 @@ describe('TibberFeed', function () {
                 assert.ok(data);
                 if (!called) {
                     called = true;
+                    feed.active = false;
                     feed.close();
                     done();
                 }
@@ -233,7 +233,7 @@ describe('TibberFeed', function () {
 
     describe('reconnect', function () {
         it('Should reconnect 5 times after 1 sec. timeout', function (done) {
-            this.timeout(60000);
+            this.timeout(10000);
             const query = new FakeTibberQuery(
                 {
                     endpoint: {
@@ -254,6 +254,7 @@ describe('TibberFeed', function () {
             feed.on('disconnected', function (data) {
                 assert.ok(data);
                 if (callCount == 4) {
+                    feed.active = false;
                     feed.close();
                     done();
                 }
