@@ -11,7 +11,6 @@ module.exports = function (RED) {
         delete config.apiKey;
         delete node.apiKey;
 
-        node.feedUrl = config.feedUrl;
         node.queryUrl = config.queryUrl;
         node.feedTimeout = config.feedTimeout;
 

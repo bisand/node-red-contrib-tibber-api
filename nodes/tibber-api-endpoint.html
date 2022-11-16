@@ -13,21 +13,12 @@
       },
     },
     defaults: {
-      feedUrl: {
-        value: "wss://api.tibber.com/v1-beta/gql/subscriptions",
+      queryUrl: {
+        value: "https://api.tibber.com/v1-beta/gql",
         validate: function (value) {
           var queryUrl = $("#node-config-input-queryUrl").val();
           return (
             urlValidator(value ? value : queryUrl) || urlValidator(value)
-          );
-        }
-      },
-      queryUrl: {
-        value: "https://api.tibber.com/v1-beta/gql",
-        validate: function (value) {
-          var feedUrl = $("#node-config-input-feedUrl").val();
-          return (
-            urlValidator(value ? value : feedUrl) || urlValidator(value)
           );
         }
       },
@@ -50,10 +41,6 @@
 </script>
 
 <script type="text/x-red" data-template-name="tibber-api-endpoint">
-  <div class="form-row">
-      <label for="node-config-input-feedUrl"><i class="icon-bookmark"></i> WebSocket url</label>
-      <input type="text" id="node-config-input-feedUrl" placeholder="WebSocket Url">
-  </div>
   <div class="form-row">
       <label for="node-config-input-queryUrl"><i class="icon-bookmark"></i> Query url</label>
       <input type="text" id="node-config-input-queryUrl" placeholder="Query url">
