@@ -15,7 +15,7 @@ class FakeTibberQuery extends TibberQueryBase {
     }
 
     async getWebsocketSubscriptionUrl() {
-        return new URL(this.config.endpoint.url);
+        return new URL(this.config.apiEndpoint.queryUrl);
     }
 
 }
@@ -70,8 +70,8 @@ describe('TibberFeed', function () {
     describe('create', function () {
         it('Should be created', function () {
             const query = new FakeTibberQuery({
-                endpoint: {
-                    url: 'ws://localhost:1337',
+                apiEndpoint: {
+                    queryUrl: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
@@ -85,8 +85,8 @@ describe('TibberFeed', function () {
     describe('connect', function () {
         it('Should be connected', function (done) {
             const query = new FakeTibberQuery({
-                endpoint: {
-                    url: 'ws://localhost:1337',
+                apiEndpoint: {
+                    queryUrl: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
@@ -106,8 +106,8 @@ describe('TibberFeed', function () {
     describe('receive', function () {
         it('Should receive data', function (done) {
             const query = new FakeTibberQuery({
-                endpoint: {
-                    url: 'ws://localhost:1337',
+                apiEndpoint: {
+                    queryUrl: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
@@ -129,8 +129,8 @@ describe('TibberFeed', function () {
             this.timeout(5000);
             let done1, done2 = false;
             const query1 = new FakeTibberQuery({
-                endpoint: {
-                    url: 'ws://localhost:1337',
+                apiEndpoint: {
+                    queryUrl: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
@@ -138,8 +138,8 @@ describe('TibberFeed', function () {
             });
             const feed1 = new TibberFeed(query1);
             const query2 = new FakeTibberQuery({
-                endpoint: {
-                    url: 'ws://localhost:1337',
+                apiEndpoint: {
+                    queryUrl: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '42',
@@ -172,8 +172,8 @@ describe('TibberFeed', function () {
     describe('active', function () {
         it('Should be active', function () {
             const query = new FakeTibberQuery({
-                endpoint: {
-                    url: 'ws://localhost:1337',
+                apiEndpoint: {
+                    queryUrl: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
@@ -187,8 +187,8 @@ describe('TibberFeed', function () {
     describe('inactive', function () {
         it('Should be inactive', function () {
             const query = new FakeTibberQuery({
-                endpoint: {
-                    url: 'ws://localhost:1337',
+                apiEndpoint: {
+                    queryUrl: 'ws://localhost:1337',
                     apiKey: '1337',
                 },
                 homeId: '1337',
@@ -204,8 +204,8 @@ describe('TibberFeed', function () {
             this.timeout(10000);
             const query = new FakeTibberQuery(
                 {
-                    endpoint: {
-                        url: 'ws://localhost:1337',
+                    apiEndpoint: {
+                        queryUrl: 'ws://localhost:1337',
                         apiKey: '1337',
                     },
                     homeId: '1337',
@@ -236,8 +236,8 @@ describe('TibberFeed', function () {
             this.timeout(10000);
             const query = new FakeTibberQuery(
                 {
-                    endpoint: {
-                        url: 'ws://localhost:1337',
+                    apiEndpoint: {
+                        queryUrl: 'ws://localhost:1337',
                         apiKey: '1337',
                     },
                     homeId: '1337',
