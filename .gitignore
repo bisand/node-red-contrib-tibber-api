@@ -66,5 +66,4 @@ typings/
 .flows_*
 flows_*
 .config.*.json
-package-lock.json
 .config.*.json.backup

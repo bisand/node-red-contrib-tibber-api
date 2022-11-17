@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-tibber-api",
-  "version": "2.7.1",
+  "version": "4.0.0-beta.1",
   "description": "Node Red module for integrating with Tibber api",
   "repository": {
     "url": "https://github.com/bisand/node-red-contrib-tibber-api"
@@ -9,12 +9,12 @@
     "url": "https://github.com/bisand/node-red-contrib-tibber-api/issues"
   },
   "dependencies": {
-    "tibber-api": "^4.1.0"
+    "tibber-api": "^5.0.0-beta.7"
   },
   "devDependencies": {
-    "eslint": "^8.17.0",
-    "mocha": "^10.0.0",
-    "node-red": "^2.2.2"
+    "eslint": "^8.27.0",
+    "mocha": "^10.1.0",
+    "node-red": "^3.0.2"
   },
   "directories": {
     "examples": "./examples",

@@ -1,4 +1,5 @@
 const TibberFeed = require('tibber-api').TibberFeed;
+const TibberQuery = require('tibber-api').TibberQuery;
 const StatusEnum = Object.freeze({ 'unknown': -1, 'disconnected': 0, 'waiting': 1, 'connecting': 2, 'connected': 100 });
 
 module.exports = function (RED) {
@@ -38,7 +39,7 @@ module.exports = function (RED) {
         node._setStatus(StatusEnum.disconnected);
 
         const credentials = RED.nodes.getCredentials(_config.apiEndpointRef);
-        if (!_config.apiEndpoint.feedUrl || !credentials || !credentials.accessToken || !_config.homeId) {
+        if (!_config.apiEndpoint.queryUrl || !credentials || !credentials.accessToken || !_config.homeId) {
             node.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
             return;
         }
@@ -56,7 +57,7 @@ module.exports = function (RED) {
             TibberFeedNode.instances[key] = {};
         }
         if (!TibberFeedNode.instances[key][home]) {
-            TibberFeedNode.instances[key][home] = new TibberFeed(_config, feedTimeout, true);
+            TibberFeedNode.instances[key][home] = new TibberFeed(new TibberQuery(_config), feedTimeout, true);
         }
         node._feed = TibberFeedNode.instances[key][home];
         if (!node._feed.refCount || node._feed.refCount < 1) {
