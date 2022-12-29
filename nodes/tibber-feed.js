@@ -5,42 +5,41 @@ const StatusEnum = Object.freeze({ 'unknown': -1, 'disconnected': 0, 'waiting': 
 module.exports = function (RED) {
     function TibberFeedNode(config) {
         RED.nodes.createNode(this, config);
-        const node = this;
         const _config = config;
         _config.apiEndpoint = RED.nodes.getNode(_config.apiEndpointRef);
 
-        node._connectionDelay = -1;
-        node._lastStatus = StatusEnum.unknown;
-        node._setStatus = status => {
-            if (status !== node._lastStatus) {
+        this._connectionDelay = -1;
+        this._lastStatus = StatusEnum.unknown;
+        this._setStatus = status => {
+            if (status !== this._lastStatus) {
                 switch (status) {
                     case StatusEnum.unknown:
-                        node.status({ fill: "grey", shape: "ring", text: "unknown" });
+                        this.status({ fill: "grey", shape: "ring", text: "unknown" });
                         break;
                     case StatusEnum.disconnected:
-                        node.status({ fill: "red", shape: "ring", text: "disconnected" });
+                        this.status({ fill: "red", shape: "ring", text: "disconnected" });
                         break;
                     case StatusEnum.waiting:
-                        node.status({ fill: "yellow", shape: "ring", text: "waiting" });
+                        this.status({ fill: "yellow", shape: "ring", text: "waiting" });
                         break;
                     case StatusEnum.connecting:
-                        node.status({ fill: "green", shape: "ring", text: "connecting" });
+                        this.status({ fill: "green", shape: "ring", text: "connecting" });
                         break;
                     case StatusEnum.connected:
-                        node.status({ fill: "green", shape: "dot", text: "connected" });
+                        this.status({ fill: "green", shape: "dot", text: "connected" });
                         break;
 
                     default:
                         break;
                 }
-                node._lastStatus = status;
+                this._lastStatus = status;
             }
         };
-        node._setStatus(StatusEnum.disconnected);
+        this._setStatus(StatusEnum.disconnected);
 
         const credentials = RED.nodes.getCredentials(_config.apiEndpointRef);
         if (!_config.apiEndpoint.queryUrl || !credentials || !credentials.accessToken || !_config.homeId) {
-            node.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
+            this.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
             return;
         }
 
@@ -59,115 +58,115 @@ module.exports = function (RED) {
         if (!TibberFeedNode.instances[key][home]) {
             TibberFeedNode.instances[key][home] = new TibberFeed(new TibberQuery(_config), feedTimeout, true);
         }
-        node._feed = TibberFeedNode.instances[key][home];
-        if (!node._feed.refCount || node._feed.refCount < 1) {
-            node._feed.refCount = 1;
+        this._feed = TibberFeedNode.instances[key][home];
+        if (!this._feed.refCount || this._feed.refCount < 1) {
+            this._feed.refCount = 1;
         }
         else {
-            node._feed.refCount++;
+            this._feed.refCount++;
         }
 
-        node.listeners = {};
-        node.listeners.onDataReceived = function onDataReceived(data) {
+        this.listeners = {};
+        this.listeners.onDataReceived = (data) => {
             var msg = {
                 payload: data
             };
-            if (_config.active && node._feed.connected) {
-                if (node._lastStatus !== StatusEnum.connected)
-                    node._setStatus(StatusEnum.connected);
-                node._mapAndsend(msg);
-                node._feed.heartbeat();
+            if (_config.active && this._feed.connected) {
+                if (this._lastStatus !== StatusEnum.connected)
+                    this._setStatus(StatusEnum.connected);
+                this._mapAndsend(msg);
+                this._feed.heartbeat();
             } else {
-                node._setStatus(StatusEnum.disconnected);
+                this._setStatus(StatusEnum.disconnected);
             }
         };
-        node.listeners.onConnected = function onConnected(data) {
-            node._setStatus(StatusEnum.connected);
-            node.log(JSON.stringify(data));
-            node._feed.heartbeat();
+        this.listeners.onConnected = (data) => {
+            this._setStatus(StatusEnum.connected);
+            this.log(JSON.stringify(data));
+            this._feed.heartbeat();
         };
-        node.listeners.onDisconnected = function onDisconnected(data) {
-            if (node._lastStatus !== StatusEnum.waiting && node._lastStatus !== StatusEnum.connecting)
-                node._setStatus(StatusEnum.disconnected);
-            node.log(JSON.stringify(data));
-            node._feed.heartbeat();
+        this.listeners.onDisconnected = (data) => {
+            if (this._lastStatus !== StatusEnum.waiting && this._lastStatus !== StatusEnum.connecting)
+                this._setStatus(StatusEnum.disconnected);
+            this.log(JSON.stringify(data));
+            this._feed.heartbeat();
         };
-        node.listeners.onError = function onError(data) {
-            node.error(data);
+        this.listeners.onError = (data) => {
+            this.error(data);
         };
-        node.listeners.onWarn = function onWarn(data) {
-            node.warn(data);
+        this.listeners.onWarn = (data) => {
+            this.warn(data);
         };
-        node.listeners.onLog = function onLog(data) {
-            node.log(data);
+        this.listeners.onLog = (data) => {
+            this.log(data);
         };
 
         if (_config.active) {
-            node._feed.on('data', node.listeners.onDataReceived);
-            node._feed.on('connected', node.listeners.onConnected);
-            node._feed.on('connection_ack', node.listeners.onConnected);
-            node._feed.on('disconnected', node.listeners.onDisconnected);
-            node._feed.on('error', node.listeners.onError);
-            node._feed.on('warn', node.listeners.onWarn);
-            node._feed.on('log', node.listeners.onLog);
+            this._feed.on('data', this.listeners.onDataReceived);
+            this._feed.on('connected', this.listeners.onConnected);
+            this._feed.on('connection_ack', this.listeners.onConnected);
+            this._feed.on('disconnected', this.listeners.onDisconnected);
+            this._feed.on('error', this.listeners.onError);
+            this._feed.on('warn', this.listeners.onWarn);
+            this._feed.on('log', this.listeners.onLog);
         }
 
-        node.on('close', function (removed, done) {
-            clearTimeout(node._connectionDelay)
-            if (!node._feed) {
+        this.on('close', (removed, done) => {
+            clearTimeout(this._connectionDelay)
+            if (!this._feed) {
                 done();
                 return;
             }
 
-            node._feed.refCount--;
+            this._feed.refCount--;
             if (removed) {
                 // This node is being removed
             } else {
                 // This node is being restarted
             }
 
-            node.log('Unregistering event handlers...');
-            node._feed.off('data', node.listeners.onDataReceived);
-            node._feed.off('connected', node.listeners.onConnected);
-            node._feed.off('connection_ack', node.listeners.onConnected);
-            node._feed.off('disconnected', node.listeners.onDisconnected);
-            node._feed.off('error', node.listeners.onError);
-            node._feed.off('warn', node.listeners.onWarn);
-            node._feed.off('log', node.listeners.onLog);
-            node.listeners = null;
+            this.log('Unregistering event handlers...');
+            this._feed.off('data', this.listeners.onDataReceived);
+            this._feed.off('connected', this.listeners.onConnected);
+            this._feed.off('connection_ack', this.listeners.onConnected);
+            this._feed.off('disconnected', this.listeners.onDisconnected);
+            this._feed.off('error', this.listeners.onError);
+            this._feed.off('warn', this.listeners.onWarn);
+            this._feed.off('log', this.listeners.onLog);
+            this.listeners = null;
 
-            if (node._feed && node._feed.refCount < 1) {
-                node.log('Disconnecting from Tibber feed...');
-                node._feed.close();
+            if (this._feed && this._feed.refCount < 1) {
+                this.log('Disconnecting from Tibber feed...');
+                this._feed.close();
             }
-            node._feed = null;
+            this._feed = null;
 
-            node._setStatus(StatusEnum.disconnected);
-            node.log('Done.');
+            this._setStatus(StatusEnum.disconnected);
+            this.log('Done.');
             done();
         });
 
-        node._mapAndsend = (msg) => {
+        this._mapAndsend = (msg) => {
             const returnMsg = { payload: {} };
             if (msg && msg.payload)
                 for (const property in msg.payload) {
                     if (_config[property])
                         returnMsg.payload[property] = msg.payload[property];
                 }
-            node.send(returnMsg);
+            this.send(returnMsg);
         }
 
-        node.connect = () => {
-            node._setStatus(StatusEnum.connecting);
-            node.log('Connecting to Tibber...');
-            node._feed.connect();
+        this.connect = () => {
+            this._setStatus(StatusEnum.connecting);
+            this.log('Connecting to Tibber...');
+            this._feed.connect();
         };
 
-        if (node._feed && node._feed.refCount === 1) {
-            node._setStatus(StatusEnum.waiting);
-            node.log('Preparing to connect to Tibber...');
-            node._connectionDelay = setTimeout(() => {
-                node.connect();
+        if (this._feed && this._feed.refCount === 1) {
+            this._setStatus(StatusEnum.waiting);
+            this.log('Preparing to connect to Tibber...');
+            this._connectionDelay = setTimeout(() => {
+                this.connect();
             }, 1000);
         }
     }

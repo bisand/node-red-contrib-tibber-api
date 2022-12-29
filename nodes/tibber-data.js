@@ -3,27 +3,26 @@ const TibberQuery = require('tibber-api').TibberQuery;
 module.exports = function(RED) {
     function TibberDataNode(config) {
         RED.nodes.createNode(this, config);
-        var node = this;
         config.apiEndpoint = RED.nodes.getNode(config.apiEndpointRef);
 
-        node._config = config;
+        this._config = config;
 
         var credentials = RED.nodes.getCredentials(config.apiEndpointRef);
         if (!config.apiEndpoint.queryUrl || !credentials || !credentials.accessToken) {
-            node.error('Missing mandatory parameters (queryUrl and/or accessToken)');
+            this.error('Missing mandatory parameters (queryUrl and/or accessToken)');
             return;
         }
         
         // Assign access token to api key to meintain compatibility. This will not cause the access token to be exported.
         config.apiEndpoint.apiKey = credentials.accessToken;
-        node.client = new TibberQuery(config);
+        this.client = new TibberQuery(config);
 
-        node.on('input', async function(msg) {
+        this.on('input', async (msg) => {
             var message = msg;
-            var queryName = node._config.queryName ? node._config.queryName : msg.payload.queryName;
-            var homeId = node._config.homeId ? node._config.homeId : msg.payload.homeId;
-            var energyResolution = node._config.energyResolution ? node._config.energyResolution : msg.payload.energyResolution;
-            var lastCount = Number(node._config.lastCount ? node._config.lastCount : msg.payload.lastCount);
+            var queryName = this._config.queryName ? this._config.queryName : msg.payload.queryName;
+            var homeId = this._config.homeId ? this._config.homeId : msg.payload.homeId;
+            var energyResolution = this._config.energyResolution ? this._config.energyResolution : msg.payload.energyResolution;
+            var lastCount = Number(this._config.lastCount ? this._config.lastCount : msg.payload.lastCount);
 
             // Preserve default values.
             energyResolution = energyResolution ? energyResolution : 'HOURLY';
@@ -35,63 +34,63 @@ module.exports = function(RED) {
             switch (queryName) {
                 case 'getHome':
                     try {
-                        payload = await node.client.getHome(homeId);
+                        payload = await this.client.getHome(homeId);
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 case 'getHomeComplete':
                     try {
-                        payload = await node.client.getHomeComplete(homeId);
+                        payload = await this.client.getHomeComplete(homeId);
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 case 'getHomes':
                     try {
-                        payload = await node.client.getHomes();
+                        payload = await this.client.getHomes();
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 case 'getHomesComplete':
                     try {
-                        payload = await node.client.getHomesComplete();
+                        payload = await this.client.getHomesComplete();
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 case 'getCurrentEnergyPrice':
                     try {
-                        payload = await node.client.getCurrentEnergyPrice(homeId);
+                        payload = await this.client.getCurrentEnergyPrice(homeId);
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 case 'getCurrentEnergyPrices':
                     try {
-                        payload = await node.client.getCurrentEnergyPrices();
+                        payload = await this.client.getCurrentEnergyPrices();
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 case 'getTodaysEnergyPrices':
                     try {
-                        payload = await node.client.getTodaysEnergyPrices(homeId);
+                        payload = await this.client.getTodaysEnergyPrices(homeId);
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 case 'getTomorrowsEnergyPrices':
                     try {
-                        payload = await node.client.getTomorrowsEnergyPrices(homeId);
+                        payload = await this.client.getTomorrowsEnergyPrices(homeId);
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 case 'getConsumption':
                     try {
-                        payload = await node.client.getConsumption(energyResolution, lastCount, homeId ? homeId : undefined);
+                        payload = await this.client.getConsumption(energyResolution, lastCount, homeId ? homeId : undefined);
                     } catch (error) {
                         payload = error;
                     }
@@ -102,7 +101,7 @@ module.exports = function(RED) {
             }
             if (payload) {
                 message.payload = payload;
-                node.send(message);
+                this.send(message);
             }
         });
     }

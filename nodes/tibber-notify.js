@@ -3,34 +3,33 @@ const TibberQuery = require("tibber-api").TibberQuery;
 module.exports = function (RED) {
   function TibberNotifyNode(config) {
     RED.nodes.createNode(this, config);
-    var node = this;
     config.apiEndpoint = RED.nodes.getNode(config.apiEndpointRef);
-    node._config = config;
+    this._config = config;
 
     var credentials = RED.nodes.getCredentials(config.apiEndpointRef);
     if (!config.apiEndpoint.queryUrl || !credentials || !credentials.accessToken) {
-      node.error("Missing mandatory parameters (queryUrl and/or accessToken)");
+      this.error("Missing mandatory parameters (queryUrl and/or accessToken)");
       return;
     }
 
     // Assign access token to api key to meintain compatibility. This will not cause the access token to be exported.
     config.apiEndpoint.apiKey = credentials.accessToken;
-    node.client = new TibberQuery(config);
+    this.client = new TibberQuery(config);
 
-    node.on("input", async function (msg) {
-      var title = node._config.notifyTitle
-        ? node._config.notifyTitle
+    this.on("input", async (msg) => {
+      var title = this._config.notifyTitle
+        ? this._config.notifyTitle
         : msg.payload.title;
-      var message = node._config.notifyMessage
-        ? node._config.notifyMessage
+      var message = this._config.notifyMessage
+        ? this._config.notifyMessage
         : msg.payload.message;
-      var screen = node._config.notifyScreen
-        ? node._config.notifyScreen
+      var screen = this._config.notifyScreen
+        ? this._config.notifyScreen
         : msg.payload.screen;
       screen = screen ? screen : "HOME";
 
       if (!title || !message) {
-        node.error("Missing mandatory parameters (title and/or message)");
+        this.error("Missing mandatory parameters (title and/or message)");
         return;
       }
 
@@ -43,14 +42,14 @@ module.exports = function (RED) {
         screen +
         "}){successful pushedToNumberOfDevices}}";
       try {
-        var result = await node.client.query(query);
+        var result = await this.client.query(query);
         if (result.error) {
-          node.error(JSON.stringify(result));
+          this.error(JSON.stringify(result));
         } else {
-          node.log(JSON.stringify(result));
+          this.log(JSON.stringify(result));
         }
       } catch (error) {
-        node.error(error);
+        this.error(error);
       }
     });
   }
