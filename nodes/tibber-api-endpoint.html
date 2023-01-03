@@ -22,8 +22,20 @@
           );
         }
       },
+      feedConnectionTimeout: {
+        value: 30,
+        required: true,
+        validate: RED.validators.number()
+      },
       feedTimeout: {
-        value: '60',
+        value: 60,
+        required: true,
+        validate: RED.validators.number()
+      },
+      queryRequestTimeout: {
+        value: 30,
+        required: true,
+        validate: RED.validators.number()
       },
       name: {
         value: ""
@@ -35,6 +47,14 @@
     oneditprepare: function () {
       if (this.credentials.accessToken) {
         delete this.apiKey;
+      }
+      if (!this.feedConnectionTimeout) {
+        this.feedConnectionTimeout = 30;
+        $("#node-config-input-feedConnectionTimeout").val(this.feedConnectionTimeout);
+      }
+      if (!this.queryRequestTimeout) {
+        this.queryRequestTimeout = 30;
+        $("#node-config-input-queryRequestTimeout").val(this.queryRequestTimeout);
       }
     }
   });
@@ -50,8 +70,16 @@
     <input type="text" id="node-config-input-accessToken" placeholder="Accss Token">
   </div>
   <div class="form-row">
-    <label for="node-config-input-feedTimeout"><i class="icon-tag"></i> Feed Timeout (sec)</label>
+    <label for="node-config-input-feedConnectionTimeout"><i class="icon-tag"></i> Connection Timeout (s)</label>
+    <input type="number" id="node-config-input-feedConnectionTimeout" placeholder="Feed Connection Timeout">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-feedTimeout"><i class="icon-tag"></i> Feed Timeout (s)</label>
     <input type="number" id="node-config-input-feedTimeout" placeholder="Feed Timeout">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-queryRequestTimeout"><i class="icon-tag"></i> Request Timeout (s)</label>
+    <input type="number" id="node-config-input-queryRequestTimeout" placeholder="Query Request Timeout">
   </div>
   <div class="form-row">
     <label for="node-config-input-name"><i class="icon-bookmark"></i> Name</label>

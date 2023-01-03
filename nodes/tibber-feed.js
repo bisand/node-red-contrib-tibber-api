@@ -59,6 +59,7 @@ module.exports = function (RED) {
             TibberFeedNode.instances[key][home] = new TibberFeed(new TibberQuery(_config), feedTimeout, true);
         }
         this._feed = TibberFeedNode.instances[key][home];
+        this._feed.time
         if (!this._feed.refCount || this._feed.refCount < 1) {
             this._feed.refCount = 1;
         }
