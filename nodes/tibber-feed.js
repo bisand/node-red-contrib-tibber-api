@@ -51,6 +51,8 @@ module.exports = function (RED) {
         const key = _config.apiEndpoint.apiKey = credentials.accessToken;
         const home = _config.homeId;
         const feedTimeout = (_config.apiEndpoint.feedTimeout ? _config.apiEndpoint.feedTimeout : 60) * 1000;
+        const feedConnectionTimeout = (_config.apiEndpoint.feedConnectionTimeout ? _config.apiEndpoint.feedConnectionTimeout : 30) * 1000;
+        const queryRequestTimeout = (_config.apiEndpoint.queryRequestTimeout ? _config.apiEndpoint.queryRequestTimeout : 30) * 1000;
 
         if (!TibberFeedNode.instances[key]) {
             TibberFeedNode.instances[key] = {};
@@ -59,7 +61,9 @@ module.exports = function (RED) {
             TibberFeedNode.instances[key][home] = new TibberFeed(new TibberQuery(_config), feedTimeout, true);
         }
         this._feed = TibberFeedNode.instances[key][home];
-        this._feed.time
+        this._feed.feedIdleTimeout = feedTimeout;
+        this._feed.feedConnectionTimeout = feedConnectionTimeout;
+        this._feed.queryRequestTimeout = queryRequestTimeout;
         if (!this._feed.refCount || this._feed.refCount < 1) {
             this._feed.refCount = 1;
         }
@@ -76,7 +80,6 @@ module.exports = function (RED) {
                 if (this._lastStatus !== StatusEnum.connected)
                     this._setStatus(StatusEnum.connected);
                 this._mapAndsend(msg);
-                this._feed.heartbeat();
             } else {
                 this._setStatus(StatusEnum.disconnected);
             }
@@ -84,13 +87,11 @@ module.exports = function (RED) {
         this.listeners.onConnected = (data) => {
             this._setStatus(StatusEnum.connected);
             this.log(JSON.stringify(data));
-            this._feed.heartbeat();
         };
         this.listeners.onDisconnected = (data) => {
             if (this._lastStatus !== StatusEnum.waiting && this._lastStatus !== StatusEnum.connecting)
                 this._setStatus(StatusEnum.disconnected);
             this.log(JSON.stringify(data));
-            this._feed.heartbeat();
         };
         this.listeners.onError = (data) => {
             this.error(data);
