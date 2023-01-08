@@ -90,24 +90,24 @@ module.exports = function (RED) {
         };
         this.listeners.onConnectionTimeout = (data) => {
             this._setStatus(StatusEnum.waiting);
-            this.log(JSON.stringify(data));
+            this.log(`Connection Timeout: ${JSON.stringify(data)}`);
         };
         this.listeners.onConnected = (data) => {
             this._setStatus(StatusEnum.connected);
-            this.log(JSON.stringify(data));
+            this.log(`Connected: ${JSON.stringify(data)}`);
         };
         this.listeners.onHeartbeatTimeout = (data) => {
             this._setStatus(StatusEnum.waiting);
-            this.log(JSON.stringify(data));
+            this.log(`Heartbeat Timeout: ${JSON.stringify(data)}`);
         };
         this.listeners.onHeartbeatReconnect = (data) => {
             this._setStatus(StatusEnum.connecting);
-            this.log(JSON.stringify(data));
+            this.log(`Heartbeat Reconnect: ${JSON.stringify(data)}`);
         };
         this.listeners.onDisconnected = (data) => {
             if (this._lastStatus !== StatusEnum.waiting && this._lastStatus !== StatusEnum.connecting)
                 this._setStatus(StatusEnum.disconnected);
-            this.log(JSON.stringify(data));
+            this.log(`Disconnected: ${JSON.stringify(data)}`);
         };
         this.listeners.onError = (data) => {
             this.error(data);

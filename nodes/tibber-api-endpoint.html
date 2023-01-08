@@ -15,27 +15,43 @@
     defaults: {
       queryUrl: {
         value: "https://api.tibber.com/v1-beta/gql",
-        validate: function (value) {
+        validate: (value) => {
           var queryUrl = $("#node-config-input-queryUrl").val();
-          return (
-            urlValidator(value ? value : queryUrl) || urlValidator(value)
-          );
+          return urlValidator(value ? value : queryUrl) || urlValidator(value);
         }
       },
       feedConnectionTimeout: {
         value: 30,
         required: true,
-        validate: RED.validators.number()
+        validate: (value) => {
+          if (value < 5) {
+            $("#node-config-input-feedConnectionTimeout").val(5);
+            return false;
+          }
+          return RED.validators.number(value);
+        }
       },
       feedTimeout: {
         value: 60,
         required: true,
-        validate: RED.validators.number()
+        validate: (value) => {
+          if (value < 5) {
+            $("#node-config-input-feedTimeout").val(5);
+            return false;
+          }
+          return RED.validators.number(value);
+        }
       },
       queryRequestTimeout: {
         value: 30,
         required: true,
-        validate: RED.validators.number()
+        validate: (value) => {
+          if (value < 5) {
+            $("#node-config-input-queryRequestTimeout").val(5);
+            return false;
+          }
+          return RED.validators.number(value);
+        }
       },
       name: {
         value: ""
