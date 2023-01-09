@@ -18,6 +18,9 @@ class FakeTibberQuery extends TibberQueryBase {
         return new URL(this.config.apiEndpoint.queryUrl);
     }
 
+    async getRealTimeEnabled(homeId) {
+        return homeId !== undefined;
+    }
 }
 
 
@@ -62,6 +65,10 @@ describe('TibberFeed', function () {
 
     after(function () {
         if (server) {
+            for (const client of server.clients) {
+                client.close();
+                console.log('Closed client.');
+            }
             server.close();
             server = null;
         }
@@ -84,6 +91,7 @@ describe('TibberFeed', function () {
 
     describe('connect', function () {
         it('Should be connected', function (done) {
+            this.timeout(5000);
             const query = new FakeTibberQuery({
                 apiEndpoint: {
                     queryUrl: 'ws://localhost:1337',
@@ -105,6 +113,7 @@ describe('TibberFeed', function () {
 
     describe('receive', function () {
         it('Should receive data', function (done) {
+            this.timeout(5000);
             const query = new FakeTibberQuery({
                 apiEndpoint: {
                     queryUrl: 'ws://localhost:1337',
@@ -232,8 +241,8 @@ describe('TibberFeed', function () {
     });
 
     describe('reconnect', function () {
-        it('Should reconnect 5 times after 1 sec. timeout', function (done) {
-            this.timeout(10000);
+        it('Should reconnect 3 times after 5 sec. timeout', function (done) {
+            this.timeout(60000);
             const query = new FakeTibberQuery(
                 {
                     apiEndpoint: {
@@ -249,16 +258,14 @@ describe('TibberFeed', function () {
             feed.on('connection_ack', function (data) {
                 assert.ok(data);
                 assert.equal(data.payload.token, '1337');
-                feed.heartbeat();
             });
             feed.on('disconnected', function (data) {
                 assert.ok(data);
-                if (callCount == 4) {
+                if (++callCount == 3) {
                     feed.active = false;
                     feed.close();
                     done();
                 }
-                callCount++;
             });
             feed.connect();
         });

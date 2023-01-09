@@ -12,6 +12,8 @@ module.exports = function (RED) {
 
         this.queryUrl = config.queryUrl;
         this.feedTimeout = config.feedTimeout;
+        this.feedConnectionTimeout = config.feedConnectionTimeout;
+        this.queryRequestTimeout = config.queryRequestTimeout;
 
         this.on('export', () => {
             alert('EXPORT!');

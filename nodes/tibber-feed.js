@@ -51,6 +51,8 @@ module.exports = function (RED) {
         const key = _config.apiEndpoint.apiKey = credentials.accessToken;
         const home = _config.homeId;
         const feedTimeout = (_config.apiEndpoint.feedTimeout ? _config.apiEndpoint.feedTimeout : 60) * 1000;
+        const feedConnectionTimeout = (_config.apiEndpoint.feedConnectionTimeout ? _config.apiEndpoint.feedConnectionTimeout : 30) * 1000;
+        const queryRequestTimeout = (_config.apiEndpoint.queryRequestTimeout ? _config.apiEndpoint.queryRequestTimeout : 30) * 1000;
 
         if (!TibberFeedNode.instances[key]) {
             TibberFeedNode.instances[key] = {};
@@ -59,7 +61,9 @@ module.exports = function (RED) {
             TibberFeedNode.instances[key][home] = new TibberFeed(new TibberQuery(_config), feedTimeout, true);
         }
         this._feed = TibberFeedNode.instances[key][home];
-        this._feed.time
+        this._feed.feedIdleTimeout = feedTimeout;
+        this._feed.feedConnectionTimeout = feedConnectionTimeout;
+        this._feed.queryRequestTimeout = queryRequestTimeout;
         if (!this._feed.refCount || this._feed.refCount < 1) {
             this._feed.refCount = 1;
         }
@@ -76,21 +80,34 @@ module.exports = function (RED) {
                 if (this._lastStatus !== StatusEnum.connected)
                     this._setStatus(StatusEnum.connected);
                 this._mapAndsend(msg);
-                this._feed.heartbeat();
             } else {
                 this._setStatus(StatusEnum.disconnected);
             }
         };
+        this.listeners.onConnecting = (data) => {
+            this._setStatus(StatusEnum.connecting);
+            this.log(`Connecting: ${JSON.stringify(data)}`);
+        };
+        this.listeners.onConnectionTimeout = (data) => {
+            this._setStatus(StatusEnum.waiting);
+            this.log(`Connection Timeout: ${JSON.stringify(data)}`);
+        };
         this.listeners.onConnected = (data) => {
             this._setStatus(StatusEnum.connected);
-            this.log(JSON.stringify(data));
-            this._feed.heartbeat();
+            this.log(`Connected: ${JSON.stringify(data)}`);
+        };
+        this.listeners.onHeartbeatTimeout = (data) => {
+            this._setStatus(StatusEnum.waiting);
+            this.log(`Heartbeat Timeout: ${JSON.stringify(data)}`);
+        };
+        this.listeners.onHeartbeatReconnect = (data) => {
+            this._setStatus(StatusEnum.connecting);
+            this.log(`Heartbeat Reconnect: ${JSON.stringify(data)}`);
         };
         this.listeners.onDisconnected = (data) => {
             if (this._lastStatus !== StatusEnum.waiting && this._lastStatus !== StatusEnum.connecting)
                 this._setStatus(StatusEnum.disconnected);
-            this.log(JSON.stringify(data));
-            this._feed.heartbeat();
+            this.log(`Disconnected: ${JSON.stringify(data)}`);
         };
         this.listeners.onError = (data) => {
             this.error(data);
@@ -103,10 +120,15 @@ module.exports = function (RED) {
         };
 
         if (_config.active) {
-            this._feed.on('data', this.listeners.onDataReceived);
+            this._feed.on('connecting', this.listeners.onConnecting);
+            this._feed.on('connection_timeout', this.listeners.onConnectionTimeout);
             this._feed.on('connected', this.listeners.onConnected);
             this._feed.on('connection_ack', this.listeners.onConnected);
+            this._feed.on('data', this.listeners.onDataReceived);
+            this._feed.on('heartbeat_timeout', this.listeners.onHeartbeatTimeout);
+            this._feed.on('heartbeat_reconnect', this.listeners.onHeartbeatReconnect);
             this._feed.on('disconnected', this.listeners.onDisconnected);
+
             this._feed.on('error', this.listeners.onError);
             this._feed.on('warn', this.listeners.onWarn);
             this._feed.on('log', this.listeners.onLog);
