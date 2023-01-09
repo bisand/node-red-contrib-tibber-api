@@ -72,7 +72,6 @@ describe('TibberFeed', function () {
             server.close();
             server = null;
         }
-        // console.log(process._getActiveHandles());
     });
 
     describe('create', function () {
