@@ -1,136 +1,244 @@
 [
   {
-    "id": "15652aa.fd5c4d5",
-    "type": "tab",
-    "label": "Tibber Test Flow",
-    "disabled": false,
-    "info": ""
+      "id": "15652aa.fd5c4d5",
+      "type": "tab",
+      "label": "Tibber Test Flow",
+      "disabled": false,
+      "info": ""
   },
   {
-    "id": "3a621e1.6c980e2",
-    "type": "inject",
-    "z": "15652aa.fd5c4d5",
-    "name": "",
-    "topic": "",
-    "payload": "{viewer{homes{id size appNickname appAvatar address{address1 address2 address3 postalCode city country latitude longitude}}}}",
-    "payloadType": "str",
-    "repeat": "",
-    "crontab": "",
-    "once": false,
-    "onceDelay": 0.1,
-    "x": 130,
-    "y": 80,
-    "wires": [["4d90c0d9.a283f"]]
+      "id": "3a621e1.6c980e2",
+      "type": "inject",
+      "z": "15652aa.fd5c4d5",
+      "name": "",
+      "props": [
+          {
+              "p": "payload",
+              "v": "{viewer{homes{id size appNickname appAvatar address{address1 address2 address3 postalCode city country latitude longitude}}}}",
+              "vt": "str"
+          },
+          {
+              "p": "topic",
+              "v": "",
+              "vt": "str"
+          }
+      ],
+      "repeat": "",
+      "crontab": "",
+      "once": false,
+      "onceDelay": 0.1,
+      "topic": "",
+      "payload": "{viewer{homes{id size appNickname appAvatar address{address1 address2 address3 postalCode city country latitude longitude}}}}",
+      "payloadType": "str",
+      "x": 130,
+      "y": 80,
+      "wires": [
+          [
+              "4d90c0d9.a283f"
+          ]
+      ]
   },
   {
-    "id": "d98c9051.ec2cb",
-    "type": "debug",
-    "z": "15652aa.fd5c4d5",
-    "name": "",
-    "active": true,
-    "tosidebar": true,
-    "console": false,
-    "tostatus": false,
-    "complete": "false",
-    "x": 570,
-    "y": 80,
-    "wires": []
+      "id": "d98c9051.ec2cb",
+      "type": "debug",
+      "z": "15652aa.fd5c4d5",
+      "name": "",
+      "active": true,
+      "tosidebar": true,
+      "console": false,
+      "tostatus": false,
+      "complete": "false",
+      "x": 570,
+      "y": 80,
+      "wires": []
   },
   {
-    "id": "1f5b698b.c40ec6",
-    "type": "tibber-feed",
-    "z": "15652aa.fd5c4d5",
-    "name": "",
-    "active": true,
-    "apiEndpointRef": "fe217e47.760b6",
-    "homeId": "c70dcbe5-4485-4821-933d-a8a86452737b",
-    "timestamp": "1",
-    "power": "1",
-    "lastMeterConsumption": "1",
-    "accumulatedConsumption": "1",
-    "accumulatedProduction": "1",
-    "accumulatedCost": "1",
-    "accumulatedReward": "1",
-    "currency": "1",
-    "minPower": "1",
-    "averagePower": "1",
-    "maxPower": "1",
-    "powerProduction": "1",
-    "minPowerProduction": "1",
-    "maxPowerProduction": "1",
-    "lastMeterProduction": "1",
-    "powerFactor": "1",
-    "voltagePhase1": "1",
-    "voltagePhase2": "1",
-    "voltagePhase3": "1",
-    "currentL1": "1",
-    "currentL2": "1",
-    "currentL3": "1",
-    "x": 120,
-    "y": 180,
-    "wires": [["3eb3b3f1.899ecc"]]
+      "id": "1f5b698b.c40ec6",
+      "type": "tibber-feed",
+      "z": "15652aa.fd5c4d5",
+      "name": "",
+      "active": true,
+      "apiEndpointRef": "d4450078.a5f12",
+      "homeId": "96a14971-525a-4420-aae9-e5aedaa129ff",
+      "timestamp": "1",
+      "power": "1",
+      "lastMeterConsumption": "1",
+      "accumulatedConsumption": "1",
+      "accumulatedProduction": "1",
+      "accumulatedConsumptionLastHour": true,
+      "accumulatedProductionLastHour": true,
+      "accumulatedCost": "1",
+      "accumulatedReward": "1",
+      "currency": "1",
+      "minPower": "1",
+      "averagePower": "1",
+      "maxPower": "1",
+      "powerProduction": "1",
+      "minPowerProduction": "1",
+      "maxPowerProduction": "1",
+      "lastMeterProduction": "1",
+      "powerFactor": "1",
+      "voltagePhase1": "1",
+      "voltagePhase2": "1",
+      "voltagePhase3": "1",
+      "currentL1": "1",
+      "currentL2": "1",
+      "currentL3": "1",
+      "signalStrength": true,
+      "x": 120,
+      "y": 180,
+      "wires": [
+          [
+              "3eb3b3f1.899ecc"
+          ]
+      ]
   },
   {
-    "id": "3eb3b3f1.899ecc",
-    "type": "debug",
-    "z": "15652aa.fd5c4d5",
-    "name": "",
-    "active": true,
-    "tosidebar": true,
-    "console": false,
-    "tostatus": false,
-    "complete": "false",
-    "x": 350,
-    "y": 180,
-    "wires": []
+      "id": "3eb3b3f1.899ecc",
+      "type": "debug",
+      "z": "15652aa.fd5c4d5",
+      "name": "",
+      "active": false,
+      "tosidebar": true,
+      "console": false,
+      "tostatus": false,
+      "complete": "false",
+      "x": 350,
+      "y": 180,
+      "wires": []
   },
   {
-    "id": "4d90c0d9.a283f",
-    "type": "tibber-query",
-    "z": "15652aa.fd5c4d5",
-    "name": "",
-    "active": true,
-    "apiEndpointRef": "fe217e47.760b6",
-    "x": 350,
-    "y": 80,
-    "wires": [["d98c9051.ec2cb"]]
+      "id": "4d90c0d9.a283f",
+      "type": "tibber-query",
+      "z": "15652aa.fd5c4d5",
+      "name": "",
+      "active": true,
+      "apiEndpointRef": "d4450078.a5f12",
+      "x": 350,
+      "y": 80,
+      "wires": [
+          [
+              "d98c9051.ec2cb"
+          ]
+      ]
   },
   {
-    "id": "fb875b11.4c9c18",
-    "type": "tibber-notify",
-    "z": "15652aa.fd5c4d5",
-    "name": "",
-    "active": true,
-    "apiEndpointRef": "fe217e47.760b6",
-    "notifyTitle": "",
-    "notifyMessage": "",
-    "notifyScreen": "",
-    "x": 330,
-    "y": 300,
-    "wires": []
+      "id": "fb875b11.4c9c18",
+      "type": "tibber-notify",
+      "z": "15652aa.fd5c4d5",
+      "name": "",
+      "active": true,
+      "apiEndpointRef": "d4450078.a5f12",
+      "notifyTitle": "",
+      "notifyMessage": "",
+      "notifyScreen": "",
+      "x": 330,
+      "y": 300,
+      "wires": []
   },
   {
-    "id": "1f3d8f53.3561c1",
-    "type": "inject",
-    "z": "15652aa.fd5c4d5",
-    "name": "",
-    "topic": "",
-    "payload": "{\"title\":\"Test\",\"message\":\"This is a simple test\",\"screen\":\"HOME\"}",
-    "payloadType": "json",
-    "repeat": "",
-    "crontab": "",
-    "once": false,
-    "onceDelay": 0.1,
-    "x": 120,
-    "y": 300,
-    "wires": [["fb875b11.4c9c18"]]
+      "id": "1f3d8f53.3561c1",
+      "type": "inject",
+      "z": "15652aa.fd5c4d5",
+      "name": "",
+      "props": [
+          {
+              "p": "payload",
+              "v": "{\"title\":\"Test\",\"message\":\"This is a simple test\",\"screen\":\"HOME\"}",
+              "vt": "json"
+          },
+          {
+              "p": "topic",
+              "v": "",
+              "vt": "str"
+          }
+      ],
+      "repeat": "",
+      "crontab": "",
+      "once": false,
+      "onceDelay": 0.1,
+      "topic": "",
+      "payload": "{\"title\":\"Test\",\"message\":\"This is a simple test\",\"screen\":\"HOME\"}",
+      "payloadType": "json",
+      "x": 120,
+      "y": 300,
+      "wires": [
+          [
+              "fb875b11.4c9c18"
+          ]
+      ]
   },
   {
-    "id": "fe217e47.760b6",
-    "type": "tibber-api-endpoint",
-    "z": "",
-    "queryUrl": "https://api.tibber.com/v1-beta/gql",
-    "apiKey": "d1007ead2dc84a2b82f0de19451c5fb22112f7ae11d19bf2bedb224a003ff74a",
-    "name": "Demo"
+      "id": "8ab553e09f0322b7",
+      "type": "tibber-data",
+      "z": "15652aa.fd5c4d5",
+      "name": "GetHome",
+      "active": true,
+      "apiEndpointRef": "d4450078.a5f12",
+      "queryName": "getHome",
+      "homeId": "96a14971-525a-4420-aae9-e5aedaa129ff",
+      "energyResolution": "DAILY",
+      "lastCount": 10,
+      "x": 320,
+      "y": 420,
+      "wires": [
+          [
+              "47dc9e1949e5cbe2"
+          ]
+      ]
+  },
+  {
+      "id": "6dfb2ea9d13e4447",
+      "type": "inject",
+      "z": "15652aa.fd5c4d5",
+      "name": "",
+      "props": [
+          {
+              "p": "payload"
+          },
+          {
+              "p": "topic",
+              "vt": "str"
+          }
+      ],
+      "repeat": "",
+      "crontab": "",
+      "once": false,
+      "onceDelay": 0.1,
+      "topic": "",
+      "payload": "",
+      "payloadType": "date",
+      "x": 120,
+      "y": 420,
+      "wires": [
+          [
+              "8ab553e09f0322b7"
+          ]
+      ]
+  },
+  {
+      "id": "47dc9e1949e5cbe2",
+      "type": "debug",
+      "z": "15652aa.fd5c4d5",
+      "name": "debug 2",
+      "active": true,
+      "tosidebar": true,
+      "console": false,
+      "tostatus": false,
+      "complete": "false",
+      "statusVal": "",
+      "statusType": "auto",
+      "x": 540,
+      "y": 420,
+      "wires": []
+  },
+  {
+      "id": "d4450078.a5f12",
+      "type": "tibber-api-endpoint",
+      "queryUrl": "https://api.tibber.com/v1-beta/gql",
+      "feedConnectionTimeout": "30",
+      "feedTimeout": "60",
+      "queryRequestTimeout": "30",
+      "name": "Demo"
   }
 ]

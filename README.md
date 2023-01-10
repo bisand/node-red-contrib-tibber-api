@@ -82,7 +82,7 @@ Payload example:
 ```json
 {
     "queryName": "getTomorrowsEnergyPrices",
-    "homeId": "c70dcbe5-4485-4821-933d-a8a86452737b",
+    "homeId": "96a14971-525a-4420-aae9-e5aedaa129ff",
     "energyResolution": "DAILY",
     "lastCount": 14
 }
@@ -233,7 +233,7 @@ Read the included [readme](https://github.com/bisand/IoTServer/blob/master/READM
         "active": true,
         "apiUrl": "wss://api.tibber.com/v1-beta/gql/subscriptions",
         "apiToken": "d1007ead2dc84a2b82f0de19451c5fb22112f7ae11d19bf2bedb224a003ff74a",
-        "homeId": "c70dcbe5-4485-4821-933d-a8a86452737b",
+        "homeId": "96a14971-525a-4420-aae9-e5aedaa129ff",
         "timestamp": "1",
         "power": "1",
         "lastMeterConsumption": "1",
@@ -355,7 +355,7 @@ Read the included [readme](https://github.com/bisand/IoTServer/blob/master/READM
     "name": "",
     "active": true,
     "apiEndpointRef": "8a80f84f.0cbd98",
-    "homeId": "c70dcbe5-4485-4821-933d-a8a86452737b",
+    "homeId": "96a14971-525a-4420-aae9-e5aedaa129ff",
     "timestamp": "1",
     "power": "1",
     "lastMeterConsumption": "1",
