@@ -20,9 +20,6 @@
     "examples": "./examples",
     "nodes": "./nodes"
   },
-  "engines": {
-    "node": ">=14.0.0"
-  },
   "scripts": {
     "test": "mocha tests/test*.js",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
@@ -54,5 +51,8 @@
       "tibber-data": "nodes/tibber-data.js",
       "tibber-notify": "nodes/tibber-notify.js"
     }
+  },
+  "engines": {
+    "node": ">=14.21.2"
   }
 }
