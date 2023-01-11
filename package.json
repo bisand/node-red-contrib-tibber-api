@@ -43,7 +43,7 @@
   "author": "André Biseth",
   "license": "MIT",
   "node-red": {
-    "version": ">=2.0.0",
+    "version": ">=1.3.7",
     "nodes": {
       "tibber-api-endpoint": "nodes/tibber-api-endpoint.js",
       "tibber-feed": "nodes/tibber-feed.js",
@@ -53,6 +53,6 @@
     }
   },
   "engines": {
-    "node": ">=14.21.2"
+    "node": ">=14.0.0"
   }
 }
