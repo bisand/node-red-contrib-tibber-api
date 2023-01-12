@@ -1,10 +1,10 @@
 <script type="text/javascript">
   const dateTimeValidator = function (dateTimeString) {
-    var regExp = /^(?<datetime>(?<date>[0-9]{4}[-](?:[0][1-9]|[1][0-2])[-](?:[0][1-9]|[1][0-9]|[2][0-9]|[3][0-1]))(?:[ TZ])(?<time>(?:[0-1][0-9]|[2][0-3])[:](?:[0-5][0-9])[:](?:[0-5][0-9])))/s;
+    var regExp = /^(?<datetime>(?<date>[0-9]{4}[-](?:[0][1-9]|[1][0-2])[-](?:[0][1-9]|[1][0-9]|[2][0-9]|[3][0-1]))(?:[ TZ])(?<time>(?:[0-1][0-9]|[2][0-3])[:](?:[0-5][0-9])[:](?:[0-5][0-9])))$/s;
     return new RegExp(regExp).test(dateTimeString);
   };
 
-  RED.nodes.registerType("tibber-meter-reading", {
+  RED.nodes.registerType("tibber-meter", {
     category: "Tibber API",
     color: "#23B8CC",
     defaults: {
@@ -22,7 +22,7 @@
         value: "",
         validate: (value) => {
           var dateTime = $("#node-input-time").val();
-          return dateTimeValidator(value ? value : dateTime) || dateTimeValidator(value);
+          return !value || dateTimeValidator(value ? value : dateTime) || dateTimeValidator(value);
         }
       },
       reading: {
@@ -32,9 +32,9 @@
     inputs: 1,
     outputs: 0,
     align: "right",
-    icon: "envelope.png",
+    icon: "font-awesome/fa-bolt",
     label: function() {
-      return this.name || "tibber-meter-reading";
+      return this.name || "tibber-meter";
     }
   });
 </script>
@@ -48,7 +48,7 @@
   }
 </style>
 
-<script type="text/x-red" data-template-name="tibber-meter-reading">
+<script type="text/html" data-template-name="tibber-meter">
   <div class="form-row">
       <label for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
       <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
@@ -74,6 +74,13 @@
   </div>
 </script>
 
-<script type="text/x-red" data-help-name="tibber-api">
-  <p>A simple node that enables you to query Tibber API.</p>
+<script type="text/html" data-help-name="tibber-meter">
+  <p>A node to register energy meter readings.</p>
+  <h3>Input</h3>
+      <dl class="message-properties">
+      <dt>payload
+          <span class="property-type">string | buffer</span>
+      </dt>
+  <h3>Details</h3>
+  <p>Some more information about the node.</p>
 </script>

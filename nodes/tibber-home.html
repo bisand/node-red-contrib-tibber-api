@@ -1,0 +1,86 @@
+<script type="text/javascript">
+  const dateTimeValidator = function (dateTimeString) {
+    var regExp = /^(?<datetime>(?<date>[0-9]{4}[-](?:[0][1-9]|[1][0-2])[-](?:[0][1-9]|[1][0-9]|[2][0-9]|[3][0-1]))(?:[ TZ])(?<time>(?:[0-1][0-9]|[2][0-3])[:](?:[0-5][0-9])[:](?:[0-5][0-9])))$/s;
+    return new RegExp(regExp).test(dateTimeString);
+  };
+
+  RED.nodes.registerType("tibber-home", {
+    category: "Tibber API",
+    color: "#23B8CC",
+    defaults: {
+      name: {
+        value: ""
+      },
+      active: {
+        value: true
+      },
+      apiEndpointRef: { value: null, type: "tibber-api-endpoint" },
+      homeId: {
+        value: ""
+      },
+      time: {
+        value: "",
+        validate: (value) => {
+          var dateTime = $("#node-input-time").val();
+          return !value || dateTimeValidator(value ? value : dateTime) || dateTimeValidator(value);
+        }
+      },
+      reading: {
+        value: ""
+      }
+    },
+    inputs: 1,
+    outputs: 0,
+    align: "right",
+    icon: "font-awesome/fa-home",
+    label: function() {
+      return this.name || "tibber-home";
+    }
+  });
+</script>
+<style>
+  .red-ui-editor .form-row {
+    white-space: nowrap;
+  }
+  .red-ui-editor .form-row label {
+    white-space: nowrap;
+    width: 150px;
+  }
+</style>
+
+<script type="text/html" data-template-name="tibber-home">
+  <div class="form-row">
+      <label for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+      <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
+  </div>
+  <div class="form-row">
+      <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+      <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+
+  <hr>
+
+  <div class="form-row">
+    <label for="node-input-homeId"><i class="icon-tag"></i> Home ID</label>
+    <input type="text" id="node-input-homeId" placeholder="{payload.homeId}" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-time"><i class="icon-tag"></i> Date and time</label>
+    <input type="text" id="node-input-time" placeholder="{payload.time}" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-reading"><i class="icon-tag"></i> Meter reading (KW/h)</label>
+    <input type="text" id="node-input-reading" placeholder="{payload.reading}" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="tibber-home">
+  <p>A node to register energy meter readings.</p>
+  <h3>Input</h3>
+      <dl class="message-properties">
+      <dt>payload
+          <span class="property-type">string | buffer</span>
+      </dt>
+  <h3>Details</h3>
+  <p>Some more information about the node.</p>
+</script>

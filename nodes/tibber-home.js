@@ -1,7 +1,7 @@
 const TibberQuery = require("tibber-api").TibberQuery;
 
 module.exports = function (RED) {
-  function TibberMeeterReadingNode(config) {
+  function TibberHomeNode(config) {
     RED.nodes.createNode(this, config);
     config.apiEndpoint = RED.nodes.getNode(config.apiEndpointRef);
     this._config = config;
@@ -19,17 +19,16 @@ module.exports = function (RED) {
     this.on("input", async (msg) => {
       var homeId = this._config.homeId
         ? this._config.homeId
-        : msg.payload.title;
+        : msg.payload.homeId;
       var time = this._config.time
         ? this._config.time
-        : msg.payload.message;
+        : msg.payload.time;
       var reading = this._config.reading
         ? this._config.reading
-        : msg.payload.screen;
-      reading = reading ? reading : "HOME";
+        : msg.payload.reading;
 
-      if (!homeId || !time) {
-        this.error("Missing mandatory parameters (title and/or message)");
+      if (!homeId || !time || !reading) {
+        this.error("Missing mandatory parameters (homeId, time and/or reading)");
         return;
       }
 
@@ -54,5 +53,5 @@ module.exports = function (RED) {
     });
   }
 
-  RED.nodes.registerType("tibber-meter-reading", TibberMeeterReadingNode);
+  RED.nodes.registerType("tibber-meter", TibberHomeNode);
 };
