@@ -61,6 +61,7 @@ module.exports = function (RED) {
             TibberFeedNode.instances[key][home] = new TibberFeed(new TibberQuery(_config), feedTimeout, true);
         }
         this._feed = TibberFeedNode.instances[key][home];
+        this._feed.config = _config;
         this._feed.feedIdleTimeout = feedTimeout;
         this._feed.feedConnectionTimeout = feedConnectionTimeout;
         this._feed.queryRequestTimeout = queryRequestTimeout;
