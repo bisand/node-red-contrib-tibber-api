@@ -1,3 +1,4 @@
+require ('global-agent/bootstrap');
 const TibberFeed = require('tibber-api').TibberFeed;
 const TibberQuery = require('tibber-api').TibberQuery;
 const StatusEnum = Object.freeze({ 'unknown': -1, 'disconnected': 0, 'waiting': 1, 'connecting': 2, 'connected': 100 });
