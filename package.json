@@ -9,6 +9,7 @@
     "url": "https://github.com/bisand/node-red-contrib-tibber-api/issues"
   },
   "dependencies": {
+    "global-agent": "^3.0.0",
     "tibber-api": "^5.1.7"
   },
   "devDependencies": {

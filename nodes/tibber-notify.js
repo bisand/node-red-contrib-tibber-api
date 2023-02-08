@@ -1,3 +1,4 @@
+require ('global-agent/bootstrap');
 const TibberQuery = require("tibber-api").TibberQuery;
 
 module.exports = function (RED) {
