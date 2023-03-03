@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "global-agent": "^3.0.0",
-    "tibber-api": "^5.1.7"
+    "tibber-api": "^5.1.8"
   },
   "devDependencies": {
     "eslint": "^8.31.0",
