@@ -31,27 +31,18 @@
         },
     });
 </script>
-<style>
-    .red-ui-editor .form-row {
-        white-space: nowrap;
-    }
-    .red-ui-editor .form-row label {
-        white-space: nowrap;
-        width: 150px;
-    }
-</style>
 
 <script type="text/x-red" data-template-name="tibber-data">
-    <div class="form-row">
-      <label for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+    <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
       <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
     </div>
-    <div class="form-row">
-      <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+    <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-name"><i class="icon-tag"></i> Name</label>
       <input type="text" id="node-input-name" placeholder="Name">
     </div>
-    <div class="form-row">
-      <label for="node-input-queryName"><i class="fa fa-cogs"></i> Query</label>
+    <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-queryName"><i class="fa fa-cogs"></i> Query</label>
       <select id="node-input-queryName">
         <option value="">{ payload.queryName }</option>
         <option value="getHome">getHome(homeId)</option>
@@ -65,12 +56,12 @@
         <option value="getConsumption">getConsumption(EnergyResolution, lastCount, homeId?)</option>
       </select>
     </div>
-    <div class="form-row">
-      <label for="node-input-homeId"><i class="fa fa-home"></i> Home ID</label>
+    <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-homeId"><i class="fa fa-home"></i> Home ID</label>
       <input type="text" id="node-input-homeId" placeholder="{ payload.homeId }">
     </div>
-    <div class="form-row">
-      <label for="node-input-energyResolution"><i class="fa fa-eye"></i> Energy Resolution</label>
+    <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-energyResolution"><i class="fa fa-eye"></i> Energy Resolution</label>
       <select id="node-input-energyResolution">
         <option value="">{ payload.energyResolution }</option>
         <option value="HOURLY">HOURLY</option>
@@ -80,8 +71,8 @@
         <option value="ANNUAL">ANNUAL</option>
       </select>
     </div>
-    <div class="form-row">
-      <label for="node-input-lastCount"><i class="fa fa-tachometer"></i> Last Count</label>
+    <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-lastCount"><i class="fa fa-tachometer"></i> Last Count</label>
       <input type="number" id="node-input-lastCount" placeholder="{ payload.lastCount }">
     </div>
 </script>
