@@ -1,6 +1,6 @@
 {
 	"name": "Node.js & TypeScript",
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:18",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:20",
 	"features": {
 		"ghcr.io/devcontainers/features/git:1": {},
 		"ghcr.io/devcontainers/features/git-lfs:1": {},
@@ -18,7 +18,8 @@
 		"vscode": {
 			"extensions": [
 				"afractal.node-essentials",
-				"ms-vscode.vs-keybindings"
+				"ms-vscode.vs-keybindings",
+				"github.vscode-github-actions"
 			]
 		}
 	}
