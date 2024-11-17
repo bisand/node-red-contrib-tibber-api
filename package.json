@@ -22,7 +22,7 @@
     "nodes": "./nodes"
   },
   "scripts": {
-    "prepublish": "mkver ./version.js",
+    "prepack": "mkver ./version.js",
     "test": "mocha tests/test*.js",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "eslint -c .eslintrc.json .",

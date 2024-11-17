@@ -5,3 +5,10 @@ _config.yml
 npm-release*
 tests/
 node-red-contrib-tibber-api-*.tgz
+.config.json*
+.flows_*
+flows_*
+.config.*.json
+.config.*.json.backup
+.devcontainer/
+.github/
