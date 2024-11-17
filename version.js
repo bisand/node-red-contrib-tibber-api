@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.version = "6.1.3";
+exports.versionMajor = 6;
+exports.versionMinor = 1;
+exports.versionPatch = 3;
+exports.versionPrerelease = [];
+exports.release = "6.1.3+20241112061420";
+exports.gitSha = "a04c6b09ed4ac11e44ad27bea63f049417802e36";
+exports.gitDate = new Date(1731392060000);

@@ -1,3 +1,5 @@
+const { version } = require('../Version');
+
 module.exports = function (RED) {
     function TibberApiEndpointNode(config) {
         RED.nodes.createNode(this, config);
@@ -14,6 +16,7 @@ module.exports = function (RED) {
         this.feedTimeout = config.feedTimeout;
         this.feedConnectionTimeout = config.feedConnectionTimeout;
         this.queryRequestTimeout = config.queryRequestTimeout;
+        this.userAgent = `bisand/node-red-contrib-tibber-api/${version}`;
 
         this.on('export', () => {
             alert('EXPORT!');
