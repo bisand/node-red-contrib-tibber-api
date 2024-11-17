@@ -12,3 +12,4 @@ flows_*
 .config.*.json.backup
 .devcontainer/
 .github/
+.prettierrc
