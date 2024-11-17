@@ -65,5 +65,9 @@ typings/
 .config.json*
 .flows_*
 flows_*
+.flows.*
+flows.*
 .config.*.json
 .config.*.json.backup
+version.js
+version.mjs
