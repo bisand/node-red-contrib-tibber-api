@@ -1,4 +1,4 @@
-const { version } = require('../Version');
+const { version } = require('./version.js')
 
 module.exports = function (RED) {
     function TibberApiEndpointNode(config) {
