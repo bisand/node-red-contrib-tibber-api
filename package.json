@@ -28,7 +28,9 @@
     "nodes": "./nodes"
   },
   "scripts": {
-    "prepack": "mkver ./nodes/version.js",
+    "prepack": "mkver",
+    "prebuild": "mkver",
+    "build": "tsc",
     "test": "mocha tests/test*.js",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "eslint -c .eslintrc.json .",

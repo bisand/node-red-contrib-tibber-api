@@ -61,6 +61,7 @@ typings/
 .next
 
 # Visual Studio Code dir.
+lib/*
 .vscode/
 .config.json*
 .flows_*
@@ -70,4 +71,5 @@ flows.*
 .config.*.json
 .config.*.json.backup
 version.js
+version.ts
 version.mjs
