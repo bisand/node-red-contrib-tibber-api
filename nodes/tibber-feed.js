@@ -2,6 +2,14 @@ const TibberFeed = require('tibber-api').TibberFeed;
 const TibberQuery = require('tibber-api').TibberQuery;
 const StatusEnum = Object.freeze({ 'unknown': -1, 'disconnected': 0, 'waiting': 1, 'connecting': 2, 'connected': 100 });
 
+// Add this helper to manage node instances per feed
+function getFeedNodeRegistry(feed) {
+    if (!feed._nodeRegistry) {
+        feed._nodeRegistry = new Set();
+    }
+    return feed._nodeRegistry;
+}
+
 module.exports = function (RED) {
     function TibberFeedNode(config) {
         RED.nodes.createNode(this, config);
@@ -47,13 +55,14 @@ module.exports = function (RED) {
             return;
         }
 
-        // Assign access token to api key to meintain compatibility. This will not cause the access token to be exported.
+        // Assign access token to api key to maintain compatibility.
         const key = _config.apiEndpoint.apiKey = credentials.accessToken;
         const home = _config.homeId;
         const feedTimeout = (_config.apiEndpoint.feedTimeout ? _config.apiEndpoint.feedTimeout : 60) * 1000;
         const feedConnectionTimeout = (_config.apiEndpoint.feedConnectionTimeout ? _config.apiEndpoint.feedConnectionTimeout : 30) * 1000;
         const queryRequestTimeout = (_config.apiEndpoint.queryRequestTimeout ? _config.apiEndpoint.queryRequestTimeout : 30) * 1000;
 
+        // Only one TibberFeed per key+home
         if (!TibberFeedNode.instances[key]) {
             TibberFeedNode.instances[key] = {};
         }
@@ -65,106 +74,104 @@ module.exports = function (RED) {
         this._feed.feedIdleTimeout = feedTimeout;
         this._feed.feedConnectionTimeout = feedConnectionTimeout;
         this._feed.queryRequestTimeout = queryRequestTimeout;
-        if (!this._feed.refCount || this._feed.refCount < 1) {
-            this._feed.refCount = 1;
-        }
-        else {
-            this._feed.refCount++;
-        }
 
-        this.listeners = {};
-        this.listeners.onDataReceived = (data) => {
-            var msg = {
-                payload: data
-            };
-            if (_config.active && this._feed.connected) {
-                if (this._lastStatus !== StatusEnum.connected)
-                    this._setStatus(StatusEnum.connected);
-                this._mapAndsend(msg);
-            } else {
-                this._setStatus(StatusEnum.disconnected);
-            }
-        };
-        this.listeners.onConnecting = (data) => {
-            this._setStatus(StatusEnum.connecting);
-            this.log(`Connecting: ${JSON.stringify(data)}`);
-        };
-        this.listeners.onConnectionTimeout = (data) => {
-            this._setStatus(StatusEnum.waiting);
-            this.log(`Connection Timeout: ${JSON.stringify(data)}`);
-        };
-        this.listeners.onConnected = (data) => {
-            this._setStatus(StatusEnum.connected);
-            this.log(`Connected: ${JSON.stringify(data)}`);
-        };
-        this.listeners.onHeartbeatTimeout = (data) => {
-            this._setStatus(StatusEnum.waiting);
-            this.log(`Heartbeat Timeout: ${JSON.stringify(data)}`);
-        };
-        this.listeners.onHeartbeatReconnect = (data) => {
-            this._setStatus(StatusEnum.connecting);
-            this.log(`Heartbeat Reconnect: ${JSON.stringify(data)}`);
-        };
-        this.listeners.onDisconnected = (data) => {
-            if (this._lastStatus !== StatusEnum.waiting && this._lastStatus !== StatusEnum.connecting)
-                this._setStatus(StatusEnum.disconnected);
-            this.log(`Disconnected: ${JSON.stringify(data)}`);
-        };
-        this.listeners.onError = (data) => {
-            this.error(data);
-        };
-        this.listeners.onWarn = (data) => {
-            this.warn(data);
-        };
-        this.listeners.onLog = (data) => {
-            this.log(data);
-        };
+        // Register this node instance in the feed's registry
+        const nodeRegistry = getFeedNodeRegistry(this._feed);
+        nodeRegistry.add(this);
 
-        if (_config.active) {
-            this._feed.on('connecting', this.listeners.onConnecting);
-            this._feed.on('connection_timeout', this.listeners.onConnectionTimeout);
-            this._feed.on('connected', this.listeners.onConnected);
-            this._feed.on('connection_ack', this.listeners.onConnected);
-            this._feed.on('data', this.listeners.onDataReceived);
-            this._feed.on('heartbeat_timeout', this.listeners.onHeartbeatTimeout);
-            this._feed.on('heartbeat_reconnect', this.listeners.onHeartbeatReconnect);
-            this._feed.on('disconnected', this.listeners.onDisconnected);
-
-            this._feed.on('error', this.listeners.onError);
-            this._feed.on('warn', this.listeners.onWarn);
-            this._feed.on('log', this.listeners.onLog);
+        // Only add event listeners once per feed instance
+        if (!this._feed._eventHandlersRegistered) {
+            this._feed.on('connecting', data => {
+                for (const node of getFeedNodeRegistry(this._feed)) {
+                    node._setStatus(StatusEnum.connecting);
+                    node.log(`Connecting: ${JSON.stringify(data)}`);
+                }
+            });
+            this._feed.on('connection_timeout', data => {
+                for (const node of getFeedNodeRegistry(this._feed)) {
+                    node._setStatus(StatusEnum.waiting);
+                    node.log(`Connection Timeout: ${JSON.stringify(data)}`);
+                }
+            });
+            this._feed.on('connected', data => {
+                for (const node of getFeedNodeRegistry(this._feed)) {
+                    node._setStatus(StatusEnum.connected);
+                    node.log(`Connected: ${JSON.stringify(data)}`);
+                }
+            });
+            this._feed.on('connection_ack', data => {
+                for (const node of getFeedNodeRegistry(this._feed)) {
+                    node._setStatus(StatusEnum.connected);
+                    node.log(`Connected: ${JSON.stringify(data)}`);
+                }
+            });
+            this._feed.on('data', data => {
+                for (const node of getFeedNodeRegistry(this._feed)) {
+                    if (node._config.active && node._feed.connected) {
+                        if (node._lastStatus !== StatusEnum.connected)
+                            node._setStatus(StatusEnum.connected);
+                        node._mapAndsend({ payload: data });
+                    } else {
+                        node._setStatus(StatusEnum.disconnected);
+                    }
+                }
+            });
+            this._feed.on('heartbeat_timeout', data => {
+                for (const node of getFeedNodeRegistry(this._feed)) {
+                    node._setStatus(StatusEnum.waiting);
+                    node.log(`Heartbeat Timeout: ${JSON.stringify(data)}`);
+                }
+            });
+            this._feed.on('heartbeat_reconnect', data => {
+                for (const node of getFeedNodeRegistry(this._feed)) {
+                    node._setStatus(StatusEnum.connecting);
+                    node.log(`Heartbeat Reconnect: ${JSON.stringify(data)}`);
+                }
+            });
+            this._feed.on('disconnected', data => {
+                for (const node of getFeedNodeRegistry(this._feed)) {
+                    if (node._lastStatus !== StatusEnum.waiting && node._lastStatus !== StatusEnum.connecting)
+                        node._setStatus(StatusEnum.disconnected);
+                    node.log(`Disconnected: ${JSON.stringify(data)}`);
+                }
+            });
+            this._feed.on('error', data => {
+                for (const node of getFeedNodeRegistry(this._feed)) {
+                    node.error(data);
+                }
+            });
+            this._feed.on('warn', data => {
+                for (const node of getFeedNodeRegistry(this._feed)) {
+                    node.warn(data);
+                }
+            });
+            this._feed.on('log', data => {
+                for (const node of getFeedNodeRegistry(this._feed)) {
+                    node.log(data);
+                }
+            });
+            this._feed._eventHandlersRegistered = true;
         }
 
         this.on('close', (removed, done) => {
-            clearTimeout(this._connectionDelay)
+            clearTimeout(this._connectionDelay);
             if (!this._feed) {
                 done();
                 return;
             }
 
-            this._feed.refCount--;
-            if (removed) {
-                // This node is being removed
-            } else {
-                // This node is being restarted
-            }
+            // Remove this node from the registry
+            nodeRegistry.delete(this);
 
-            this.log('Unregistering event handlers...');
-            this._feed.off('data', this.listeners.onDataReceived);
-            this._feed.off('connected', this.listeners.onConnected);
-            this._feed.off('connection_ack', this.listeners.onConnected);
-            this._feed.off('disconnected', this.listeners.onDisconnected);
-            this._feed.off('error', this.listeners.onError);
-            this._feed.off('warn', this.listeners.onWarn);
-            this._feed.off('log', this.listeners.onLog);
-            this.listeners = null;
-
-            if (this._feed && this._feed.refCount < 1) {
+            // If no more nodes are using this feed, clean up
+            if (nodeRegistry.size === 0) {
                 this.log('Disconnecting from Tibber feed...');
                 this._feed.close();
+                delete this._feed._eventHandlersRegistered;
+                delete this._feed._nodeRegistry;
             }
-            this._feed = null;
 
+            this._feed = null;
             this._setStatus(StatusEnum.disconnected);
             this.log('Done.');
             done();
