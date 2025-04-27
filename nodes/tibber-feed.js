@@ -16,10 +16,13 @@ module.exports = function (RED) {
         const _config = config;
         _config.apiEndpoint = RED.nodes.getNode(_config.apiEndpointRef);
 
+        this.log('TibberFeedNode created');
+
         this._connectionDelay = -1;
         this._lastStatus = StatusEnum.unknown;
         this._setStatus = status => {
             if (status !== this._lastStatus) {
+                this.log(`Status changed: ${this._lastStatus} -> ${status}`);
                 switch (status) {
                     case StatusEnum.unknown:
                         this.status({ fill: "grey", shape: "ring", text: "unknown" });
@@ -36,7 +39,6 @@ module.exports = function (RED) {
                     case StatusEnum.connected:
                         this.status({ fill: "green", shape: "dot", text: "connected" });
                         break;
-
                     default:
                         break;
                 }
@@ -52,6 +54,7 @@ module.exports = function (RED) {
         }
 
         if (!_config.active) {
+            this.log('Node is not active, skipping initialization.');
             return;
         }
 
@@ -67,7 +70,10 @@ module.exports = function (RED) {
             TibberFeedNode.instances[key] = {};
         }
         if (!TibberFeedNode.instances[key][home]) {
+            this.log(`Creating new TibberFeed for key=${key}, home=${home}`);
             TibberFeedNode.instances[key][home] = new TibberFeed(new TibberQuery(_config), feedTimeout, true);
+        } else {
+            this.log(`Reusing existing TibberFeed for key=${key}, home=${home}`);
         }
         this._feed = TibberFeedNode.instances[key][home];
         this._feed.config = _config;
@@ -78,9 +84,11 @@ module.exports = function (RED) {
         // Register this node instance in the feed's registry
         const nodeRegistry = getFeedNodeRegistry(this._feed);
         nodeRegistry.add(this);
+        this.log(`Node registered. Registry size: ${nodeRegistry.size}`);
 
         // Only add event listeners once per feed instance
         if (!this._feed._eventHandlersRegistered) {
+            this.log('Registering event handlers for TibberFeed');
             this._feed.on('connecting', data => {
                 for (const node of getFeedNodeRegistry(this._feed)) {
                     node._setStatus(StatusEnum.connecting);
@@ -153,6 +161,34 @@ module.exports = function (RED) {
             this._feed._eventHandlersRegistered = true;
         }
 
+        this._mapAndsend = (msg) => {
+            const returnMsg = { payload: {} };
+            if (msg && msg.payload)
+                for (const property in msg.payload) {
+                    if (_config[property])
+                        returnMsg.payload[property] = msg.payload[property];
+                }
+            this.log(`Sending message: ${JSON.stringify(returnMsg)}`);
+            this.send(returnMsg);
+        }
+
+        this.connect = () => {
+            this._setStatus(StatusEnum.connecting);
+            this.log('Calling _feed.connect()');
+            this._feed.connect();
+        };
+
+        // Only connect if this is the first node for this feed
+        if (nodeRegistry.size === 1) {
+            this._setStatus(StatusEnum.waiting);
+            this.log('Preparing to connect to Tibber...');
+            this._connectionDelay = setTimeout(() => {
+                this.connect();
+            }, 1000);
+        } else {
+            this.log('Feed already connected or connecting.');
+        }
+
         this.on('close', (removed, done) => {
             clearTimeout(this._connectionDelay);
             if (!this._feed) {
@@ -162,6 +198,7 @@ module.exports = function (RED) {
 
             // Remove this node from the registry
             nodeRegistry.delete(this);
+            this.log(`Node unregistered. Registry size: ${nodeRegistry.size}`);
 
             // If no more nodes are using this feed, clean up
             if (nodeRegistry.size === 0) {
@@ -176,30 +213,6 @@ module.exports = function (RED) {
             this.log('Done.');
             done();
         });
-
-        this._mapAndsend = (msg) => {
-            const returnMsg = { payload: {} };
-            if (msg && msg.payload)
-                for (const property in msg.payload) {
-                    if (_config[property])
-                        returnMsg.payload[property] = msg.payload[property];
-                }
-            this.send(returnMsg);
-        }
-
-        this.connect = () => {
-            this._setStatus(StatusEnum.connecting);
-            this.log('Connecting to Tibber...');
-            this._feed.connect();
-        };
-
-        if (this._feed && this._feed.refCount === 1) {
-            this._setStatus(StatusEnum.waiting);
-            this.log('Preparing to connect to Tibber...');
-            this._connectionDelay = setTimeout(() => {
-                this.connect();
-            }, 1000);
-        }
     }
     TibberFeedNode.instances = {};
 
