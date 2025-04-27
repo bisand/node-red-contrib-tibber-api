@@ -115,11 +115,11 @@ module.exports = function (RED) {
             });
             this._feed.on('data', data => {
                 for (const node of getFeedNodeRegistry(this._feed)) {
-                    if (node._config.active && node._feed.connected) {
+                    if (node && node._config && node._config.active && node._feed && node._feed.connected) {
                         if (node._lastStatus !== StatusEnum.connected)
                             node._setStatus(StatusEnum.connected);
                         node._mapAndsend({ payload: data });
-                    } else {
+                    } else if (node && node._setStatus) {
                         node._setStatus(StatusEnum.disconnected);
                     }
                 }
