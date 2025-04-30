@@ -93,12 +93,29 @@ module.exports = function (RED) {
                 node.log(`Heartbeat Reconnect: ${JSON.stringify(data)}`);
             }
         }
+
+        // Add a property to track the reconnect timer
+        this._reconnectTimer = null;
+
         this._onDisconnected = data => {
             for (const node of getFeedNodeRegistry(this._feed)) {
                 node._setStatus(StatusEnum.disconnected);
                 node.log(`Disconnected: ${JSON.stringify(data)}`);
+
+                // If still active, schedule a reconnect after 5 seconds
+                if (node._config && node._config.active) {
+                    if (node._reconnectTimer) clearTimeout(node._reconnectTimer);
+                    node.log('Scheduling reconnect in 5 seconds...');
+                    node._reconnectTimer = setTimeout(() => {
+                        if (node._config && node._config.active && node._feed && !node._feed.connected) {
+                            node.log('Attempting reconnect...');
+                            node.connect();
+                        }
+                    }, node._config.reconnectDelay || 5000);
+                }
             }
         }
+
         this._onError = data => {
             for (const node of getFeedNodeRegistry(this._feed)) {
                 node.error('TibberFeed error: ' + JSON.stringify(data));
@@ -208,6 +225,7 @@ module.exports = function (RED) {
 
         this.on('close', (removed, done) => {
             clearTimeout(this._connectionDelay);
+            if (this._reconnectTimer) clearTimeout(this._reconnectTimer);
             if (!this._feed) {
                 done();
                 return;

@@ -88,6 +88,9 @@
             signalStrength: {
                 value: '1',
             },
+            reconnectDelay: {
+                value: 5000,
+            },
         },
         inputs: 0,
         outputs: 1,
@@ -104,24 +107,20 @@
           <input type="checkbox" id="node-input-active" value="1">
       </div>
       <div class="form-row" style="white-space: nowrap;">
-          <label style="white-space: nowrap;" for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+          <label style="white-space: nowrap; width: 120px;" for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
           <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
       </div>
-      <!-- <div class="form-row" style="white-space: nowrap;">
-        <label style="white-space: nowrap;" for="node-input-apiUrl"><i class="icon-tag"></i> API Url</label>
-        <input type="text" id="node-input-apiUrl" placeholder="Websocket Url">
-      </div>
       <div class="form-row" style="white-space: nowrap;">
-          <label style="white-space: nowrap;" for="node-input-apiToken"><i class="icon-tag"></i> API key</label>
-          <input type="text" id="node-input-apiToken" placeholder="API key">
-      </div> -->
-      <div class="form-row" style="white-space: nowrap;">
-          <label style="white-space: nowrap;" for="node-input-homeId"><i class="icon-tag"></i> Home id</label>
+          <label style="white-space: nowrap; width: 120px;" for="node-input-homeId"><i class="icon-tag"></i> Home id</label>
           <input type="text" id="node-input-homeId" placeholder="Home id">
       </div>
       <div class="form-row" style="white-space: nowrap;">
-          <label style="white-space: nowrap;" for="node-input-name"><i class="icon-tag"></i> Name</label>
+          <label style="white-space: nowrap; width: 120px;" for="node-input-name"><i class="icon-tag"></i> Name</label>
           <input type="text" id="node-input-name" placeholder="Name">
+      </div>
+      <div class="form-row" style="white-space: nowrap;">
+          <label style="white-space: nowrap; width: 120px;" for="node-input-reconnectDelay"><i class="icon-tag"></i> Reconnect delay</label>
+          <input type="text" id="node-input-reconnectDelay" placeholder="Reconnect delay" style="width: 100px;"><span> ms</span>
       </div>
 
       <hr>
