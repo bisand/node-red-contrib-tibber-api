@@ -12,6 +12,13 @@
             apiEndpointRef: { value: null, type: 'tibber-api-endpoint' },
             homeId: {
                 value: '',
+                required: true,
+                validate: function (v) {
+                    if (v === '') {
+                        return false;
+                    }
+                    return true;
+                },
             },
             timestamp: {
                 value: '1',
@@ -90,6 +97,7 @@
             },
             reconnectDelay: {
                 value: 5000,
+                type: 'number',
             },
         },
         inputs: 0,
@@ -97,6 +105,16 @@
         icon: 'feed.png',
         label: function () {
             return this.name || 'tibber-feed';
+        },
+        // Use function and not arrow function to access the correct context
+        oneditprepare: function () {
+            // Set the default value for the reconnectDelay input field
+            if (!this.reconnectDelay) {
+                $("#node-input-reconnectDelay").val(5000);
+            }
+            $("#node-input-reconnectDelay").typedInput({
+                type:"num",
+            })
         },
     });
 </script>
@@ -120,7 +138,7 @@
       </div>
       <div class="form-row" style="white-space: nowrap;">
           <label style="white-space: nowrap; width: 120px;" for="node-input-reconnectDelay"><i class="icon-tag"></i> Reconnect delay</label>
-          <input type="text" id="node-input-reconnectDelay" placeholder="Reconnect delay" style="width: 100px;"><span> ms</span>
+          <input type="text" id="node-input-reconnectDelay" placeholder="Delay (ms)" style="width: 100px;"><span> ms</span>
       </div>
 
       <hr>

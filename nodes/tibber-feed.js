@@ -14,6 +14,7 @@ module.exports = function (RED) {
         RED.nodes.createNode(this, config);
         const _config = config;
         _config.apiEndpoint = RED.nodes.getNode(_config.apiEndpointRef);
+        _config.reconnectDelay = _config.reconnectDelay || 5000;
         this._config = _config;
 
         this.log('TibberFeedNode created');
