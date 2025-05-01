@@ -159,9 +159,9 @@ module.exports = function (RED) {
             TibberFeedNode.instances[key] = {};
         }
         if (!TibberFeedNode.instances[key][home]) {
-            this.log(`Creating new TibberFeed for key=${key}, home=${home}`);
+            this.debug(`Creating new TibberFeed for key=${key}, home=${home}`);
             TibberFeedNode.instances[key][home] = new TibberFeed(new TibberQuery(_config), feedTimeout, true);
-            this.log('TibberFeed instance created:', TibberFeedNode.instances[key][home]);
+            this.debug('TibberFeed instance created:', TibberFeedNode.instances[key][home]);
         } else {
             this.log(`Reusing existing TibberFeed for key=${key}, home=${home}`);
         }
@@ -174,11 +174,11 @@ module.exports = function (RED) {
         // Register this node instance in the feed's registry
         const nodeRegistry = getFeedNodeRegistry(this._feed);
         nodeRegistry.add(this);
-        this.log(`Node registered. Registry size: ${nodeRegistry.size}`);
+        this.debug(`Node registered. Registry size: ${nodeRegistry.size}`);
 
         // Only add event listeners once per feed instance
         if (!this._feed._eventHandlersRegistered) {
-            this.log('Registering event handlers for TibberFeed');
+            this.debug('Registering event handlers for TibberFeed');
             this._feed.on('connecting', this._onConnecting);
             this._feed.on('connection_timeout', this._onConnectionTimeout);
             this._feed.on('connected', this._onConnected);
@@ -205,10 +205,10 @@ module.exports = function (RED) {
 
         this.connect = () => {
             this._setStatus(StatusEnum.connecting);
-            this.log('Calling _feed.connect()');
+            this.debug('Calling _feed.connect()');
             try {
                 this._feed.connect();
-                this.log('Called _feed.connect() successfully');
+                this.debug('Called _feed.connect() successfully');
             } catch (err) {
                 this.error('Error calling _feed.connect(): ' + err.message);
             }
@@ -246,7 +246,7 @@ module.exports = function (RED) {
             }
 
             if (typeof this._feed.off === 'function' && this._feed._eventHandlersRegistered) {
-                this.log('Unregistering event handlers for TibberFeed');
+                this.debug('Unregistering event handlers for TibberFeed');
                 this._feed.off('connecting', this._onConnecting);
                 this._feed.off('connection_timeout', this._onConnectionTimeout);
                 this._feed.off('connected', this._onConnected);
