@@ -103,10 +103,11 @@ module.exports = function (RED) {
                 node._setStatus(StatusEnum.disconnected);
                 node.log(`Disconnected: ${JSON.stringify(data)}`);
 
-                // If still active, schedule a reconnect after 5 seconds
+                // If still active, schedule a reconnect after x number of seconds
+                const seconds = (node._config.reconnectDelay || 5) / 1000;
                 if (node._config && node._config.active) {
                     if (node._reconnectTimer) clearTimeout(node._reconnectTimer);
-                    node.log('Scheduling reconnect in 5 seconds...');
+                    node.log(`Scheduling reconnect in ${seconds} seconds...`);
                     node._reconnectTimer = setTimeout(() => {
                         if (node._config && node._config.active && node._feed && !node._feed.connected) {
                             node.log('Attempting reconnect...');
