@@ -4,6 +4,7 @@
 	"features": {
 		"ghcr.io/devcontainers/features/git:1": {},
 		"ghcr.io/devcontainers/features/git-lfs:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {},
 		"ghcr.io/stuartleeks/dev-container-features/shell-history:0": {},
 		"ghcr.io/devcontainers/features/docker-in-docker": {}
 	},
@@ -17,12 +18,20 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"afractal.node-essentials",
+				"github.vscode-pull-request-github",
 				"ms-vscode.vs-keybindings",
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
+				"Orta.vscode-jest",
+				"Gruntfuggly.todo-tree",
 				"github.vscode-github-actions"
 			]
 		}
-	}
+	},
+	"mounts": [
+		"type=bind,source=/home/${localEnv:USER}/.ssh,target=/home/node/.ssh",
+		"type=bind,source=/home/${localEnv:USER}/.zshrc,target=/home/node/.zshrc"
+	],
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }

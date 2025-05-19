@@ -15,6 +15,13 @@
             },
             homeId: {
                 value: '',
+                required: true,
+                validate: function (v) {
+                    if (v === '') {
+                        return false;
+                    }
+                    return true;
+                },
             },
             energyResolution: {
                 value: 'DAILY',
