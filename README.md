@@ -2,9 +2,9 @@
 
 Node Red module for integrating with Tibber Pulse through Tibber api.
 
-| Status |  | NPM | DeepScan |
-|--------|--|-----|----------|
-| [![GitHub Actions](https://github.com/bisand/node-red-contrib-tibber-api/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/bisand/node-red-contrib-tibber-api/actions/workflows/node.js.yml) | [![GitHub Actions](https://github.com/bisand/node-red-contrib-tibber-api/actions/workflows/npm-publish.yml/badge.svg?event=release)](https://github.com/bisand/node-red-contrib-tibber-api/actions/workflows/npm-publish.yml?event=release) | [![npm version](https://img.shields.io/npm/v/node-red-contrib-tibber-api.svg)](https://www.npmjs.com/package/node-red-contrib-tibber-api) | [![DeepScan grade](https://deepscan.io/api/teams/16513/projects/19830/branches/520473/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=16513&pid=19830&bid=520473) |
+| Status | NPM | DeepScan |
+|--------|-----|----------|
+| [![GitHub Actions](https://github.com/bisand/node-red-contrib-tibber-api/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/bisand/node-red-contrib-tibber-api/actions/workflows/node.js.yml) [![GitHub Actions](https://github.com/bisand/node-red-contrib-tibber-api/actions/workflows/npm-publish.yml/badge.svg?event=release)](https://github.com/bisand/node-red-contrib-tibber-api/actions/workflows/npm-publish.yml?event=release) | [![npm version](https://img.shields.io/npm/v/node-red-contrib-tibber-api.svg)](https://www.npmjs.com/package/node-red-contrib-tibber-api) | [![DeepScan grade](https://deepscan.io/api/teams/16513/projects/19830/branches/520473/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=16513&pid=19830&bid=520473) |
 
 ## General
 
