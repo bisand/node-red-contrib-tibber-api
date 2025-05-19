@@ -2,11 +2,10 @@
 
 Node Red module for integrating with Tibber Pulse through Tibber api.
 
-|  Branch  | Status           |
-|----------|------------------|
-| develop  | [![Build Status](https://app.travis-ci.com/bisand/node-red-contrib-tibber-api.svg?branch=develop)](https://app.travis-ci.com/bisand/node-red-contrib-tibber-api) |
-| master | [![Build Status](https://app.travis-ci.com/bisand/node-red-contrib-tibber-api.svg?branch=master)](https://app.travis-ci.com/bisand/node-red-contrib-tibber-api) |
- 
+| Status |  | NPM | DeepScan |
+|--------|--|-----|----------|
+| [![GitHub Actions](https://github.com/bisand/node-red-contrib-tibber-api/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/bisand/node-red-contrib-tibber-api/actions/workflows/node.js.yml) | [![GitHub Actions](https://github.com/bisand/node-red-contrib-tibber-api/actions/workflows/npm-publish.yml/badge.svg?event=release)](https://github.com/bisand/node-red-contrib-tibber-api/actions/workflows/npm-publish.yml?event=release) | [![npm version](https://img.shields.io/npm/v/node-red-contrib-tibber-api.svg)](https://www.npmjs.com/package/node-red-contrib-tibber-api) | [![DeepScan grade](https://deepscan.io/api/teams/16513/projects/19830/branches/520473/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=16513&pid=19830&bid=520473) |
+
 ## General
 
 This Node-Red module is used for communication with [Tibber API](https://developer.tibber.com/) through [GraphQL](https://developer.tibber.com/docs/overview) queries and for retrieving data from Tibber Pulse via websocket.
