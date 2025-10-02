@@ -76,14 +76,14 @@ module.exports = function(RED) {
                     break;
                 case 'getTodaysEnergyPrices':
                     try {
-                        payload = await this.client.getTodaysEnergyPrices(homeId);
+                        payload = await this.client.getTodaysEnergyPrices(homeId, energyResolution);
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 case 'getTomorrowsEnergyPrices':
                     try {
-                        payload = await this.client.getTomorrowsEnergyPrices(homeId);
+                        payload = await this.client.getTomorrowsEnergyPrices(homeId, energyResolution);
                     } catch (error) {
                         payload = error;
                     }
