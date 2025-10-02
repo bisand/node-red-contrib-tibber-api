@@ -9,13 +9,13 @@
     "url": "https://github.com/bisand/node-red-contrib-tibber-api/issues"
   },
   "dependencies": {
-    "tibber-api": "^5.4.2"
+    "tibber-api": "^5.5.2"
   },
   "devDependencies": {
-    "eslint": "^9.27.0",
-    "mkver": "^3.0.2",
-    "mocha": "^11.3.0",
-    "node-red": "^4.0.9"
+    "eslint": "^9.36.0",
+    "mkver": "^4.3.0",
+    "mocha": "^11.7.4",
+    "node-red": "^4.1.0"
   },
   "directories": {
     "examples": "./examples",
