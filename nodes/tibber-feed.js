@@ -137,63 +137,6 @@ module.exports = function (RED) {
 
         this._setStatus(StatusEnum.disconnected);
 
-        const credentials = RED.nodes.getCredentials(_config.apiEndpointRef);
-        if (!_config.apiEndpoint?.queryUrl || !credentials || !credentials.accessToken || !_config.homeId) {
-            this.error('Missing mandatory parameters. Execution will halt. Please reconfigure and publish again.');
-            return;
-        }
-
-        if (!_config.active) {
-            this.log('Node is not active, skipping initialization.');
-            return;
-        }
-
-        // Assign access token to api key to maintain compatibility.
-        const key = _config.apiEndpoint.apiKey = credentials.accessToken;
-        const home = _config.homeId;
-        const feedTimeout = (_config.apiEndpoint.feedTimeout ? _config.apiEndpoint.feedTimeout : 60) * 1000;
-        const feedConnectionTimeout = (_config.apiEndpoint.feedConnectionTimeout ? _config.apiEndpoint.feedConnectionTimeout : 30) * 1000;
-        const queryRequestTimeout = (_config.apiEndpoint.queryRequestTimeout ? _config.apiEndpoint.queryRequestTimeout : 30) * 1000;
-
-        // Only one TibberFeed per key+home
-        if (!TibberFeedNode.instances[key]) {
-            TibberFeedNode.instances[key] = {};
-        }
-        if (!TibberFeedNode.instances[key][home]) {
-            this.debug(`Creating new TibberFeed for key=${key}, home=${home}`);
-            TibberFeedNode.instances[key][home] = new TibberFeed(new TibberQuery(_config), feedTimeout, true);
-            this.debug('TibberFeed instance created:', TibberFeedNode.instances[key][home]);
-        } else {
-            this.log(`Reusing existing TibberFeed for key=${key}, home=${home}`);
-        }
-        this._feed = TibberFeedNode.instances[key][home];
-        this._feed.config = _config;
-        this._feed.feedIdleTimeout = feedTimeout;
-        this._feed.feedConnectionTimeout = feedConnectionTimeout;
-        this._feed.queryRequestTimeout = queryRequestTimeout;
-
-        // Register this node instance in the feed's registry
-        const nodeRegistry = getFeedNodeRegistry(this._feed);
-        nodeRegistry.add(this);
-        this.debug(`Node registered. Registry size: ${nodeRegistry.size}`);
-
-        // Only add event listeners once per feed instance
-        if (!this._feed._eventHandlersRegistered) {
-            this.debug('Registering event handlers for TibberFeed');
-            this._feed.on('connecting', this._onConnecting);
-            this._feed.on('connection_timeout', this._onConnectionTimeout);
-            this._feed.on('connected', this._onConnected);
-            this._feed.on('connection_ack', this._onConnectionAck);
-            this._feed.on('data', this._onData);
-            this._feed.on('heartbeat_timeout', this._onHeartbeatTimeout);
-            this._feed.on('heartbeat_reconnect', this._onHeartbeatReconnect);
-            this._feed.on('disconnected', this._onDisconnected);
-            this._feed.on('error', this._onError);
-            this._feed.on('warn', this._onWarn);
-            this._feed.on('log', this._onLog);
-            this._feed._eventHandlersRegistered = true;
-        }
-
         this._mapAndsend = (msg) => {
             const returnMsg = { payload: {} };
             if (msg && msg.payload)
@@ -215,24 +158,82 @@ module.exports = function (RED) {
             }
         };
 
-        // Only connect if this is the first node for this feed
-        if (nodeRegistry.size === 1) {
-            this._setStatus(StatusEnum.waiting);
-            this.log('Preparing to connect to Tibber...');
-            this._connectionDelay = setTimeout(() => {
-                this.connect();
-            }, 1000);
-        } else {
-            this.log('Feed already connected or connecting.');
-        }
+        // Set up (or reuse) the shared TibberFeed for the given access token and home id,
+        // and register this node with it. Used both at deploy time and when new
+        // credentials are injected through an incoming message.
+        this._setupFeed = (accessToken, homeId) => {
+            // Assign access token to api key to maintain compatibility.
+            const key = _config.apiEndpoint.apiKey = accessToken;
+            const home = _config.homeId = homeId;
+            this._accessToken = accessToken;
+            this._homeId = homeId;
+            const feedTimeout = (_config.apiEndpoint.feedTimeout ? _config.apiEndpoint.feedTimeout : 60) * 1000;
+            const feedConnectionTimeout = (_config.apiEndpoint.feedConnectionTimeout ? _config.apiEndpoint.feedConnectionTimeout : 30) * 1000;
+            const queryRequestTimeout = (_config.apiEndpoint.queryRequestTimeout ? _config.apiEndpoint.queryRequestTimeout : 30) * 1000;
 
-        this.on('close', (removed, done) => {
+            // Only one TibberFeed per key+home
+            if (!TibberFeedNode.instances[key]) {
+                TibberFeedNode.instances[key] = {};
+            }
+            if (!TibberFeedNode.instances[key][home]) {
+                this.debug(`Creating new TibberFeed for key=${key}, home=${home}`);
+                TibberFeedNode.instances[key][home] = new TibberFeed(new TibberQuery(_config), feedTimeout, true);
+                this.debug('TibberFeed instance created:', TibberFeedNode.instances[key][home]);
+            } else {
+                this.log(`Reusing existing TibberFeed for key=${key}, home=${home}`);
+            }
+            this._feed = TibberFeedNode.instances[key][home];
+            this._feed.config = _config;
+            this._feed.feedIdleTimeout = feedTimeout;
+            this._feed.feedConnectionTimeout = feedConnectionTimeout;
+            this._feed.queryRequestTimeout = queryRequestTimeout;
+
+            // Register this node instance in the feed's registry
+            const nodeRegistry = getFeedNodeRegistry(this._feed);
+            nodeRegistry.add(this);
+            this.debug(`Node registered. Registry size: ${nodeRegistry.size}`);
+
+            // Only add event listeners once per feed instance. Keep a reference to the
+            // registered handlers on the feed so any node can unregister them later.
+            if (!this._feed._eventHandlersRegistered) {
+                this.debug('Registering event handlers for TibberFeed');
+                this._feed._registeredHandlers = {
+                    connecting: this._onConnecting,
+                    connection_timeout: this._onConnectionTimeout,
+                    connected: this._onConnected,
+                    connection_ack: this._onConnectionAck,
+                    data: this._onData,
+                    heartbeat_timeout: this._onHeartbeatTimeout,
+                    heartbeat_reconnect: this._onHeartbeatReconnect,
+                    disconnected: this._onDisconnected,
+                    error: this._onError,
+                    warn: this._onWarn,
+                    log: this._onLog,
+                };
+                for (const eventName in this._feed._registeredHandlers) {
+                    this._feed.on(eventName, this._feed._registeredHandlers[eventName]);
+                }
+                this._feed._eventHandlersRegistered = true;
+            }
+
+            // Only connect if this is the first node for this feed
+            if (nodeRegistry.size === 1) {
+                this._setStatus(StatusEnum.waiting);
+                this.log('Preparing to connect to Tibber...');
+                this._connectionDelay = setTimeout(() => {
+                    this.connect();
+                }, 1000);
+            } else {
+                this.log('Feed already connected or connecting.');
+            }
+        };
+
+        // Unregister this node from its current feed and close the feed
+        // if no other nodes are using it.
+        this._teardownFeed = () => {
             clearTimeout(this._connectionDelay);
             if (this._reconnectTimer) clearTimeout(this._reconnectTimer);
-            if (!this._feed) {
-                done();
-                return;
-            }
+            if (!this._feed) return;
 
             // Remove this node from the registry
             const nodeRegistry = getFeedNodeRegistry(this._feed);
@@ -244,28 +245,82 @@ module.exports = function (RED) {
                 this.log('Disconnecting from Tibber feed...');
                 this._feed.close();
                 nodeRegistry.clear();
+
+                if (typeof this._feed.off === 'function' && this._feed._eventHandlersRegistered && this._feed._registeredHandlers) {
+                    this.debug('Unregistering event handlers for TibberFeed');
+                    for (const eventName in this._feed._registeredHandlers) {
+                        this._feed.off(eventName, this._feed._registeredHandlers[eventName]);
+                    }
+                    this._feed._registeredHandlers = null;
+                }
+                this._feed._eventHandlersRegistered = false;
             }
 
-            if (typeof this._feed.off === 'function' && this._feed._eventHandlersRegistered) {
-                this.debug('Unregistering event handlers for TibberFeed');
-                this._feed.off('connecting', this._onConnecting);
-                this._feed.off('connection_timeout', this._onConnectionTimeout);
-                this._feed.off('connected', this._onConnected);
-                this._feed.off('connection_ack', this._onConnectionAck);
-                this._feed.off('data', this._onData);
-                this._feed.off('heartbeat_timeout', this._onHeartbeatTimeout);
-                this._feed.off('heartbeat_reconnect', this._onHeartbeatReconnect);
-                this._feed.off('disconnected', this._onDisconnected);
-                this._feed.off('error', this._onError);
-                this._feed.off('warn', this._onWarn);
-                this._feed.off('log', this._onLog);
-            }
-            this._feed._eventHandlersRegistered = false;
-
+            this._feed = null;
             this._setStatus(StatusEnum.disconnected);
+        };
+
+        // Accept a new access token and/or home id from an incoming message and
+        // reconnect the feed with the new values. This makes it possible to control
+        // the feed without reconfiguring the node (e.g. from a dashboard).
+        this.on('input', (msg, send, done) => {
+            done = done || ((err) => { if (err) this.error(err, msg); });
+            const payload = msg && msg.payload && typeof msg.payload === 'object' ? msg.payload : {};
+            const accessToken = payload.accessToken || this._accessToken;
+            const homeId = payload.homeId || this._homeId;
+
+            if (!payload.accessToken && !payload.homeId) {
+                done('Nothing to do. Send msg.payload.accessToken and/or msg.payload.homeId to (re)configure the feed.');
+                return;
+            }
+            if (!accessToken || !homeId) {
+                done('Missing mandatory parameters (accessToken and/or homeId).');
+                return;
+            }
+            if (!_config.apiEndpoint?.queryUrl) {
+                done('Missing API endpoint configuration (queryUrl).');
+                return;
+            }
+            if (accessToken === this._accessToken && homeId === this._homeId && this._feed) {
+                this.log('Access token and home id unchanged. Skipping reconnect.');
+                done();
+                return;
+            }
+
+            this.log('New credentials received. Reconnecting feed...');
+            this._teardownFeed();
+            if (_config.active) {
+                this._setupFeed(accessToken, homeId);
+            } else {
+                this.log('Node is not active, skipping initialization.');
+            }
+            done();
+        });
+
+        this.on('close', (removed, done) => {
+            if (!this._feed) {
+                clearTimeout(this._connectionDelay);
+                if (this._reconnectTimer) clearTimeout(this._reconnectTimer);
+                done();
+                return;
+            }
+            this._teardownFeed();
             this.log('Done.');
             done();
         });
+
+        const credentials = RED.nodes.getCredentials(_config.apiEndpointRef);
+        if (!_config.apiEndpoint?.queryUrl || !credentials || !credentials.accessToken || !_config.homeId) {
+            this.warn('Missing mandatory parameters (accessToken and/or homeId). Waiting for them to be injected through an incoming message (msg.payload.accessToken / msg.payload.homeId).');
+            return;
+        }
+
+        if (!_config.active) {
+            this.log('Node is not active, skipping initialization.');
+            return;
+        }
+
+        this._setupFeed(credentials.accessToken, _config.homeId);
     }
     TibberFeedNode.instances = {};
 

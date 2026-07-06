@@ -1,0 +1,62 @@
+<script type="text/javascript">
+  RED.nodes.registerType("tibber-update-home", {
+    category: "Tibber API",
+    color: "#23B8CC",
+    defaults: {
+      name: {
+        value: ""
+      },
+      active: {
+        value: true
+      },
+      apiEndpointRef: { value: null, type: "tibber-api-endpoint" },
+      homeId: {
+        value: ""
+      }
+    },
+    inputs: 1,
+    outputs: 1,
+    align: "right",
+    icon: "white-globe.png",
+    label: function() {
+      return this.name || "tibber-update-home";
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="tibber-update-home">
+  <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space:nowrap;width:150px;" for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+      <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
+  </div>
+  <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space:nowrap;width:150px;" for="node-input-name"><i class="icon-tag"></i> Name</label>
+      <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+
+  <hr>
+
+  <div class="form-row" style="white-space: nowrap;">
+    <label style="white-space:nowrap;width:150px;" for="node-input-homeId"><i class="fa fa-home"></i> Home ID</label>
+    <input type="text" id="node-input-homeId" placeholder="{payload.homeId}" />
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="tibber-update-home">
+  <p>Updates home information via the Tibber API <code>updateHome</code> mutation and outputs the updated home.</p>
+  <h3>Input</h3>
+  <p>The incoming <code>msg.payload</code> may contain the following properties. <code>homeId</code> is required unless set in the node configuration. All other properties are optional and only included in the mutation when present.</p>
+  <ul>
+    <li><code>homeId</code> — Tibber home ID</li>
+    <li><code>appNickname</code> — nickname shown in the Tibber app</li>
+    <li><code>appAvatar</code> — one of <code>APARTMENT</code>, <code>ROWHOUSE</code>, <code>FLOORHOUSE1</code>, <code>FLOORHOUSE2</code>, <code>FLOORHOUSE3</code>, <code>COTTAGE</code>, <code>CASTLE</code></li>
+    <li><code>size</code> — size in square meters</li>
+    <li><code>type</code> — one of <code>APARTMENT</code>, <code>ROWHOUSE</code>, <code>HOUSE</code>, <code>COTTAGE</code></li>
+    <li><code>numberOfResidents</code> — number of people living in the home</li>
+    <li><code>primaryHeatingSource</code> — one of <code>AIR2AIR_HEATPUMP</code>, <code>ELECTRICITY</code>, <code>GROUND</code>, <code>DISTRICT_HEATING</code>, <code>ELECTRIC_BOILER</code>, <code>AIR2WATER_HEATPUMP</code>, <code>OTHER</code></li>
+    <li><code>hasVentilationSystem</code> — boolean</li>
+    <li><code>mainFuseSize</code> — main fuse size in ampere</li>
+  </ul>
+  <h3>Output</h3>
+  <p><code>msg.payload</code> contains the updated home object as returned by the Tibber API.</p>
+</script>

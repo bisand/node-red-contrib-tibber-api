@@ -26,11 +26,13 @@ module.exports = function(RED) {
 
             // Preserve default values.
             energyResolution = energyResolution ? energyResolution : 'HOURLY';
+            // Price queries only accept HOURLY or QUARTER_HOURLY (PriceInfoResolution).
+            var priceResolution = energyResolution === 'QUARTER_HOURLY' ? 'QUARTER_HOURLY' : 'HOURLY';
             if (isNaN(lastCount)) {
                 lastCount = 10;
             }
 
-            var payload = {};
+            var payload;
             switch (queryName) {
                 case 'getHome':
                     try {
@@ -62,28 +64,28 @@ module.exports = function(RED) {
                     break;
                 case 'getCurrentEnergyPrice':
                     try {
-                        payload = await this.client.getCurrentEnergyPrice(homeId);
+                        payload = await this.client.getCurrentEnergyPrice(homeId, priceResolution);
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 case 'getCurrentEnergyPrices':
                     try {
-                        payload = await this.client.getCurrentEnergyPrices();
+                        payload = await this.client.getCurrentEnergyPrices(priceResolution);
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 case 'getTodaysEnergyPrices':
                     try {
-                        payload = await this.client.getTodaysEnergyPrices(homeId, energyResolution);
+                        payload = await this.client.getTodaysEnergyPrices(homeId, priceResolution);
                     } catch (error) {
                         payload = error;
                     }
                     break;
                 case 'getTomorrowsEnergyPrices':
                     try {
-                        payload = await this.client.getTomorrowsEnergyPrices(homeId, energyResolution);
+                        payload = await this.client.getTomorrowsEnergyPrices(homeId, priceResolution);
                     } catch (error) {
                         payload = error;
                     }
