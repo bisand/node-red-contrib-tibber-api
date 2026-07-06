@@ -15,7 +15,7 @@
     "eslint": "^9.36.0",
     "mkver": "^4.3.0",
     "mocha": "^11.7.4",
-    "node-red": "^4.1.0"
+    "node-red": "^5.0.1"
   },
   "directories": {
     "examples": "./examples",
