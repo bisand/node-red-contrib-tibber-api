@@ -1,4 +1,3 @@
-/* eslint-env mocha */
 const { TibberQueryBase, TibberFeed } = require('tibber-api');
 const assert = require('assert');
 const WebSocket = require('ws');

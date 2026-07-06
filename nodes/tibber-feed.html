@@ -12,13 +12,6 @@
             apiEndpointRef: { value: null, type: 'tibber-api-endpoint' },
             homeId: {
                 value: '',
-                required: true,
-                validate: function (v) {
-                    if (v === '') {
-                        return false;
-                    }
-                    return true;
-                },
             },
             timestamp: {
                 value: '1',
@@ -100,7 +93,7 @@
                 type: 'number',
             },
         },
-        inputs: 0,
+        inputs: 1,
         outputs: 1,
         icon: 'feed.png',
         label: function () {
@@ -247,6 +240,17 @@
       </div>
 </script>
 
-<script type="text/x-red" data-help-name="tibber-api">
-    <p>A simple node that enables you to stream realtime data from tibber.</p>
+<script type="text/x-red" data-help-name="tibber-feed">
+    <p>A node that enables you to stream realtime data from Tibber.</p>
+    <h3>Input</h3>
+    <p>The access token and home id can be injected at runtime through an incoming message,
+    without reconfiguring the node. When new values are received, the feed reconnects using them.</p>
+    <ul>
+        <li><code>msg.payload.accessToken</code> — Tibber access token (optional if configured in the API endpoint)</li>
+        <li><code>msg.payload.homeId</code> — Tibber home ID (optional if configured on the node)</li>
+    </ul>
+    <p>If the node is deployed without an access token or home id, it stays idle and waits
+    for them to be injected.</p>
+    <h3>Output</h3>
+    <p><code>msg.payload</code> contains the selected realtime measurement properties.</p>
 </script>
