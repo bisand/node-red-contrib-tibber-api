@@ -13,7 +13,7 @@ This Node-Red module is used for communication with [Tibber API](https://develop
 
 > Note!
 >
-> **Breaking changes** in the version built on [tibber-api](https://www.npmjs.com/package/tibber-api) 6:
+> **Breaking changes** in version 7.0.0, which is built on [tibber-api](https://www.npmjs.com/package/tibber-api) 6:
 >
 > - The nodes report an error when a call to Tibber fails, for example with an invalid access token. Use a **Catch** node to handle it. Earlier versions sent an empty result or the error object as `msg.payload`.
 > - `tibber-feed` reconnects by itself with an increasing delay, as Tibber requires. The **Reconnect delay** setting is removed. If Tibber rejects the access token, the feed stops and the status shows *invalid token*.
