@@ -63,7 +63,7 @@ $ npm install node-red-contrib-tibber-api
 
 ### Tibber Feed node (*tibber-feed*)
 
-![tibber-feed](examples/images/tibber-feed.png)
+![tibber-feed](docs/images/tibber-feed.png)
 
 Realtime power consuption data from Tibber Pulse. Select an API endpoint, provide Home ID and select what kind of information you want to retrieve, including reactive power.
 
@@ -72,13 +72,13 @@ The access token and home ID can also be injected through an incoming message (`
 
 ### Tibber API call node (*tibber-query*)
 
-![tibber-query](examples/images/tibber-query.png)
+![tibber-query](docs/images/tibber-query.png)
 
 Do basic calls to Tibber API using GraphQL queries. To query the Tibber API, simply provide raw GraphQL queries in the payload of the incoming message. See Tibber API documentation and API Explorer for more informations. If the query fails, the node reports an error that can be handled with a Catch node.
 
 ### Tibber push notification (*tibber-notify*)
 
-![tibber-notify](examples/images/tibber-notify.png)
+![tibber-notify](docs/images/tibber-notify.png)
 
 Send push notifications to connected Tibber apps via Tibber API. Fill in Title, Message and which screen to open in the app directly in the node, or provide them in the payload of the incoming message as `title`, `message` and `screen`.
 
@@ -250,7 +250,7 @@ Live measurements from Tibber Pulse and Watty. `msg.payload` is the measurement 
 
 ### Configuration node (*tibber-api-endpoint*)
 
-![tibber-api-endpoint](examples/images/tibber-api-endpoint.png)
+![tibber-api-endpoint](docs/images/tibber-api-endpoint.png)
 
 When configuring regular tibber nodes, you will have to create or select the configuration from the property **API Endpoint**. The configuration can be used by any Tibber node, so a change happens on all nodes using it. There are two ways to authenticate:
 
@@ -346,6 +346,18 @@ sudo ./init.sh
 Read the included [readme](https://github.com/bisand/IoTServer/blob/master/README.md) for more info.
 
 ### Node-Red examples
+
+The example flows are included in the package. In the Node-RED editor, open the menu, select **Import**, then **Examples**, and look under *node-red-contrib-tibber-api*.
+
+| Example | Shows |
+| ------- | ----- |
+| `node-red-tibber-test-flow` | The feed, GraphQL queries, pre-defined queries and push notifications. |
+| `node-red-home-power` | Storing live measurements from Tibber Pulse in InfluxDB. |
+| `node-red-tibber-data-api` | The Tibber Data API: homes, devices with their current state, and live measurements. Needs a configuration that logs in with client ID and secret. |
+| `node-red-tibber-update-home` | Reading your homes and updating the information about one. |
+
+The Grafana dashboard further down is also available as [docs/grafana/home-power-dashboard.json](docs/grafana/home-power-dashboard.json).
+
 
 <details>
   <summary>Tibber Pulse - Example flow</summary>

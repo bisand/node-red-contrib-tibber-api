@@ -1,0 +1,182 @@
+[
+    {
+        "id": "b2e1d5c38a4f6b01",
+        "type": "tab",
+        "label": "Tibber update home",
+        "disabled": false,
+        "info": "Updates the information about a home, such as the nickname shown in the Tibber app."
+    },
+    {
+        "id": "b2e1d5c38a4f6b02",
+        "type": "comment",
+        "z": "b2e1d5c38a4f6b01",
+        "name": "Set the Home ID on the \"Update home\" node, then click the inject button",
+        "info": "The values to change come from msg.payload. Only the properties that are present are changed.\n\nThe \"Get homes\" flow shows your home IDs and the current values.",
+        "x": 300,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "b2e1d5c38a4f6b03",
+        "type": "inject",
+        "z": "b2e1d5c38a4f6b01",
+        "name": "Get homes",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{}",
+        "payloadType": "json",
+        "x": 130,
+        "y": 140,
+        "wires": [
+            [
+                "b2e1d5c38a4f6b04"
+            ]
+        ]
+    },
+    {
+        "id": "b2e1d5c38a4f6b04",
+        "type": "tibber-data",
+        "z": "b2e1d5c38a4f6b01",
+        "name": "Homes",
+        "active": true,
+        "apiEndpointRef": "b2e1d5c38a4f6b10",
+        "queryName": "getHomes",
+        "homeId": "",
+        "energyResolution": "HOURLY",
+        "lastCount": 10,
+        "x": 330,
+        "y": 140,
+        "wires": [
+            [
+                "b2e1d5c38a4f6b05"
+            ]
+        ]
+    },
+    {
+        "id": "b2e1d5c38a4f6b05",
+        "type": "debug",
+        "z": "b2e1d5c38a4f6b01",
+        "name": "Homes",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 610,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "b2e1d5c38a4f6b06",
+        "type": "inject",
+        "z": "b2e1d5c38a4f6b01",
+        "name": "Change nickname and size",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"appNickname\":\"My home\",\"size\":120}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 240,
+        "wires": [
+            [
+                "b2e1d5c38a4f6b07"
+            ]
+        ]
+    },
+    {
+        "id": "b2e1d5c38a4f6b07",
+        "type": "tibber-update-home",
+        "z": "b2e1d5c38a4f6b01",
+        "name": "Update home",
+        "active": true,
+        "apiEndpointRef": "b2e1d5c38a4f6b10",
+        "homeId": "",
+        "x": 410,
+        "y": 240,
+        "wires": [
+            [
+                "b2e1d5c38a4f6b08"
+            ]
+        ]
+    },
+    {
+        "id": "b2e1d5c38a4f6b08",
+        "type": "debug",
+        "z": "b2e1d5c38a4f6b01",
+        "name": "Updated home",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 630,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "b2e1d5c38a4f6b09",
+        "type": "catch",
+        "z": "b2e1d5c38a4f6b01",
+        "name": "Errors from Tibber",
+        "scope": null,
+        "uncaught": false,
+        "x": 150,
+        "y": 340,
+        "wires": [
+            [
+                "b2e1d5c38a4f6b0a"
+            ]
+        ]
+    },
+    {
+        "id": "b2e1d5c38a4f6b0a",
+        "type": "debug",
+        "z": "b2e1d5c38a4f6b01",
+        "name": "Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "error",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 610,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "b2e1d5c38a4f6b10",
+        "type": "tibber-api-endpoint",
+        "authType": "",
+        "scopes": "openid profile email offline_access data-api-user-read data-api-homes-read data-api-vehicles-read data-api-chargers-read data-api-thermostats-read data-api-energy-systems-read data-api-inverters-read data-api-meters-read",
+        "redirectUri": "",
+        "queryUrl": "https://api.tibber.com/v1-beta/gql",
+        "feedConnectionTimeout": "30",
+        "feedTimeout": "60",
+        "queryRequestTimeout": "30",
+        "name": "Tibber"
+    }
+]
