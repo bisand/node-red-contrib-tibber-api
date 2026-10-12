@@ -1,0 +1,313 @@
+[
+    {
+        "id": "a1f0c4d27b3e5a01",
+        "type": "tab",
+        "label": "Tibber Data API",
+        "disabled": false,
+        "info": "Devices paired to Tibber, and live measurements from Tibber Pulse and Watty.\n\nOpen the **Tibber login** configuration node, enter the Client ID and Client Secret of your OAuth client, and click **Log in to Tibber**."
+    },
+    {
+        "id": "a1f0c4d27b3e5a02",
+        "type": "comment",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "1. Open a Tibber node, edit \"Tibber login\" and log in",
+        "info": "The Tibber Data API needs a login with client ID and secret.\n\nCreate an OAuth client at https://data-api.tibber.com/clients/manage/ and add the Redirect URI shown in the configuration node to it.",
+        "x": 240,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "a1f0c4d27b3e5a03",
+        "type": "inject",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "Get homes",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{}",
+        "payloadType": "json",
+        "x": 130,
+        "y": 140,
+        "wires": [
+            [
+                "a1f0c4d27b3e5a04"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c4d27b3e5a04",
+        "type": "tibber-data-api",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "Homes",
+        "apiEndpointRef": "a1f0c4d27b3e5a10",
+        "queryName": "getHomes",
+        "homeId": "",
+        "deviceId": "",
+        "resolution": "",
+        "x": 330,
+        "y": 140,
+        "wires": [
+            [
+                "a1f0c4d27b3e5a05"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c4d27b3e5a05",
+        "type": "debug",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "Homes",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 730,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "a1f0c4d27b3e5a06",
+        "type": "comment",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "2. List the devices in the first home, with their current state",
+        "info": "The first query gets the homes. The function nodes pass the home ID, and then each device ID, on to the next query through msg.payload.",
+        "x": 270,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "a1f0c4d27b3e5a07",
+        "type": "inject",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "Get devices",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{}",
+        "payloadType": "json",
+        "x": 130,
+        "y": 280,
+        "wires": [
+            [
+                "a1f0c4d27b3e5a08"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c4d27b3e5a08",
+        "type": "tibber-data-api",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "Homes",
+        "apiEndpointRef": "a1f0c4d27b3e5a10",
+        "queryName": "getHomes",
+        "homeId": "",
+        "deviceId": "",
+        "resolution": "",
+        "x": 310,
+        "y": 280,
+        "wires": [
+            [
+                "a1f0c4d27b3e5a09"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c4d27b3e5a09",
+        "type": "function",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "First home",
+        "func": "if (!msg.payload.length) {\n    node.warn('No homes found');\n    return null;\n}\nmsg.homeId = msg.payload[0].id;\nmsg.payload = { queryName: 'getDevices', homeId: msg.homeId };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 280,
+        "wires": [
+            [
+                "a1f0c4d27b3e5a0a"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c4d27b3e5a0a",
+        "type": "tibber-data-api",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "Devices",
+        "apiEndpointRef": "a1f0c4d27b3e5a10",
+        "queryName": "",
+        "homeId": "",
+        "deviceId": "",
+        "resolution": "",
+        "x": 640,
+        "y": 280,
+        "wires": [
+            [
+                "a1f0c4d27b3e5a0b"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c4d27b3e5a0b",
+        "type": "function",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "One message per device",
+        "func": "return [msg.payload.map((device) => ({\n    payload: { queryName: 'getDevice', homeId: msg.homeId, deviceId: device.id }\n}))];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 190,
+        "y": 340,
+        "wires": [
+            [
+                "a1f0c4d27b3e5a0c"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c4d27b3e5a0c",
+        "type": "tibber-data-api",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "Device",
+        "apiEndpointRef": "a1f0c4d27b3e5a10",
+        "queryName": "",
+        "homeId": "",
+        "deviceId": "",
+        "resolution": "",
+        "x": 430,
+        "y": 340,
+        "wires": [
+            [
+                "a1f0c4d27b3e5a0d"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c4d27b3e5a0d",
+        "type": "debug",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "Device with state",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 730,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "a1f0c4d27b3e5a0e",
+        "type": "comment",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "3. Live measurements from Tibber Pulse or Watty",
+        "info": "Starts by itself when you have logged in. msg.topic is the ID of the device.\n\nTibber allows one live feed per home.",
+        "x": 220,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "a1f0c4d27b3e5a0f",
+        "type": "tibber-data-api-feed",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "Live measurements",
+        "active": true,
+        "apiEndpointRef": "a1f0c4d27b3e5a10",
+        "homeId": "",
+        "deviceIds": "",
+        "x": 160,
+        "y": 480,
+        "wires": [
+            [
+                "a1f0c4d27b3e5a11"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c4d27b3e5a11",
+        "type": "debug",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "Measurement",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 730,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "a1f0c4d27b3e5a12",
+        "type": "catch",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "Errors from Tibber",
+        "scope": null,
+        "uncaught": false,
+        "x": 150,
+        "y": 560,
+        "wires": [
+            [
+                "a1f0c4d27b3e5a13"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c4d27b3e5a13",
+        "type": "debug",
+        "z": "a1f0c4d27b3e5a01",
+        "name": "Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "error",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 730,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "a1f0c4d27b3e5a10",
+        "type": "tibber-api-endpoint",
+        "authType": "oauth",
+        "scopes": "openid profile email offline_access data-api-user-read data-api-homes-read data-api-vehicles-read data-api-chargers-read data-api-thermostats-read data-api-energy-systems-read data-api-inverters-read data-api-meters-read",
+        "redirectUri": "",
+        "queryUrl": "https://api.tibber.com/v1-beta/gql",
+        "feedConnectionTimeout": "30",
+        "feedTimeout": "60",
+        "queryRequestTimeout": "30",
+        "name": "Tibber login"
+    }
+]
