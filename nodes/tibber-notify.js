@@ -1,20 +1,21 @@
-const TibberQuery = require('tibber-api').TibberQuery;
-const { getApiConfig, getTimeout, toError, getPayload } = require('./tibber-common');
+const { MISSING_PARAMETERS, getQueryClient, ensureAccessToken, toError, getPayload } = require('./tibber-common');
 
 module.exports = function (RED) {
     function TibberNotifyNode(config) {
         RED.nodes.createNode(this, config);
         this._config = config;
 
-        const apiConfig = getApiConfig(RED, config);
-        if (!apiConfig) {
-            this.error('Missing mandatory parameters (queryUrl and/or accessToken)');
-            return;
+        // The client is created here if the API endpoint is ready, otherwise when a message arrives after a login.
+        if (!getQueryClient(RED, this, config)) {
+            this.error(MISSING_PARAMETERS);
         }
 
-        this.client = new TibberQuery(apiConfig, getTimeout(RED, config, 'queryRequestTimeout', 30));
-
         this.on('input', async (msg, send, done) => {
+            const client = getQueryClient(RED, this, this._config);
+            if (!client) {
+                done(new Error(MISSING_PARAMETERS));
+                return;
+            }
             const payload = getPayload(msg);
             const title = this._config.notifyTitle ? this._config.notifyTitle : payload.title;
             const message = this._config.notifyMessage ? this._config.notifyMessage : payload.message;
@@ -26,7 +27,8 @@ module.exports = function (RED) {
             }
 
             try {
-                const result = await this.client.sendPushNotification(message, title, screen);
+                await ensureAccessToken(RED, this._config);
+                const result = await client.sendPushNotification(message, title, screen);
                 this.log(JSON.stringify(result));
                 done();
             } catch (error) {

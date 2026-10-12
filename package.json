@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-tibber-api",
-  "version": "6.5.0",
+  "version": "7.0.0",
   "description": "Node Red module for integrating with Tibber api",
   "repository": {
     "url": "git+https://github.com/bisand/node-red-contrib-tibber-api.git"
@@ -47,7 +47,9 @@
       "tibber-query": "nodes/tibber-query.js",
       "tibber-data": "nodes/tibber-data.js",
       "tibber-notify": "nodes/tibber-notify.js",
-      "tibber-update-home": "nodes/tibber-update-home.js"
+      "tibber-update-home": "nodes/tibber-update-home.js",
+      "tibber-data-api": "nodes/tibber-data-api.js",
+      "tibber-data-api-feed": "nodes/tibber-data-api-feed.js"
     }
   },
   "engines": {

@@ -1,0 +1,103 @@
+<script type="text/javascript">
+    RED.nodes.registerType('tibber-data-api', {
+        category: 'Tibber API',
+        color: '#23B8CC',
+        defaults: {
+            name: {
+                value: '',
+            },
+            apiEndpointRef: { value: null, type: 'tibber-api-endpoint' },
+            queryName: {
+                value: '',
+            },
+            homeId: {
+                value: '',
+            },
+            deviceId: {
+                value: '',
+            },
+            resolution: {
+                value: '',
+            },
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'db.png',
+        paletteLabel: 'data api',
+        label: function() {
+            return this.name || 'tibber-data-api';
+        },
+    });
+</script>
+
+<script type="text/x-red" data-template-name="tibber-data-api">
+    <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+      <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
+    </div>
+    <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-name"><i class="icon-tag"></i> Name</label>
+      <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-queryName"><i class="fa fa-cogs"></i> Query</label>
+      <select id="node-input-queryName">
+        <option value="">{ payload.queryName }</option>
+        <option value="getHomes">getHomes()</option>
+        <option value="getDevices">getDevices(homeId)</option>
+        <option value="getDevice">getDevice(homeId, deviceId)</option>
+        <option value="getDeviceHistory">getDeviceHistory(homeId, deviceId, resolution)</option>
+        <option value="getLiveEventDevices">getLiveEventDevices(homeId)</option>
+      </select>
+    </div>
+    <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-homeId"><i class="fa fa-home"></i> Home ID</label>
+      <input type="text" id="node-input-homeId" placeholder="{ payload.homeId }">
+    </div>
+    <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-deviceId"><i class="fa fa-plug"></i> Device ID</label>
+      <input type="text" id="node-input-deviceId" placeholder="{ payload.deviceId }">
+    </div>
+    <div class="form-row" style="white-space: nowrap;">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-resolution"><i class="fa fa-eye"></i> History Resolution</label>
+      <select id="node-input-resolution">
+        <option value="">{ payload.resolution }</option>
+        <option value="quarterHour">quarterHour</option>
+        <option value="hour">hour</option>
+        <option value="day">day</option>
+        <option value="month">month</option>
+      </select>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="tibber-data-api">
+    <p>Queries the Tibber Data API for devices paired to Tibber, such as electric vehicles, chargers, thermostats, heat pumps, inverters and batteries.</p>
+    <h3>Input</h3>
+    <p>Values set on the node are used first. Values left empty on the node are read from <code>msg.payload</code>.</p>
+    <dl class="message-properties">
+        <dt class="optional">payload.queryName <span class="property-type">string</span></dt>
+        <dd><code>getHomes</code>, <code>getDevices</code>, <code>getDevice</code>, <code>getDeviceHistory</code> or <code>getLiveEventDevices</code>.</dd>
+        <dt class="optional">payload.homeId <span class="property-type">string</span></dt>
+        <dd>home ID from <code>getHomes</code>. Needed for all queries except <code>getHomes</code>.</dd>
+        <dt class="optional">payload.deviceId <span class="property-type">string</span></dt>
+        <dd>device ID from <code>getDevices</code>. Needed for <code>getDevice</code> and <code>getDeviceHistory</code>.</dd>
+        <dt class="optional">payload.resolution <span class="property-type">string</span></dt>
+        <dd>resolution of the history: <code>quarterHour</code>, <code>hour</code>, <code>day</code> or <code>month</code>. The default is <code>hour</code>.</dd>
+        <dt class="optional">payload.since / payload.until <span class="property-type">string | number</span></dt>
+        <dd>return history from, or up to, a point in time: an ISO 8601 date or a timestamp in milliseconds. Without either, the latest history is returned.</dd>
+        <dt class="optional">payload.link <span class="property-type">string</span></dt>
+        <dd>the <code>next</code> or <code>prev</code> link from a previous <code>getDeviceHistory</code> result, to get another page.</dd>
+    </dl>
+    <h3>Output</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">object | array</span></dt>
+        <dd>the result of the query.</dd>
+    </dl>
+    <h3>Details</h3>
+    <p><code>getDevice</code> returns the device with its <code>attributes</code> and its <code>capabilities</code>, which hold the current state, for example the state of charge of a car.</p>
+    <p>A device only has history if <code>supportedHistory.resolutions</code> lists a resolution. <code>getDeviceHistory</code> returns
+    <code>items</code> and a <code>next</code> or <code>prev</code> link to the page after or before.</p>
+    <p>The API endpoint must log in with client ID and secret. The Tibber Data API does not accept an access token.
+    A device is only visible if its kind was selected in the scopes when logging in.</p>
+    <p>If the query fails, the node reports an error that can be handled with a Catch node.</p>
+</script>

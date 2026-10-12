@@ -1,0 +1,75 @@
+<script type="text/javascript">
+    RED.nodes.registerType('tibber-data-api-feed', {
+        category: 'Tibber API',
+        color: '#23B8CC',
+        defaults: {
+            name: {
+                value: '',
+            },
+            active: {
+                value: true,
+            },
+            apiEndpointRef: { value: null, type: 'tibber-api-endpoint' },
+            homeId: {
+                value: '',
+            },
+            deviceIds: {
+                value: '',
+            },
+        },
+        inputs: 0,
+        outputs: 1,
+        icon: 'feed.png',
+        paletteLabel: 'data api feed',
+        label: function () {
+            return this.name || 'tibber-data-api-feed';
+        },
+    });
+</script>
+
+<script type="text/x-red" data-template-name="tibber-data-api-feed">
+    <div class="form-row" style="white-space: nowrap;">
+        <label style="white-space: nowrap; width: 150px;" for="node-input-active"><i class="icon-tag"></i> Active</label>
+        <input type="checkbox" id="node-input-active" value="1" style="width: auto;">
+    </div>
+    <div class="form-row" style="white-space: nowrap;">
+        <label style="white-space: nowrap; width: 150px;" for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+        <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
+    </div>
+    <div class="form-row" style="white-space: nowrap;">
+        <label style="white-space: nowrap; width: 150px;" for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row" style="white-space: nowrap;">
+        <label style="white-space: nowrap; width: 150px;" for="node-input-homeId"><i class="fa fa-home"></i> Home ID</label>
+        <input type="text" id="node-input-homeId" placeholder="First home">
+    </div>
+    <div class="form-row" style="white-space: nowrap;">
+        <label style="white-space: nowrap; width: 150px;" for="node-input-deviceIds"><i class="fa fa-plug"></i> Device IDs</label>
+        <input type="text" id="node-input-deviceIds" placeholder="All devices that can stream">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="tibber-data-api-feed">
+    <p>Streams live measurements from Tibber Pulse and Watty through the Tibber Data API.</p>
+    <h3>Properties</h3>
+    <dl class="message-properties">
+        <dt>Home ID</dt>
+        <dd>home ID from the <code>getHomes</code> query of the <i>tibber-data-api</i> node. The first home is used if left empty.</dd>
+        <dt>Device IDs</dt>
+        <dd>IDs from the <code>getLiveEventDevices</code> query, separated by commas. All devices that can stream are used if left empty, up to 5.
+            These are not the same as the device IDs from <code>getDevices</code>.</dd>
+    </dl>
+    <h3>Output</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">object</span></dt>
+        <dd>the measurement, for example <code>power</code>, <code>accumulatedConsumption</code> and <code>timestamp</code>. Which values are present depends on the meter.</dd>
+        <dt>topic <span class="property-type">string</span></dt>
+        <dd>ID of the device the measurement comes from.</dd>
+    </dl>
+    <h3>Details</h3>
+    <p>The API endpoint must log in with client ID and secret, and the scope <code>data-api-meters-read</code> must have been selected when logging in.</p>
+    <p>Tibber allows one live feed per home. Starting a second one closes the first, which then shows the status <i>evicted</i> and
+    does not reconnect. Use one <i>tibber-data-api-feed</i> node per home.</p>
+    <p>The feed reconnects by itself when the connection is lost, with an increasing delay between the attempts.</p>
+</script>
