@@ -69,3 +69,4 @@ flows_*
 flows.*
 .config.*.json
 .config.*.json.backup
+tibber-data-api-tokens.json

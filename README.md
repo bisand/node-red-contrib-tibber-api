@@ -211,6 +211,52 @@ Available queries:
     getEnergyPriceRange(homeId: string, energyResolution: PriceRangeResolution, paging): ISubscriptionPriceConnection;
 ```
 
+### Tibber Data API nodes
+
+The [Tibber Data API](https://data-api.tibber.com/docs/) gives access to devices paired to Tibber, such as electric vehicles, chargers, thermostats, heat pumps, inverters and batteries, and to live measurements from Tibber Pulse and Watty. It is a separate API from the one used by the nodes above. It does not accept the same access token and it does not serve prices.
+
+#### Data API configuration node (*tibber-data-api-endpoint*)
+
+1. Create an OAuth client at [data-api.tibber.com](https://data-api.tibber.com/clients/manage/) and select the scopes you need.
+2. Open the configuration node in Node-RED. Add the **Redirect URI** it shows to the client at Tibber.
+3. Enter the **Client ID** and **Client Secret**, click **Log in to Tibber** and log in in the window that opens.
+4. Save and deploy.
+
+> The Redirect URI follows the address used to open the Node-RED editor, for example `http://localhost:1880/tibber-data-api/callback`. Tibber requires `https`, except for `localhost`.
+
+> The login gives Node-RED tokens that are renewed automatically. They are stored in the file `tibber-data-api-tokens.json` in the Node-RED user directory, readable only by the user running Node-RED. They are not part of the flow and are not included when flows are exported.
+
+#### Tibber Data API query (*tibber-data-api*)
+
+Select a query on the node, or provide it in the payload of the incoming message.
+
+| Query | Parameters | Result |
+| ----- | ---------- | ------ |
+| `getHomes` | | The homes of the user. |
+| `getDevices` | `homeId` | The devices in a home. |
+| `getDevice` | `homeId`, `deviceId` | A device with its `attributes` and its `capabilities`, which hold the current state. |
+| `getDeviceHistory` | `homeId`, `deviceId`, `resolution`, `since` or `until`, or `link` | A page of history with `items`, and a `next` or `prev` link to another page. |
+| `getLiveEventDevices` | `homeId` | The devices that can stream live measurements right now. |
+
+Payload example:
+```json
+{
+    "queryName": "getDeviceHistory",
+    "homeId": "b5d69cab-...",
+    "deviceId": "dGVzb...",
+    "resolution": "hour",
+    "since": "2026-10-01T00:00:00+02:00"
+}
+```
+
+`resolution` is `quarterHour`, `hour`, `day` or `month`. A device only has history if its `supportedHistory.resolutions` lists a resolution. To get another page, send the `next` or `prev` link from the previous result as `link`.
+
+#### Tibber Data API feed (*tibber-data-api-feed*)
+
+Live measurements from Tibber Pulse and Watty. `msg.payload` is the measurement and `msg.topic` is the ID of the device. The scope `data-api-meters-read` must be selected when logging in.
+
+> Note! Tibber allows one live feed per home. Starting a second one closes the first, which then shows the status *evicted* and does not reconnect. Use one *tibber-data-api-feed* node per home.
+
 ### Configuration node (*tibber-api-endpoint*)
 
 ![tibber-api-endpoint](examples/images/tibber-api-endpoint.png)
