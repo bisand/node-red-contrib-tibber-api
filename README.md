@@ -33,6 +33,8 @@ Click the link below to sign up, and receive 400 NOK to shop smart home gadgets 
 
 You will also need an OAuth client or an access token from Tibber. See the [configuration node](#configuration-node-tibber-api-endpoint) for how to get them.
 
+The nodes require Node-RED 2.0 or newer and Node.js 18 or newer. They are tested with Node-RED 2.2, 3.1, 4.1 and 5.0.
+
 > Note! In order to use the included Grafana dashboard example, you will need Grafana 6.x or higher.
 
 ## Installation
