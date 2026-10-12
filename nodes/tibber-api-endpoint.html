@@ -111,11 +111,23 @@
           $("#node-config-input-redirectUri").val(new URL("tibber-api/callback", window.location.href.split(/[?#]/)[0]).href);
         }
 
+        // Set when a login has been started from this dialog.
+        var loginStarted = false;
+        // The stored secret belongs to the stored client. Ask for the secret again when the Client ID is changed.
+        var originalClientId = $("#node-config-input-clientId").val();
+        $("#node-config-input-clientId").on("change", function () {
+          var secret = $("#node-config-input-clientSecret");
+          if ($(this).val() !== originalClientId && secret.val() === "__PWRD__") {
+            secret.val("").attr("placeholder", "Enter the secret of the new client").focus();
+          }
+        });
+
         function showStatus() {
           $.getJSON("tibber-api/" + node.id + "/status", function (data) {
             $("#node-config-tibber-login-status").text(data.authorized ? "Logged in" : "Not logged in");
             if (data.authorized) {
               stopStatusTimer();
+              $("#node-config-tibber-login-saved").toggle(loginStarted);
             }
           });
         }
@@ -127,6 +139,9 @@
         }
 
         $("#node-config-tibber-login").on("click", function () {
+          // Open the window right away. A window opened later, when the address has arrived, can be blocked as a popup.
+          var loginWindow = window.open("", "tibber-login", "width=600,height=820");
+          $("#node-config-tibber-login-saved").hide();
           $.ajax({
             url: "tibber-api/" + node.id + "/auth",
             type: "POST",
@@ -135,14 +150,24 @@
               clientId: $("#node-config-input-clientId").val(),
               clientSecret: $("#node-config-input-clientSecret").val(),
               scopes: $("#node-config-input-scopes").val(),
-              redirectUri: $("#node-config-input-redirectUri").val()
+              redirectUri: $("#node-config-input-redirectUri").val(),
+              // Where to go back to, if the login takes over this page instead of opening a window.
+              returnUrl: window.location.href
             }),
             success: function (data) {
-              window.open(data.url, "_blank");
+              loginStarted = true;
+              if (loginWindow) {
+                loginWindow.location.href = data.url;
+              } else {
+                window.open(data.url, "_blank");
+              }
               stopStatusTimer();
               statusTimer = setInterval(showStatus, 2000);
             },
             error: function (xhr) {
+              if (loginWindow) {
+                loginWindow.close();
+              }
               showError(xhr, "Unable to start the login: ");
             }
           });
@@ -156,6 +181,7 @@
             data: JSON.stringify({ url: $("#node-config-tibber-pasted-url").val() }),
             success: function () {
               $("#node-config-tibber-pasted-url").val("");
+              loginStarted = true;
               showStatus();
             },
             error: function (xhr) {
@@ -202,10 +228,18 @@
     <label for="node-config-input-redirectUri"><i class="fa fa-reply"></i> Redirect URI</label>
     <input type="text" id="node-config-input-redirectUri" placeholder="Redirect URI">
   </div>
+  <div class="form-tips tibber-auth-oauth" style="margin-bottom: 12px;">
+    Add the Redirect URI to the client at Tibber, exactly as written here. If Tibber shows
+    <i>Something went wrong: invalid_request</i> instead of its login page, the address is missing there or differs.
+  </div>
   <div class="form-row tibber-auth-oauth">
     <label for="node-config-tibber-login"><i class="fa fa-sign-in"></i> Login</label>
     <button type="button" class="red-ui-button" id="node-config-tibber-login">Log in to Tibber</button>
     <span id="node-config-tibber-login-status" style="margin-left: 10px;"></span>
+  </div>
+  <div class="form-tips tibber-auth-oauth" id="node-config-tibber-login-saved" style="display: none; margin-bottom: 12px;">
+    You are logged in, and the Tibber nodes can be used right away. Click <b>Update</b> (or <b>Add</b>) and then
+    <b>Deploy</b> to keep the Client ID and Client Secret when Node-RED restarts.
   </div>
   <div class="form-row tibber-auth-oauth">
     <label for="node-config-tibber-pasted-url"><i class="fa fa-clipboard"></i> Or paste</label>
@@ -259,6 +293,8 @@
       HTTP In nodes. Set the Redirect URI to your public <code>https</code> address followed by
       <code>/tibber-api/callback</code>.</li>
   </ul>
+  <p>If Tibber shows <i>Something went wrong: invalid_request</i> instead of its login page, the Redirect URI is not
+    registered on the client, or differs from the one here.</p>
   <p>A login must be finished within 10 minutes, and the address can only be used once. See the README for more.</p>
   <p><b>Access token</b> uses a personal access token from
     <a href="https://developer.tibber.com/" target="_blank">developer.tibber.com</a>. It works with all nodes except

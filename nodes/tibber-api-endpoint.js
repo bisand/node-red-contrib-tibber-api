@@ -1,5 +1,5 @@
 const { TibberOAuth, TibberData } = require('tibber-api');
-const { userAgent, toError } = require('./tibber-common');
+const { userAgent, toError, LOGIN_EVENT } = require('./tibber-common');
 const { loadTokens, saveTokens, deleteTokens, getUrls } = require('./tibber-token-store');
 
 const PENDING_TIMEOUT = 10 * 60 * 1000; // 10 minutes
@@ -10,6 +10,33 @@ const REFRESH_RETRY_DELAY = 60 * 1000; // 1 minute
 
 function escapeHtml(text) {
     return String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Only return to an ordinary web address. Anything else is dropped.
+function toReturnUrl(value) {
+    try {
+        const url = new URL(value);
+        return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+/**
+ * The page shown in the browser after a login. It closes itself if it was opened by the editor,
+ * and otherwise offers the way back to the editor.
+ */
+function resultPage(message, returnUrl, success) {
+    const link = returnUrl ? `<p><a href="${escapeHtml(returnUrl)}">Return to Node-RED</a></p>` : '';
+    // A window opened by the editor is closed. A login that replaced the editor goes back to it.
+    const script = success
+        ? `<script>
+            if (window.opener) { window.close(); }
+            else if (${JSON.stringify(returnUrl || '').replace(/</g, '\\u003c')}) { setTimeout(function () { location.replace(${JSON.stringify(returnUrl || '').replace(/</g, '\\u003c')}); }, 2000); }
+        </script>`
+        : '';
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tibber login</title></head>
+<body style="font-family: sans-serif; margin: 40px;"><p>${escapeHtml(message)}</p>${link}${script}</body></html>`;
 }
 
 module.exports = function (RED) {
@@ -148,24 +175,38 @@ module.exports = function (RED) {
     // Logins that have been started from the editor, by OAuth state.
     const pending = new Map();
 
-    // Finish a login with the values Tibber added to the redirect address. Returns the id of the endpoint.
+    // Finish a login with the values Tibber added to the redirect address. Returns the login that was finished.
     async function completeLogin(query, expectedId) {
         const login = pending.get(query.state);
         if (!login || Date.now() - login.created > PENDING_TIMEOUT || (expectedId && login.id !== expectedId)) {
             throw new Error('unknown or expired login. Start again from the Node-RED editor.');
         }
         pending.delete(query.state);
-        if (!query.code) {
-            throw new Error(query.error_description || query.error || 'No code received from Tibber');
+        try {
+            if (!query.code) {
+                throw new Error(query.error_description || query.error || 'No code received from Tibber');
+            }
+            saveTokens(RED, login.id, await login.oauth.exchangeCode(query.code, login.codeVerifier));
+        } catch (error) {
+            // Tibber answers invalid_client when the Client ID and Client Secret do not belong together.
+            const failure = error && error.body && error.body.error === 'invalid_client'
+                ? new Error('Tibber did not accept the Client ID and Client Secret (invalid_client). Enter both again in the Node-RED editor, exactly as shown at Tibber, and log in again.')
+                : toError(error);
+            failure.login = login;
+            throw failure;
         }
-        saveTokens(RED, login.id, await login.oauth.exchangeCode(query.code, login.codeVerifier));
+        // The tokens belong to the client that was used to log in. Keep its ID and secret with the
+        // other credentials right away, so the login works even if the dialog is closed without saving.
+        // Node-RED writes them to disk on the next deploy.
+        RED.nodes.addCredentials(login.id, { ...(RED.nodes.getCredentials(login.id) || {}), clientId: login.clientId, clientSecret: login.clientSecret });
         const node = RED.nodes.getNode(login.id);
         if (node) {
-            // Use the new tokens from now on.
+            // Use the new tokens from now on, and let the nodes that were waiting for a login start.
             node._client = undefined;
             node.getDataClient();
+            node.emit(LOGIN_EVENT);
         }
-        return login.id;
+        return login;
     }
 
     // Start a login. Returns the URL the user must open to log in to Tibber.
@@ -185,6 +226,11 @@ module.exports = function (RED) {
             res.status(400).json({ error: 'Missing mandatory parameters (clientId and/or redirectUri)' });
             return;
         }
+        // The stored secret belongs to the stored client. Using it with another client fails at Tibber after the login.
+        if (body.clientSecret === '__PWRD__' && stored.clientId && clientId !== stored.clientId) {
+            res.status(400).json({ error: 'The Client ID has changed. Enter the Client Secret that belongs to it.' });
+            return;
+        }
 
         const now = Date.now();
         for (const [state, login] of pending) {
@@ -193,7 +239,7 @@ module.exports = function (RED) {
 
         const oauth = createOAuth(clientId, clientSecret, redirectUri, body.scopes);
         const { url, state, codeVerifier } = oauth.createAuthorizationUrl();
-        pending.set(state, { id: req.params.id, oauth, codeVerifier, created: now });
+        pending.set(state, { id: req.params.id, oauth, codeVerifier, created: now, clientId, clientSecret, returnUrl: toReturnUrl(body.returnUrl) });
         res.json({ url });
     });
 
@@ -201,10 +247,10 @@ module.exports = function (RED) {
     // so the route needs no permission: the browser arrives from Tibber without the editor's session.
     const callback = async (req, res) => {
         try {
-            await completeLogin(req.query || {});
-            res.send('Logged in to Tibber. You can close this window and return to Node-RED.');
+            const login = await completeLogin(req.query || {});
+            res.send(resultPage('Logged in to Tibber. You can close this window and return to Node-RED.', login.returnUrl, true));
         } catch (error) {
-            res.status(400).send(`Login failed: ${escapeHtml(toError(error).message)}`);
+            res.status(400).send(resultPage(`Login failed: ${toError(error).message}`, error.login && error.login.returnUrl, false));
         }
     };
     RED.httpAdmin.get('/tibber-api/callback', callback);

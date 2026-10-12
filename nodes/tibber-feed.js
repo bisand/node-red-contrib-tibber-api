@@ -1,6 +1,6 @@
 const TibberFeed = require('tibber-api').TibberFeed;
 const TibberQuery = require('tibber-api').TibberQuery;
-const { getApiConfig, getTimeout, toError, getPayload } = require('./tibber-common');
+const { getApiConfig, getTimeout, onLogin, toError, getPayload } = require('./tibber-common');
 const StatusEnum = Object.freeze({ 'unknown': -1, 'disconnected': 0, 'waiting': 1, 'connecting': 2, 'unauthenticated': 3, 'connected': 100 });
 
 // A login token that is rejected is replaced and the feed reconnected, but not more often than this.
@@ -254,7 +254,23 @@ module.exports = function (RED) {
             done();
         });
 
+        // Start when the user logs in on the API endpoint, or connect again if the feed
+        // had stopped because the login was rejected. No deploy is needed after a login.
+        const stopListening = onLogin(RED, _config, () => {
+            if (!_config.active || this._injectedToken) {
+                return;
+            }
+            if (!this._feed) {
+                if (_config.homeId && getApiConfig(RED, _config)) {
+                    this._setupFeed(undefined, _config.homeId);
+                }
+            } else if (this._lastStatus === StatusEnum.unauthenticated) {
+                this.connect();
+            }
+        });
+
         this.on('close', (removed, done) => {
+            stopListening();
             if (!this._feed) {
                 clearTimeout(this._connectionDelay);
                 done();

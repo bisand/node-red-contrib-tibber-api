@@ -1,5 +1,5 @@
 const { TibberDataFeed } = require('tibber-api');
-const { getDataClient, getDataClientError, toError } = require('./tibber-common');
+const { getDataClient, getDataClientError, onLogin, toError } = require('./tibber-common');
 
 module.exports = function (RED) {
     function TibberDataApiFeedNode(config) {
@@ -10,6 +10,18 @@ module.exports = function (RED) {
         this.status({ fill: 'red', shape: 'ring', text: 'disconnected' });
 
         this._start = async () => {
+            if (this._starting || this._closed) {
+                return;
+            }
+            this._starting = true;
+            try {
+                await this._connect();
+            } finally {
+                this._starting = false;
+            }
+        };
+
+        this._connect = async () => {
             const client = getDataClient(RED, config);
             if (!client) {
                 this.status({ fill: 'red', shape: 'dot', text: 'not logged in' });
@@ -63,8 +75,21 @@ module.exports = function (RED) {
             }
         };
 
+        // Start, or start again, when the user logs in. No deploy is needed after a login.
+        const stopListening = onLogin(RED, config, () => {
+            if (!config.active || (this._feed && this._feed.active)) {
+                return;
+            }
+            if (this._feed) {
+                this._feed.removeAllListeners();
+                this._feed = null;
+            }
+            this._start();
+        });
+
         this.on('close', (removed, done) => {
             this._closed = true;
+            stopListening();
             clearTimeout(this._connectionDelay);
             if (this._feed) {
                 this._feed.close();

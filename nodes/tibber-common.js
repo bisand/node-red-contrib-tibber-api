@@ -1,4 +1,9 @@
+const TibberQuery = require('tibber-api').TibberQuery;
 const { version } = require('../package.json');
+
+const MISSING_PARAMETERS = 'Missing mandatory parameters (queryUrl and/or accessToken). Log in or enter an access token on the API endpoint.';
+// Emitted by the API endpoint node when the user has logged in.
+const LOGIN_EVENT = 'tibber:login';
 
 const userAgent = `bisand/node-red-contrib-tibber-api/${version}`;
 
@@ -24,6 +29,34 @@ function getApiConfig(RED, config, overrides = {}) {
         homeId: overrides.homeId || config.homeId,
         apiEndpoint,
     };
+}
+
+/**
+ * Get the TibberQuery client of a node, creating it when the API endpoint is ready.
+ * The endpoint may become ready after the node has started, when the user logs in.
+ * @returns TibberQuery object, or undefined if the endpoint or its token is missing
+ */
+function getQueryClient(RED, node, config) {
+    if (!node.client) {
+        const apiConfig = getApiConfig(RED, config);
+        if (apiConfig) {
+            node.client = new TibberQuery(apiConfig, getTimeout(RED, config, 'queryRequestTimeout', 30));
+        }
+    }
+    return node.client;
+}
+
+/**
+ * Call a function when the user logs in on the API endpoint selected on a node.
+ * @returns Function that stops listening
+ */
+function onLogin(RED, config, listener) {
+    const endpoint = RED.nodes.getNode(config.apiEndpointRef);
+    if (!endpoint || typeof endpoint.on !== 'function') {
+        return () => {};
+    }
+    endpoint.on(LOGIN_EVENT, listener);
+    return () => endpoint.removeListener(LOGIN_EVENT, listener);
 }
 
 /**
@@ -96,4 +129,4 @@ function getPayload(msg) {
     return msg && msg.payload && typeof msg.payload === 'object' ? msg.payload : {};
 }
 
-module.exports = { userAgent, getApiConfig, ensureAccessToken, getDataClient, getDataClientError, getTimeout, toError, getPayload };
+module.exports = { userAgent, MISSING_PARAMETERS, LOGIN_EVENT, getApiConfig, getQueryClient, onLogin, ensureAccessToken, getDataClient, getDataClientError, getTimeout, toError, getPayload };

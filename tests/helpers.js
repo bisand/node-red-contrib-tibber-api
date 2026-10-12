@@ -33,6 +33,8 @@ function createRED(settings = {}) {
                 node.credentials = credentials[config.id] || {};
                 node.on = (event, listener) => emitter.on(event, listener);
                 node.emit = (event, ...args) => emitter.emit(event, ...args);
+                node.removeListener = (event, listener) => emitter.removeListener(event, listener);
+                node.listenerCount = (event) => emitter.listenerCount(event);
                 node.sent = [];
                 node.errors = [];
                 node.logs = [];
@@ -164,7 +166,7 @@ async function createDataApiServer() {
             if (url.pathname === '/connect/token') {
                 state.tokenRequests.push(Object.fromEntries(new URLSearchParams(Buffer.concat(chunks).toString())));
                 res.writeHead(state.tokens ? 200 : 400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(state.tokens || { error: 'invalid_grant' }));
+                res.end(JSON.stringify(state.tokens || { error: state.tokenError || 'invalid_grant' }));
                 return;
             }
             state.requests.push({ url: req.url, headers: req.headers });

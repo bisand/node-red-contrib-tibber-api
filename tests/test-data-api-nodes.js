@@ -154,6 +154,76 @@ describe('Data API nodes', function () {
             assert.equal((await RED.request('GET /tibber-api/callback', { query: { code: 'the-code', state: url.searchParams.get('state') } })).status, 400);
         });
 
+        it('Should keep the client that was used to log in, and return the browser to the editor', async function () {
+            // The endpoint is deployed with another client. The user enters a new one and logs in without saving.
+            const id = createEndpoint(null);
+            const started = await RED.request('POST /tibber-api/:id/auth', {
+                params: { id },
+                body: { clientId: 'new-client', clientSecret: 'new-secret', redirectUri, returnUrl: 'http://localhost:1880/#flow/"tab<1>' },
+            });
+            const state = new URL(started.body.url).searchParams.get('state');
+
+            const finished = await RED.request('GET /tibber-api/callback', { query: { code: 'the-code', state } });
+
+            assert.deepEqual(RED.nodes.getCredentials(id), { clientId: 'new-client', clientSecret: 'new-secret' });
+            // A later refresh uses the new client.
+            RED.nodes.getNode(id).getDataClient().tokens.expiresAt = Date.now() - 1000;
+            await RED.nodes.getNode(id).getAccessToken();
+            assert.equal(api.tokenRequests.at(-1).client_id, 'new-client');
+            assert.equal(api.tokenRequests.at(-1).client_secret, 'new-secret');
+
+            // The page closes itself when the editor opened it, and otherwise links back to the editor.
+            assert.match(finished.body, /window\.opener/);
+            assert.match(finished.body, /window\.close\(\)/);
+            assert.ok(finished.body.includes('<a href="http://localhost:1880/#flow/%22tab%3C1%3E">Return to Node-RED</a>'));
+            assert.ok(!finished.body.includes('tab<1>'));
+            assert.ok(!finished.body.includes('new-secret'));
+        });
+
+        it('Should ask for the client secret when the client id is changed', async function () {
+            const id = createEndpoint(null);
+
+            const changedId = await RED.request('POST /tibber-api/:id/auth', { params: { id }, body: { clientId: 'other-client', clientSecret: '__PWRD__', redirectUri } });
+            const changedBoth = await RED.request('POST /tibber-api/:id/auth', { params: { id }, body: { clientId: 'other-client', clientSecret: 'other-secret', redirectUri } });
+            const unchanged = await RED.request('POST /tibber-api/:id/auth', { params: { id }, body: { clientId: 'client', clientSecret: '__PWRD__', redirectUri } });
+
+            assert.equal(changedId.status, 400);
+            assert.match(changedId.body.error, /Enter the Client Secret/);
+            assert.equal(changedBoth.status, 200);
+            assert.equal(unchanged.status, 200);
+        });
+
+        it('Should explain when Tibber does not accept the client id and secret', async function () {
+            api.tokens = null;
+            api.tokenError = 'invalid_client';
+            try {
+                const started = await RED.request('POST /tibber-api/:id/auth', { params: { id: 'x' }, body: { clientId: 'client', clientSecret: 'wrong', redirectUri, returnUrl: 'http://localhost:1880/' } });
+
+                const finished = await RED.request('GET /tibber-api/callback', { query: { code: 'the-code', state: new URL(started.body.url).searchParams.get('state') } });
+
+                assert.equal(finished.status, 400);
+                assert.match(finished.body, /Tibber did not accept the Client ID and Client Secret \(invalid_client\)/);
+                assert.match(finished.body, /Return to Node-RED/);
+                assert.deepEqual(RED.nodes.getCredentials('x'), undefined);
+                assert.equal(loadTokens(RED, 'x'), undefined);
+            } finally {
+                api.tokenError = undefined;
+            }
+        });
+
+        it('Should only return the browser to a web address', async function () {
+            const started = await RED.request('POST /tibber-api/:id/auth', {
+                params: { id: 'x' },
+                body: { clientId: 'client', redirectUri, returnUrl: 'javascript:alert(1)' },
+            });
+
+            const finished = await RED.request('GET /tibber-api/callback', { query: { code: 'the-code', state: new URL(started.body.url).searchParams.get('state') } });
+
+            assert.equal(finished.status, 200);
+            assert.ok(!finished.body.includes('javascript:'));
+            assert.ok(!finished.body.includes('Return to Node-RED'));
+        });
+
         it('Should use the stored client secret when the editor sends the placeholder', async function () {
             const id = createEndpoint(null);
 
@@ -560,6 +630,47 @@ describe('Data API nodes', function () {
             const node = create('tibber-query', { apiEndpointRef: createGraphQLEndpoint(null) });
 
             assert.match(node.errors[0], /Missing mandatory parameters/);
+        });
+
+        it('Should start working after a login without a deploy', { timeout: 15000 }, async function () {
+            api.reply = (req, res, url) => {
+                if (url.pathname === '/v1/homes') json(res, { homes: [{ id: 'home1', name: 'Home' }] });
+                else if (url.pathname === '/v1/homes/home1/live-events/devices') json(res, { devices: [{ id: 'live1', type: 'tibber pulse' }] });
+                else if (url.pathname === '/v1/homes/home1/live-events') {
+                    res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+                    res.write(`event: measurement\ndata: ${JSON.stringify({ deviceId: 'live1', power: 275 })}\n\n`);
+                } else json(res, {}, 404);
+            };
+            // Deployed with the client ID and secret, but before the user has logged in.
+            const endpointId = createGraphQLEndpoint(null);
+            const query = create('tibber-data', { apiEndpointRef: endpointId, queryName: 'getHomes' });
+            const dataApi = create('tibber-data-api', { apiEndpointRef: endpointId, queryName: 'getHomes' });
+            const feed = create('tibber-feed', { active: true, homeId: 'home1', power: '1', apiEndpointRef: endpointId });
+            const dataApiFeed = create('tibber-data-api-feed', { active: true, apiEndpointRef: endpointId });
+            await waitFor(() => dataApiFeed.statuses.some((status) => status.text === 'not logged in'));
+            assert.match((await RED.input(query, { payload: {} })).message, /Missing mandatory parameters/);
+            assert.match((await RED.input(dataApi, { payload: {} })).message, /Not logged in/);
+
+            // The user logs in from the editor.
+            const started = await RED.request('POST /tibber-api/:id/auth', { params: { id: endpointId }, body: { clientId: 'client', clientSecret: '__PWRD__', redirectUri } });
+            await RED.request('GET /tibber-api/callback', { query: { code: 'the-code', state: new URL(started.body.url).searchParams.get('state') } });
+
+            await waitFor(() => feed.sent.length > 0 && dataApiFeed.sent.length > 0);
+            assert.equal(await RED.input(query, { payload: {} }), undefined);
+            assert.equal(await RED.input(dataApi, { payload: {} }), undefined);
+
+            assert.deepEqual(query.sent[0].payload, [{ id: 'home1' }]);
+            assert.deepEqual(dataApi.sent[0].payload, [{ id: 'home1', name: 'Home' }]);
+            assert.deepEqual(feed.sent[0], { payload: { power: 1337 } });
+            assert.deepEqual(dataApiFeed.sent[0], { topic: 'live1', payload: { deviceId: 'live1', power: 275 } });
+            assert.deepEqual(dataApiFeed.statuses.at(-1), { fill: 'green', shape: 'dot', text: 'connected' });
+
+            // Closing the nodes stops them listening to the endpoint.
+            await RED.close(feed);
+            await RED.close(dataApiFeed);
+            nodes.splice(nodes.indexOf(feed), 1);
+            nodes.splice(nodes.indexOf(dataApiFeed), 1);
+            assert.equal(RED.nodes.getNode(endpointId).listenerCount('tibber:login'), 0);
         });
 
         it('Should run the live feed with the login token', { timeout: 15000 }, async function () {

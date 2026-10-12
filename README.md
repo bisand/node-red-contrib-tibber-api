@@ -303,7 +303,7 @@ Use this when Tibber does not accept the address of your Node-RED editor.
 1. Set the Redirect URI to `http://localhost:1880/tibber-api/callback`, both in the configuration node and on the client at Tibber.
 2. Click **Log in to Tibber** and log in.
 3. The browser now shows an error such as *This site can't be reached*. That is expected: Tibber sent the browser to `localhost`, which is your own computer, and Node-RED is running somewhere else.
-4. Copy the whole address from the address bar of that page. It starts with `http://localhost:1880/tibber-api/callback?code=`.
+4. Copy the whole address from the address bar of that page. It starts with `http://localhost:1880/tibber-api/callback?code=`. Some embedded browsers show an empty page and keep Tibber's address in the address bar. If the address does not start with `http://localhost`, log in from a regular browser such as Chrome, Firefox or Safari instead.
 5. Paste it into **Or paste** in the configuration node and click **Finish login**. The status changes to *Logged in*.
 
 The address can only be used once, and within 10 minutes of clicking **Log in to Tibber**. If it has expired, click **Log in to Tibber** again.
@@ -318,10 +318,11 @@ This address does not need the editor's login, because the browser arrives there
 
 | What you see | Cause |
 | ------------ | ----- |
-| Tibber shows an error page instead of the login page | The Redirect URI in the configuration node is not registered on the client, differs by a character, or is an `http` address other than `localhost`. |
+| Tibber shows *Something went wrong: invalid_request* instead of the login page | The Redirect URI in the configuration node is not registered on the client at Tibber, differs by a character, or is an `http` address other than `localhost`. Add it to the client, exactly as shown in the configuration node, and click **Log in to Tibber** again. |
 | An error that mentions the scope, at Tibber or as *Login failed* in Node-RED | **Scopes** in the configuration node contains a scope that is not selected on the client. Remove it there, or select it on the client. |
 | *Login failed: unknown or expired login* | More than 10 minutes passed, the address was already used, or Node-RED was restarted after you clicked **Log in to Tibber**. Start again. |
-| *Login failed: Token request failed* | Tibber did not accept the Client ID, the Client Secret or the Redirect URI. Check them and start again. |
+| *Login failed: Tibber did not accept the Client ID and Client Secret (invalid_client)* | The Client Secret does not belong to the Client ID. This happens if you change the Client ID without entering the secret of the new client. Enter both again and log in again. |
+| *Login failed: Token request failed* | Tibber did not accept the code or the Redirect URI. Start again. |
 | The status stays *Not logged in* after the paste method | The pasted address was not complete. It must include everything after the `?`. |
 
 The configuration node also holds the **GraphQL Endpoint** and the timeouts for the feed and for queries.

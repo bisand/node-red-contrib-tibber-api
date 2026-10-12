@@ -1,20 +1,21 @@
-const TibberQuery = require('tibber-api').TibberQuery;
-const { getApiConfig, ensureAccessToken, getTimeout, toError, getPayload } = require('./tibber-common');
+const { MISSING_PARAMETERS, getQueryClient, ensureAccessToken, toError, getPayload } = require('./tibber-common');
 
 module.exports = function (RED) {
     function TibberUpdateHomeNode(config) {
         RED.nodes.createNode(this, config);
         this._config = config;
 
-        const apiConfig = getApiConfig(RED, config);
-        if (!apiConfig) {
-            this.error('Missing mandatory parameters (queryUrl and/or accessToken). Log in or enter an access token on the API endpoint.');
-            return;
+        // The client is created here if the API endpoint is ready, otherwise when a message arrives after a login.
+        if (!getQueryClient(RED, this, config)) {
+            this.error(MISSING_PARAMETERS);
         }
 
-        this.client = new TibberQuery(apiConfig, getTimeout(RED, config, 'queryRequestTimeout', 30));
-
         this.on('input', async (msg, send, done) => {
+            const client = getQueryClient(RED, this, this._config);
+            if (!client) {
+                done(new Error(MISSING_PARAMETERS));
+                return;
+            }
             const payload = getPayload(msg);
             const homeId = this._config.homeId ? this._config.homeId : payload.homeId;
 
@@ -33,7 +34,7 @@ module.exports = function (RED) {
 
             try {
                 await ensureAccessToken(RED, this._config);
-                msg.payload = await this.client.updateHome(input);
+                msg.payload = await client.updateHome(input);
                 send(msg);
                 done();
             } catch (error) {

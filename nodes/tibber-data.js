@@ -1,5 +1,4 @@
-const TibberQuery = require('tibber-api').TibberQuery;
-const { getApiConfig, ensureAccessToken, getTimeout, toError, getPayload } = require('./tibber-common');
+const { MISSING_PARAMETERS, getQueryClient, ensureAccessToken, toError, getPayload } = require('./tibber-common');
 
 // Convert a paging value from a message to what tibber-api expects: a Date, or a cursor from pageInfo.
 function toCursor(value) {
@@ -35,15 +34,17 @@ module.exports = function (RED) {
         RED.nodes.createNode(this, config);
         this._config = config;
 
-        const apiConfig = getApiConfig(RED, config);
-        if (!apiConfig) {
-            this.error('Missing mandatory parameters (queryUrl and/or accessToken). Log in or enter an access token on the API endpoint.');
-            return;
+        // The client is created here if the API endpoint is ready, otherwise when a message arrives after a login.
+        if (!getQueryClient(RED, this, config)) {
+            this.error(MISSING_PARAMETERS);
         }
 
-        this.client = new TibberQuery(apiConfig, getTimeout(RED, config, 'queryRequestTimeout', 30));
-
         this.on('input', async (msg, send, done) => {
+            const client = getQueryClient(RED, this, this._config);
+            if (!client) {
+                done(new Error(MISSING_PARAMETERS));
+                return;
+            }
             const payload = getPayload(msg);
             const queryName = this._config.queryName ? this._config.queryName : payload.queryName;
             const homeId = this._config.homeId ? this._config.homeId : payload.homeId;
@@ -70,7 +71,7 @@ module.exports = function (RED) {
             }
             try {
                 await ensureAccessToken(RED, this._config);
-                msg.payload = await query(this.client, { homeId, energyResolution, lastCount, paging });
+                msg.payload = await query(client, { homeId, energyResolution, lastCount, paging });
                 send(msg);
                 done();
             } catch (error) {
