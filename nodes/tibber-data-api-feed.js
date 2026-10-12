@@ -1,6 +1,5 @@
 const { TibberDataFeed } = require('tibber-api');
-const { toError } = require('./tibber-common');
-const { getClient } = require('./tibber-data-api-common');
+const { getDataClient, getDataClientError, toError } = require('./tibber-common');
 
 module.exports = function (RED) {
     function TibberDataApiFeedNode(config) {
@@ -11,10 +10,10 @@ module.exports = function (RED) {
         this.status({ fill: 'red', shape: 'ring', text: 'disconnected' });
 
         this._start = async () => {
-            const client = getClient(RED, config);
+            const client = getDataClient(RED, config);
             if (!client) {
                 this.status({ fill: 'red', shape: 'dot', text: 'not logged in' });
-                this.warn('Not logged in to Tibber. Open the Data API endpoint and log in.');
+                this.warn(getDataClientError(RED, config));
                 return;
             }
             try {

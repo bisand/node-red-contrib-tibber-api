@@ -22,6 +22,10 @@ function createRED(settings = {}) {
             get: (route, ...handlers) => (routes[`GET ${route}`] = { permission: handlers.length > 1 ? handlers[0] : undefined, handler: handlers.at(-1) }),
             post: (route, ...handlers) => (routes[`POST ${route}`] = { permission: handlers.length > 1 ? handlers[0] : undefined, handler: handlers.at(-1) }),
         },
+        // Routes served next to the HTTP In nodes.
+        httpNode: {
+            get: (route, handler) => (routes[`NODE GET ${route}`] = { handler }),
+        },
         nodes: {
             createNode(node, config) {
                 const emitter = new EventEmitter();
@@ -59,13 +63,23 @@ function createRED(settings = {}) {
         'tibber-notify',
         'tibber-update-home',
         'tibber-feed',
-        'tibber-data-api-endpoint',
         'tibber-data-api',
         'tibber-data-api-feed',
     ].forEach((name) => require(`../nodes/${name}.js`)(RED));
 
     /** Create a node of the given type. */
     RED.create = (type, config) => new types[type].constructor({ id: `${type}-${Object.keys(nodes).length}`, type, ...config });
+
+    /** Create an API endpoint node that logs in with client ID and secret, logged in unless tokens is null. Returns its id. */
+    RED.createLoginEndpoint = (tokens = { accessToken: 'access', refreshToken: 'refresh', expiresAt: Date.now() + 3600000 }, config = {}) => {
+        const id = `login-endpoint-${Object.keys(nodes).length}`;
+        RED.nodes.addCredentials(id, { clientId: 'client', clientSecret: 'secret' });
+        if (tokens) {
+            require('../nodes/tibber-token-store').saveTokens(RED, id, tokens);
+        }
+        new types['tibber-api-endpoint'].constructor({ id, type: 'tibber-api-endpoint', authType: 'oauth', queryUrl: 'https://api.tibber.com/v1-beta/gql', ...config });
+        return id;
+    };
 
     /** Create an API endpoint node with an access token. Returns its id. */
     RED.createEndpoint = (queryUrl, accessToken = 'token', config = {}) => {

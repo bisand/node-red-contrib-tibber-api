@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const TOKEN_FILE = 'tibber-data-api-tokens.json';
+const TOKEN_FILE = 'tibber-api-tokens.json';
 
 // Tibber replaces the refresh token on every refresh, and Node-RED only saves credentials on deploy.
 // The tokens are therefore kept in a file in the user directory, so they survive a restart.
@@ -25,14 +25,14 @@ function writeTokenFile(RED, content) {
 }
 
 /**
- * Get the tokens stored for a Data API endpoint node.
+ * Get the tokens stored for an API endpoint node.
  */
 function loadTokens(RED, id) {
     return readTokenFile(RED)[id];
 }
 
 /**
- * Store the tokens for a Data API endpoint node.
+ * Store the tokens for an API endpoint node.
  */
 function saveTokens(RED, id, tokens) {
     const content = readTokenFile(RED);
@@ -41,7 +41,7 @@ function saveTokens(RED, id, tokens) {
 }
 
 /**
- * Remove the tokens stored for a Data API endpoint node.
+ * Remove the tokens stored for an API endpoint node.
  */
 function deleteTokens(RED, id) {
     const content = readTokenFile(RED);
@@ -58,13 +58,4 @@ function getUrls(RED) {
     return (RED.settings && RED.settings.tibberDataApi) || {};
 }
 
-/**
- * Get the Data API client from the endpoint node selected on a node.
- * @returns TibberData object, or undefined if the endpoint is missing or the user has not logged in
- */
-function getClient(RED, config) {
-    const endpoint = RED.nodes.getNode(config.apiEndpointRef);
-    return endpoint && typeof endpoint.getClient === 'function' ? endpoint.getClient() : undefined;
-}
-
-module.exports = { TOKEN_FILE, loadTokens, saveTokens, deleteTokens, getUrls, getClient };
+module.exports = { TOKEN_FILE, loadTokens, saveTokens, deleteTokens, getUrls };

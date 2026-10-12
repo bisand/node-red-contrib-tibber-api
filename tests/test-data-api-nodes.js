@@ -2,10 +2,12 @@ const { describe, it, before, after, beforeEach, afterEach } = require('node:tes
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
-const { createRED, createDataApiServer } = require('./helpers');
-const { loadTokens, saveTokens, deleteTokens, TOKEN_FILE } = require('../nodes/tibber-data-api-common');
+const { createRED, createApiServer, createDataApiServer } = require('./helpers');
+// ws is a dependency of tibber-api.
+const WebSocket = require(require.resolve('ws', { paths: [require.resolve('tibber-api')] }));
+const { loadTokens, saveTokens, deleteTokens, TOKEN_FILE } = require('../nodes/tibber-token-store');
 
-const redirectUri = 'http://localhost:1880/tibber-data-api/callback';
+const redirectUri = 'http://localhost:1880/tibber-api/callback';
 
 function json(res, body, status = 200) {
     res.writeHead(status, { 'Content-Type': 'application/json' });
@@ -31,6 +33,7 @@ describe('Data API nodes', function () {
     let api;
     let RED;
     let nodes;
+    let endpoints;
 
     before(async function () {
         api = await createDataApiServer();
@@ -43,6 +46,7 @@ describe('Data API nodes', function () {
     beforeEach(function () {
         RED = createRED(api.settings);
         nodes = [];
+        endpoints = [];
         api.requests.length = 0;
         api.tokenRequests.length = 0;
         api.tokens = { access_token: 'access', refresh_token: 'refresh', expires_in: 3600 };
@@ -53,17 +57,17 @@ describe('Data API nodes', function () {
         for (const node of nodes) {
             await RED.close(node);
         }
+        // Closing the endpoints stops their token refresh timers.
+        for (const id of endpoints) {
+            await RED.close(RED.nodes.getNode(id));
+        }
         fs.rmSync(RED.settings.userDir, { recursive: true, force: true });
     });
 
-    /** Create a Data API endpoint node, logged in unless tokens is null. Returns its id. */
-    function createEndpoint(tokens = { accessToken: 'access', refreshToken: 'refresh', expiresAt: Date.now() + 3600000 }) {
-        const id = `data-endpoint-${Math.random().toString(36).slice(2)}`;
-        RED.nodes.addCredentials(id, { clientId: 'client', clientSecret: 'secret' });
-        if (tokens) {
-            saveTokens(RED, id, tokens);
-        }
-        new RED.types['tibber-data-api-endpoint'].constructor({ id, type: 'tibber-data-api-endpoint' });
+    /** Create an API endpoint node that logs in, logged in unless tokens is null. Returns its id. */
+    function createEndpoint(tokens) {
+        const id = RED.createLoginEndpoint(tokens);
+        endpoints.push(id);
         return id;
     }
 
@@ -97,27 +101,27 @@ describe('Data API nodes', function () {
         });
     });
 
-    describe('tibber-data-api-endpoint', function () {
+    describe('tibber-api-endpoint login', function () {
         it('Should store the client secret as a password', function () {
-            assert.equal(RED.types['tibber-data-api-endpoint'].options.credentials.clientSecret.type, 'password');
+            assert.equal(RED.types['tibber-api-endpoint'].options.credentials.clientSecret.type, 'password');
         });
 
         it('Should have no client until the user has logged in', function () {
-            assert.equal(RED.nodes.getNode(createEndpoint(null)).getClient(), undefined);
-            assert.ok(RED.nodes.getNode(createEndpoint()).getClient());
+            assert.equal(RED.nodes.getNode(createEndpoint(null)).getDataClient(), undefined);
+            assert.ok(RED.nodes.getNode(createEndpoint()).getDataClient());
         });
 
         it('Should require permission to start a login and read the status, but not for the callback', function () {
-            assert.equal(RED.routes['POST /tibber-data-api/:id/auth'].permission, 'tibber-data-api-endpoint.write');
-            assert.equal(RED.routes['GET /tibber-data-api/:id/status'].permission, 'tibber-data-api-endpoint.read');
-            assert.equal(RED.routes['GET /tibber-data-api/callback'].permission, undefined);
+            assert.equal(RED.routes['POST /tibber-api/:id/auth'].permission, 'tibber-api-endpoint.write');
+            assert.equal(RED.routes['GET /tibber-api/:id/status'].permission, 'tibber-api-endpoint.read');
+            assert.equal(RED.routes['GET /tibber-api/callback'].permission, undefined);
         });
 
         it('Should log in and store the tokens', async function () {
             const id = 'new-endpoint';
-            assert.deepEqual((await RED.request('GET /tibber-data-api/:id/status', { params: { id } })).body, { authorized: false });
+            assert.deepEqual((await RED.request('GET /tibber-api/:id/status', { params: { id } })).body, { authorized: false });
 
-            const started = await RED.request('POST /tibber-data-api/:id/auth', {
+            const started = await RED.request('POST /tibber-api/:id/auth', {
                 params: { id },
                 body: { clientId: 'client', clientSecret: 'secret', scopes: 'openid data-api-homes-read', redirectUri },
             });
@@ -132,7 +136,7 @@ describe('Data API nodes', function () {
             assert.ok(!started.body.url.includes('secret'));
 
             const before = Date.now();
-            const finished = await RED.request('GET /tibber-data-api/callback', { query: { code: 'the-code', state: url.searchParams.get('state') } });
+            const finished = await RED.request('GET /tibber-api/callback', { query: { code: 'the-code', state: url.searchParams.get('state') } });
 
             assert.equal(finished.status, 200);
             assert.match(finished.body, /Logged in to Tibber/);
@@ -144,36 +148,110 @@ describe('Data API nodes', function () {
             assert.equal(tokens.accessToken, 'access');
             assert.equal(tokens.refreshToken, 'refresh');
             assert.ok(tokens.expiresAt >= before + 3600000);
-            assert.deepEqual((await RED.request('GET /tibber-data-api/:id/status', { params: { id } })).body, { authorized: true });
+            assert.deepEqual((await RED.request('GET /tibber-api/:id/status', { params: { id } })).body, { authorized: true });
 
             // The same state can not be used twice.
-            assert.equal((await RED.request('GET /tibber-data-api/callback', { query: { code: 'the-code', state: url.searchParams.get('state') } })).status, 400);
+            assert.equal((await RED.request('GET /tibber-api/callback', { query: { code: 'the-code', state: url.searchParams.get('state') } })).status, 400);
         });
 
         it('Should use the stored client secret when the editor sends the placeholder', async function () {
             const id = createEndpoint(null);
 
-            const started = await RED.request('POST /tibber-data-api/:id/auth', { params: { id }, body: { clientId: 'client', clientSecret: '__PWRD__', redirectUri } });
-            await RED.request('GET /tibber-data-api/callback', { query: { code: 'the-code', state: new URL(started.body.url).searchParams.get('state') } });
+            const started = await RED.request('POST /tibber-api/:id/auth', { params: { id }, body: { clientId: 'client', clientSecret: '__PWRD__', redirectUri } });
+            await RED.request('GET /tibber-api/callback', { query: { code: 'the-code', state: new URL(started.body.url).searchParams.get('state') } });
 
             assert.equal(api.tokenRequests[0].client_secret, 'secret');
-            assert.ok(RED.nodes.getNode(id).getClient());
+            assert.ok(RED.nodes.getNode(id).getDataClient());
         });
 
-        it('Should reject a login without a client id or with another redirect address', async function () {
-            const noClient = await RED.request('POST /tibber-data-api/:id/auth', { params: { id: 'x' }, body: { redirectUri } });
-            const badRedirect = await RED.request('POST /tibber-data-api/:id/auth', { params: { id: 'x' }, body: { clientId: 'client', redirectUri: 'https://example.com/elsewhere' } });
-            const noRedirect = await RED.request('POST /tibber-data-api/:id/auth', { params: { id: 'x' }, body: { clientId: 'client' } });
+        it('Should finish a login from a pasted address', async function () {
+            const id = createEndpoint(null);
+            const started = await RED.request('POST /tibber-api/:id/auth', { params: { id }, body: { clientId: 'client', clientSecret: 'secret', redirectUri } });
+            const state = new URL(started.body.url).searchParams.get('state');
+            const pasted = `  ${redirectUri}?code=the-code&scope=openid&state=${state}\n`;
+
+            const wrongEndpoint = await RED.request('POST /tibber-api/:id/auth/complete', { params: { id: 'other' }, body: { url: pasted } });
+            const notAnAddress = await RED.request('POST /tibber-api/:id/auth/complete', { params: { id }, body: { url: 'the-code' } });
+            assert.equal(wrongEndpoint.status, 400);
+            assert.equal(notAnAddress.status, 400);
+            assert.match(notAnAddress.body.error, /paste the whole address/);
+            assert.equal(api.tokenRequests.length, 0);
+
+            const finished = await RED.request('POST /tibber-api/:id/auth/complete', { params: { id }, body: { url: pasted } });
+
+            assert.deepEqual(finished, { status: 200, body: { authorized: true } });
+            assert.equal(api.tokenRequests[0].code, 'the-code');
+            assert.equal(loadTokens(RED, id).accessToken, 'access');
+            assert.equal(RED.nodes.getNode(id).currentAccessToken, 'access');
+            assert.equal(RED.routes['POST /tibber-api/:id/auth/complete'].permission, 'tibber-api-endpoint.write');
+        });
+
+        it('Should also finish a login through the address served next to the HTTP In nodes', async function () {
+            const id = createEndpoint(null);
+            const started = await RED.request('POST /tibber-api/:id/auth', {
+                params: { id },
+                body: { clientId: 'client', clientSecret: 'secret', redirectUri: 'https://public.example.com/tibber-api/callback' },
+            });
+            const url = new URL(started.body.url);
+            assert.equal(url.searchParams.get('redirect_uri'), 'https://public.example.com/tibber-api/callback');
+
+            const finished = await RED.request('NODE GET /tibber-api/callback', { query: { code: 'the-code', state: url.searchParams.get('state') } });
+
+            assert.equal(finished.status, 200);
+            assert.equal(api.tokenRequests[0].redirect_uri, 'https://public.example.com/tibber-api/callback');
+            assert.equal(RED.nodes.getNode(id).currentAccessToken, 'access');
+            assert.equal((await RED.request('NODE GET /tibber-api/callback', { query: { code: 'x', state: 'guess' } })).status, 400);
+        });
+
+        it('Should use the access token unless the endpoint is set to log in', async function () {
+            const legacy = RED.nodes.getNode(RED.createEndpoint('https://api.tibber.com/v1-beta/gql', 'personal-token'));
+            const login = RED.nodes.getNode(createEndpoint());
+
+            assert.equal(legacy.authType, 'token');
+            assert.equal(legacy.currentAccessToken, 'personal-token');
+            assert.equal(await legacy.getAccessToken(), 'personal-token');
+            assert.equal(legacy.getDataClient(), undefined);
+            assert.equal(login.authType, 'oauth');
+            assert.equal(login.currentAccessToken, 'access');
+            assert.equal(RED.nodes.getNode(createEndpoint(null)).currentAccessToken, undefined);
+        });
+
+        it('Should replace the login token before it expires', async function () {
+            api.tokens = { access_token: 'new-access', refresh_token: 'new-refresh', expires_in: 3600 };
+            const timers = [];
+            const realSetTimeout = global.setTimeout;
+            global.setTimeout = (callback, delay) => timers.push({ callback, delay });
+            let id;
+            try {
+                id = createEndpoint({ accessToken: 'access', refreshToken: 'refresh', expiresAt: Date.now() + 6 * 60000 });
+            } finally {
+                global.setTimeout = realSetTimeout;
+            }
+
+            // Five minutes before the token expires.
+            assert.equal(timers.length, 1);
+            assert.ok(timers[0].delay > 55000 && timers[0].delay <= 60000);
+            await timers[0].callback();
+
+            assert.equal(api.tokenRequests[0].refresh_token, 'refresh');
+            assert.equal(RED.nodes.getNode(id).currentAccessToken, 'new-access');
+            assert.equal(loadTokens(RED, id).refreshToken, 'new-refresh');
+        });
+
+        it('Should reject a login without a client id or a redirect address', async function () {
+            const noClient = await RED.request('POST /tibber-api/:id/auth', { params: { id: 'x' }, body: { redirectUri } });
+            const badRedirect = await RED.request('POST /tibber-api/:id/auth', { params: { id: 'x' }, body: { clientId: 'client', redirectUri: 'not an address' } });
+            const noRedirect = await RED.request('POST /tibber-api/:id/auth', { params: { id: 'x' }, body: { clientId: 'client' } });
 
             assert.deepEqual([noClient.status, badRedirect.status, noRedirect.status], [400, 400, 400]);
         });
 
         it('Should reject a callback with an unknown state or an error from Tibber', async function () {
-            const unknown = await RED.request('GET /tibber-data-api/callback', { query: { code: 'the-code', state: 'guess' } });
+            const unknown = await RED.request('GET /tibber-api/callback', { query: { code: 'the-code', state: 'guess' } });
             assert.equal(unknown.status, 400);
 
-            const started = await RED.request('POST /tibber-data-api/:id/auth', { params: { id: 'x' }, body: { clientId: 'client', redirectUri } });
-            const denied = await RED.request('GET /tibber-data-api/callback', {
+            const started = await RED.request('POST /tibber-api/:id/auth', { params: { id: 'x' }, body: { clientId: 'client', redirectUri } });
+            const denied = await RED.request('GET /tibber-api/callback', {
                 query: { error: 'access_denied', error_description: '<b>denied</b>', state: new URL(started.body.url).searchParams.get('state') },
             });
             assert.equal(denied.status, 400);
@@ -184,9 +262,9 @@ describe('Data API nodes', function () {
 
         it('Should report a failed code exchange', async function () {
             api.tokens = null;
-            const started = await RED.request('POST /tibber-data-api/:id/auth', { params: { id: 'x' }, body: { clientId: 'client', redirectUri } });
+            const started = await RED.request('POST /tibber-api/:id/auth', { params: { id: 'x' }, body: { clientId: 'client', redirectUri } });
 
-            const finished = await RED.request('GET /tibber-data-api/callback', { query: { code: 'the-code', state: new URL(started.body.url).searchParams.get('state') } });
+            const finished = await RED.request('GET /tibber-api/callback', { query: { code: 'the-code', state: new URL(started.body.url).searchParams.get('state') } });
 
             assert.equal(finished.status, 400);
             assert.match(finished.body, /Login failed: Token request failed: invalid_grant/);
@@ -263,9 +341,11 @@ describe('Data API nodes', function () {
         it('Should report an error when not logged in', async function () {
             const node = create('tibber-data-api', { apiEndpointRef: createEndpoint(null), queryName: 'getHomes' });
             const withoutEndpoint = create('tibber-data-api', { queryName: 'getHomes' });
+            const withAccessToken = create('tibber-data-api', { apiEndpointRef: RED.createEndpoint('https://api.tibber.com/v1-beta/gql'), queryName: 'getHomes' });
 
             assert.match((await RED.input(node, { payload: {} })).message, /Not logged in/);
             assert.match((await RED.input(withoutEndpoint, {})).message, /Not logged in/);
+            assert.match((await RED.input(withAccessToken, {})).message, /does not accept an access token/);
             assert.equal(api.requests.length, 0);
         });
 
@@ -304,7 +384,7 @@ describe('Data API nodes', function () {
 
             // A restart reads the new tokens from the file.
             await RED.close(RED.nodes.getNode(endpointId));
-            assert.equal(RED.nodes.getNode(endpointId).getClient().tokens.refreshToken, 'new-refresh');
+            assert.equal(RED.nodes.getNode(endpointId).getDataClient().tokens.refreshToken, 'new-refresh');
         });
     });
 
@@ -401,6 +481,124 @@ describe('Data API nodes', function () {
 
             assert.equal(api.requests.length, 0);
             assert.deepEqual(node.sent, []);
+        });
+    });
+
+    describe('login with the GraphQL nodes', function () {
+        let gql;
+        let wss;
+        let initTokens;
+        let rejectToken;
+
+        before(async function () {
+            gql = await createApiServer();
+            wss = new WebSocket.Server({ port: 0 });
+            await new Promise((resolve) => wss.on('listening', resolve));
+            wss.on('connection', (socket) => {
+                socket.on('message', (data) => {
+                    const msg = JSON.parse(data);
+                    if (msg.type === 'connection_init') {
+                        initTokens.push(msg.payload.token);
+                        if (msg.payload.token === rejectToken) {
+                            socket.close(4403, 'Invalid token');
+                        } else {
+                            socket.send(JSON.stringify({ type: 'connection_ack' }));
+                        }
+                    } else if (msg.type === 'subscribe') {
+                        socket.send(JSON.stringify({ id: msg.id, type: 'next', payload: { data: { liveMeasurement: { power: 1337 } } } }));
+                    }
+                });
+            });
+        });
+
+        after(async function () {
+            for (const client of wss.clients) {
+                client.terminate();
+            }
+            await new Promise((resolve) => wss.close(resolve));
+            await gql.close();
+        });
+
+        beforeEach(function () {
+            initTokens = [];
+            rejectToken = undefined;
+            gql.requests.length = 0;
+            gql.reply = (body) => {
+                if (body.query.includes('query getHomes')) return { status: 200, body: { data: { viewer: { homes: [{ id: 'home1' }] } } } };
+                if (body.query.includes('websocketSubscriptionUrl')) return { status: 200, body: { data: { viewer: { websocketSubscriptionUrl: `ws://127.0.0.1:${wss.address().port}` } } } };
+                if (body.query.includes('realTimeConsumptionEnabled')) return { status: 200, body: { data: { viewer: { home: { features: { realTimeConsumptionEnabled: true } } } } } };
+                return { status: 200, body: { data: {} } };
+            };
+        });
+
+        function createGraphQLEndpoint(tokens) {
+            const id = RED.createLoginEndpoint(tokens, { queryUrl: gql.url });
+            endpoints.push(id);
+            return id;
+        }
+
+        it('Should query with the login token and refresh it when it has expired', async function () {
+            api.tokens = { access_token: 'new-access', refresh_token: 'new-refresh', expires_in: 3600 };
+            const endpointId = createGraphQLEndpoint();
+            const node = create('tibber-data', { apiEndpointRef: endpointId, queryName: 'getHomes' });
+
+            assert.equal(await RED.input(node, { payload: {} }), undefined);
+            assert.deepEqual(node.sent[0].payload, [{ id: 'home1' }]);
+            assert.equal(gql.requests[0].headers.authorization, 'Bearer access');
+            assert.equal(api.tokenRequests.length, 0);
+
+            // The token expires. The next query gets a new one first.
+            RED.nodes.getNode(endpointId).getDataClient().tokens.expiresAt = Date.now() - 1000;
+            assert.equal(await RED.input(node, { payload: {} }), undefined);
+
+            assert.equal(api.tokenRequests.length, 1);
+            assert.equal(gql.requests[1].headers.authorization, 'Bearer new-access');
+            assert.equal(loadTokens(RED, endpointId).refreshToken, 'new-refresh');
+        });
+
+        it('Should report an error when the endpoint is not logged in', function () {
+            const node = create('tibber-query', { apiEndpointRef: createGraphQLEndpoint(null) });
+
+            assert.match(node.errors[0], /Missing mandatory parameters/);
+        });
+
+        it('Should run the live feed with the login token', { timeout: 15000 }, async function () {
+            const endpointId = createGraphQLEndpoint();
+            const first = create('tibber-feed', { active: true, homeId: 'home1', power: '1', apiEndpointRef: endpointId });
+            const second = create('tibber-feed', { active: true, homeId: 'home1', power: '1', apiEndpointRef: endpointId });
+
+            await waitFor(() => first.sent.length > 0 && second.sent.length > 0);
+
+            assert.deepEqual(initTokens, ['access']);
+            assert.deepEqual(first.sent[0], { payload: { power: 1337 } });
+            assert.deepEqual(Object.keys(RED.types['tibber-feed'].constructor.instances), [`endpoint:${endpointId}`]);
+            assert.ok(!first.logs.concat(second.logs).some((line) => line.includes('access')));
+        });
+
+        it('Should refresh a rejected login token and reconnect the live feed', { timeout: 15000 }, async function () {
+            api.tokens = { access_token: 'new-access', refresh_token: 'new-refresh', expires_in: 3600 };
+            rejectToken = 'access';
+            const node = create('tibber-feed', { active: true, homeId: 'home1', power: '1', apiEndpointRef: createGraphQLEndpoint() });
+
+            await waitFor(() => node.sent.length > 0);
+
+            assert.deepEqual(initTokens, ['access', 'new-access']);
+            assert.equal(api.tokenRequests.length, 1);
+            assert.deepEqual(node.errors, []);
+            assert.deepEqual(node.statuses.at(-1), { fill: 'green', shape: 'dot', text: 'connected' });
+        });
+
+        it('Should stop the live feed when the login can not be refreshed', { timeout: 15000 }, async function () {
+            api.tokens = null;
+            rejectToken = 'access';
+            const node = create('tibber-feed', { active: true, homeId: 'home1', power: '1', apiEndpointRef: createGraphQLEndpoint() });
+
+            await waitFor(() => node.errors.length > 0);
+            await new Promise((resolve) => setTimeout(resolve, 2500));
+
+            assert.deepEqual(initTokens, ['access']);
+            assert.match(node.errors[0], /invalid_grant/);
+            assert.deepEqual(node.statuses.at(-1), { fill: 'red', shape: 'dot', text: 'invalid token' });
         });
     });
 });

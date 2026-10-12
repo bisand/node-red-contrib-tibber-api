@@ -1,5 +1,5 @@
 const TibberQuery = require('tibber-api').TibberQuery;
-const { getApiConfig, getTimeout, toError, getPayload } = require('./tibber-common');
+const { getApiConfig, ensureAccessToken, getTimeout, toError, getPayload } = require('./tibber-common');
 
 // Convert a paging value from a message to what tibber-api expects: a Date, or a cursor from pageInfo.
 function toCursor(value) {
@@ -37,7 +37,7 @@ module.exports = function (RED) {
 
         const apiConfig = getApiConfig(RED, config);
         if (!apiConfig) {
-            this.error('Missing mandatory parameters (queryUrl and/or accessToken)');
+            this.error('Missing mandatory parameters (queryUrl and/or accessToken). Log in or enter an access token on the API endpoint.');
             return;
         }
 
@@ -69,6 +69,7 @@ module.exports = function (RED) {
                 return;
             }
             try {
+                await ensureAccessToken(RED, this._config);
                 msg.payload = await query(this.client, { homeId, energyResolution, lastCount, paging });
                 send(msg);
                 done();

@@ -1,86 +1,221 @@
-<!-- <script type="text/javascript" src="tools.js"></script> -->
 <script type="text/javascript">
-  const urlValidator = function (url) {
-    var regExp = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/;
-    return new RegExp(regExp).test(url);
-  };
+  (function () {
+    var statusTimer;
 
-  RED.nodes.registerType("tibber-api-endpoint", {
-    category: "config",
-    credentials: {
-      accessToken: {
-        type: 'password',
-      },
-    },
-    defaults: {
-      queryUrl: {
-        value: "https://api.tibber.com/v1-beta/gql",
-        validate: (value) => {
-          var queryUrl = $("#node-config-input-queryUrl").val();
-          return urlValidator(value ? value : queryUrl) || urlValidator(value);
-        }
-      },
-      feedConnectionTimeout: {
-        value: 30,
-        required: true,
-        validate: (value) => {
-          if (value < 5) {
-            $("#node-config-input-feedConnectionTimeout").val(5);
-            return false;
-          }
-          return RED.validators.number(value);
-        }
-      },
-      feedTimeout: {
-        value: 60,
-        required: true,
-        validate: (value) => {
-          if (value < 5) {
-            $("#node-config-input-feedTimeout").val(5);
-            return false;
-          }
-          return RED.validators.number(value);
-        }
-      },
-      queryRequestTimeout: {
-        value: 30,
-        required: true,
-        validate: (value) => {
-          if (value < 5) {
-            $("#node-config-input-queryRequestTimeout").val(5);
-            return false;
-          }
-          return RED.validators.number(value);
-        }
-      },
-      name: {
-        value: ""
-      }
-    },
-    label: function () {
-      return this.name ? this.name : 'Access Token';
-    },
-    oneditprepare: function () {
-      if (!this.feedConnectionTimeout) {
-        this.feedConnectionTimeout = 30;
-        $("#node-config-input-feedConnectionTimeout").val(this.feedConnectionTimeout);
-      }
-      if (!this.queryRequestTimeout) {
-        this.queryRequestTimeout = 30;
-        $("#node-config-input-queryRequestTimeout").val(this.queryRequestTimeout);
-      }
+    const urlValidator = function (url) {
+      var regExp = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/;
+      return new RegExp(regExp).test(url);
+    };
+
+    function stopStatusTimer() {
+      clearInterval(statusTimer);
+      statusTimer = undefined;
     }
-  });
+
+    RED.nodes.registerType("tibber-api-endpoint", {
+      category: "config",
+      credentials: {
+        accessToken: {
+          type: 'password',
+        },
+        clientId: {
+          type: 'text',
+        },
+        clientSecret: {
+          type: 'password',
+        },
+      },
+      defaults: {
+        // Empty on endpoints created before the login was added. They use the access token.
+        authType: {
+          value: ""
+        },
+        scopes: {
+          value: "openid profile email offline_access data-api-user-read data-api-homes-read data-api-vehicles-read data-api-chargers-read data-api-thermostats-read data-api-energy-systems-read data-api-inverters-read data-api-meters-read"
+        },
+        redirectUri: {
+          value: ""
+        },
+        queryUrl: {
+          value: "https://api.tibber.com/v1-beta/gql",
+          validate: (value) => {
+            var queryUrl = $("#node-config-input-queryUrl").val();
+            return urlValidator(value ? value : queryUrl) || urlValidator(value);
+          }
+        },
+        feedConnectionTimeout: {
+          value: 30,
+          required: true,
+          validate: (value) => {
+            if (value < 5) {
+              $("#node-config-input-feedConnectionTimeout").val(5);
+              return false;
+            }
+            return RED.validators.number(value);
+          }
+        },
+        feedTimeout: {
+          value: 60,
+          required: true,
+          validate: (value) => {
+            if (value < 5) {
+              $("#node-config-input-feedTimeout").val(5);
+              return false;
+            }
+            return RED.validators.number(value);
+          }
+        },
+        queryRequestTimeout: {
+          value: 30,
+          required: true,
+          validate: (value) => {
+            if (value < 5) {
+              $("#node-config-input-queryRequestTimeout").val(5);
+              return false;
+            }
+            return RED.validators.number(value);
+          }
+        },
+        name: {
+          value: ""
+        }
+      },
+      label: function () {
+        return this.name ? this.name : (this.authType === 'oauth' ? 'Tibber Login' : 'Access Token');
+      },
+      oneditprepare: function () {
+        var node = this;
+        if (!this.feedConnectionTimeout) {
+          this.feedConnectionTimeout = 30;
+          $("#node-config-input-feedConnectionTimeout").val(this.feedConnectionTimeout);
+        }
+        if (!this.queryRequestTimeout) {
+          this.queryRequestTimeout = 30;
+          $("#node-config-input-queryRequestTimeout").val(this.queryRequestTimeout);
+        }
+
+        // New endpoints log in with client ID and secret. Endpoints that already have an access token keep using it.
+        if (!this.authType) {
+          $("#node-config-input-authType").val(this.credentials && this.credentials.has_accessToken ? "token" : "oauth");
+        }
+        function showAuthType() {
+          var oauth = $("#node-config-input-authType").val() === "oauth";
+          $(".tibber-auth-oauth").toggle(oauth);
+          $(".tibber-auth-token").toggle(!oauth);
+        }
+        $("#node-config-input-authType").on("change", showAuthType);
+        showAuthType();
+
+        // The address Tibber sends the browser to after the login. It must be registered on the OAuth client.
+        if (!this.redirectUri) {
+          $("#node-config-input-redirectUri").val(new URL("tibber-api/callback", window.location.href.split(/[?#]/)[0]).href);
+        }
+
+        function showStatus() {
+          $.getJSON("tibber-api/" + node.id + "/status", function (data) {
+            $("#node-config-tibber-login-status").text(data.authorized ? "Logged in" : "Not logged in");
+            if (data.authorized) {
+              stopStatusTimer();
+            }
+          });
+        }
+        showStatus();
+
+        function showError(xhr, text) {
+          var message = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : xhr.statusText;
+          RED.notify(text + message, "error");
+        }
+
+        $("#node-config-tibber-login").on("click", function () {
+          $.ajax({
+            url: "tibber-api/" + node.id + "/auth",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+              clientId: $("#node-config-input-clientId").val(),
+              clientSecret: $("#node-config-input-clientSecret").val(),
+              scopes: $("#node-config-input-scopes").val(),
+              redirectUri: $("#node-config-input-redirectUri").val()
+            }),
+            success: function (data) {
+              window.open(data.url, "_blank");
+              stopStatusTimer();
+              statusTimer = setInterval(showStatus, 2000);
+            },
+            error: function (xhr) {
+              showError(xhr, "Unable to start the login: ");
+            }
+          });
+        });
+
+        $("#node-config-tibber-complete").on("click", function () {
+          $.ajax({
+            url: "tibber-api/" + node.id + "/auth/complete",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ url: $("#node-config-tibber-pasted-url").val() }),
+            success: function () {
+              $("#node-config-tibber-pasted-url").val("");
+              showStatus();
+            },
+            error: function (xhr) {
+              showError(xhr, "");
+            }
+          });
+        });
+      },
+      oneditsave: stopStatusTimer,
+      oneditcancel: stopStatusTimer
+    });
+  })();
 </script>
 
 <script type="text/x-red" data-template-name="tibber-api-endpoint">
   <div class="form-row">
-      <label for="node-config-input-queryUrl"><i class="icon-bookmark"></i> GraphQL Endpoint</label>
-      <input type="text" id="node-config-input-queryUrl" placeholder="GraphQL Endpoint">
+    <label for="node-config-input-name"><i class="icon-bookmark"></i> Name</label>
+    <input type="text" id="node-config-input-name" placeholder="Name">
   </div>
   <div class="form-row">
+    <label for="node-config-input-authType"><i class="fa fa-lock"></i> Authentication</label>
+    <select id="node-config-input-authType" style="width: 70%;">
+      <option value="oauth">Log in with client ID and secret</option>
+      <option value="token">Access token</option>
+    </select>
+  </div>
+  <div class="form-row tibber-auth-token">
     <label for="node-config-input-accessToken"><i class="icon-bookmark"></i> Access Token</label>
     <input type="password" id="node-config-input-accessToken" placeholder="Access Token">
+  </div>
+  <div class="form-row tibber-auth-oauth">
+    <label for="node-config-input-clientId"><i class="fa fa-id-card-o"></i> Client ID</label>
+    <input type="text" id="node-config-input-clientId" placeholder="Client ID">
+  </div>
+  <div class="form-row tibber-auth-oauth">
+    <label for="node-config-input-clientSecret"><i class="fa fa-key"></i> Client Secret</label>
+    <input type="password" id="node-config-input-clientSecret" placeholder="Client Secret">
+  </div>
+  <div class="form-row tibber-auth-oauth">
+    <label for="node-config-input-scopes"><i class="fa fa-list"></i> Scopes</label>
+    <input type="text" id="node-config-input-scopes" placeholder="Scopes">
+  </div>
+  <div class="form-row tibber-auth-oauth">
+    <label for="node-config-input-redirectUri"><i class="fa fa-reply"></i> Redirect URI</label>
+    <input type="text" id="node-config-input-redirectUri" placeholder="Redirect URI">
+  </div>
+  <div class="form-row tibber-auth-oauth">
+    <label for="node-config-tibber-login"><i class="fa fa-sign-in"></i> Login</label>
+    <button type="button" class="red-ui-button" id="node-config-tibber-login">Log in to Tibber</button>
+    <span id="node-config-tibber-login-status" style="margin-left: 10px;"></span>
+  </div>
+  <div class="form-row tibber-auth-oauth">
+    <label for="node-config-tibber-pasted-url"><i class="fa fa-clipboard"></i> Or paste</label>
+    <input type="text" id="node-config-tibber-pasted-url" placeholder="Address from the browser after logging in" style="width: 50%;">
+    <button type="button" class="red-ui-button" id="node-config-tibber-complete">Finish login</button>
+  </div>
+  <hr>
+  <div class="form-row">
+      <label for="node-config-input-queryUrl"><i class="icon-bookmark"></i> GraphQL Endpoint</label>
+      <input type="text" id="node-config-input-queryUrl" placeholder="GraphQL Endpoint">
   </div>
   <div class="form-row">
     <label for="node-config-input-feedConnectionTimeout"><i class="icon-tag"></i> Connection Timeout (s)</label>
@@ -94,20 +229,48 @@
     <label for="node-config-input-queryRequestTimeout"><i class="icon-tag"></i> Request Timeout (s)</label>
     <input type="number" id="node-config-input-queryRequestTimeout" placeholder="Query Request Timeout">
   </div>
-  <div class="form-row">
-    <label for="node-config-input-name"><i class="icon-bookmark"></i> Name</label>
-    <input type="text" id="node-config-input-name" placeholder="Name">
-  </div>
 </script>
 
 <script type="text/x-red" data-help-name="tibber-api-endpoint">
-  <p>Connection to the Tibber API, shared by the Tibber nodes.</p>
+  <p>Connection to Tibber, shared by the Tibber nodes.</p>
+  <h3>Authentication</h3>
+  <p><b>Log in with client ID and secret</b> works with all Tibber nodes, and is required by the
+    <i>tibber-data-api</i> and <i>tibber-data-api-feed</i> nodes.</p>
+  <ol>
+    <li>Create an OAuth client at <a href="https://data-api.tibber.com/clients/manage/" target="_blank">data-api.tibber.com</a>.
+      Add the <b>Redirect URI</b> shown here to the client, and select the scopes you need.</li>
+    <li>Enter the <b>Client ID</b> and <b>Client Secret</b> of the client here.</li>
+    <li>Click <b>Log in to Tibber</b> and log in in the window that opens. The status changes to <i>Logged in</i>.</li>
+    <li>Save the configuration and deploy.</li>
+  </ol>
+  <h3>Redirect URI</h3>
+  <p>After you log in, Tibber sends <i>your browser</i> to the Redirect URI with a one-time code, and Node-RED exchanges
+    the code for tokens. Tibber never connects to Node-RED, so Node-RED does not have to be reachable from the internet.</p>
+  <p>The Redirect URI must be exactly the same here and on the client at Tibber, and Tibber only accepts addresses that
+    start with <code>https://</code> or <code>http://localhost</code>.</p>
+  <ul>
+    <li><b>Editor opened through <code>localhost</code> or an <code>https</code> address:</b> use the suggested Redirect URI
+      and <b>Log in to Tibber</b>. Use <code>localhost</code> rather than <code>127.0.0.1</code>.</li>
+    <li><b>Editor opened through another <code>http</code> address</b>, such as <code>http://192.168.1.10:1880</code>, or
+      through Home Assistant: set the Redirect URI to <code>http://localhost:1880/tibber-api/callback</code> here and on
+      the client. After logging in, the browser shows an error page, which is expected. Copy the whole address of that
+      page into <b>Or paste</b> and click <b>Finish login</b>.</li>
+    <li><b>Only the HTTP In nodes are public:</b> Node-RED also answers on <code>/tibber-api/callback</code> next to the
+      HTTP In nodes. Set the Redirect URI to your public <code>https</code> address followed by
+      <code>/tibber-api/callback</code>.</li>
+  </ul>
+  <p>A login must be finished within 10 minutes, and the address can only be used once. See the README for more.</p>
+  <p><b>Access token</b> uses a personal access token from
+    <a href="https://developer.tibber.com/" target="_blank">developer.tibber.com</a>. It works with all nodes except
+    <i>tibber-data-api</i> and <i>tibber-data-api-feed</i>.</p>
   <h3>Properties</h3>
   <dl class="message-properties">
+    <dt>Scopes</dt>
+    <dd>Scopes to request when logging in, separated by spaces. Remove the scopes that are not selected on the client.
+      A device is only visible with the scope for its kind, and <code>data-api-meters-read</code> is needed for live
+      measurements through the Tibber Data API.</dd>
     <dt>GraphQL Endpoint</dt>
     <dd>URL of the Tibber GraphQL API. The default is <code>https://api.tibber.com/v1-beta/gql</code>.</dd>
-    <dt>Access Token</dt>
-    <dd>Personal access token from <a href="https://developer.tibber.com/" target="_blank">developer.tibber.com</a>. It is stored with the Node-RED credentials and is not included when flows are exported.</dd>
     <dt>Connection Timeout</dt>
     <dd>Seconds to wait for the live feed to connect.</dd>
     <dt>Feed Timeout</dt>
@@ -115,4 +278,9 @@
     <dt>Request Timeout</dt>
     <dd>Seconds to wait for a response to a query.</dd>
   </dl>
+  <h3>Details</h3>
+  <p>The access token and the client secret are stored with the Node-RED credentials and are not included when flows are exported.</p>
+  <p>The login gives Node-RED tokens that are renewed automatically. They are stored in the file
+    <code>tibber-api-tokens.json</code> in the Node-RED user directory, not in the flow.
+    Log in again if Node-RED has been stopped for about 30 days.</p>
 </script>

@@ -1,5 +1,5 @@
 const TibberQuery = require('tibber-api').TibberQuery;
-const { getApiConfig, getTimeout, toError, getPayload } = require('./tibber-common');
+const { getApiConfig, ensureAccessToken, getTimeout, toError, getPayload } = require('./tibber-common');
 
 module.exports = function (RED) {
     function TibberUpdateHomeNode(config) {
@@ -8,7 +8,7 @@ module.exports = function (RED) {
 
         const apiConfig = getApiConfig(RED, config);
         if (!apiConfig) {
-            this.error('Missing mandatory parameters (queryUrl and/or accessToken)');
+            this.error('Missing mandatory parameters (queryUrl and/or accessToken). Log in or enter an access token on the API endpoint.');
             return;
         }
 
@@ -32,6 +32,7 @@ module.exports = function (RED) {
             });
 
             try {
+                await ensureAccessToken(RED, this._config);
                 msg.payload = await this.client.updateHome(input);
                 send(msg);
                 done();

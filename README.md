@@ -31,9 +31,7 @@ Click the link below to sign up, and receive 400 NOK to shop smart home gadgets 
 
 > [https://invite.tibber.com/fjafad7b](https://invite.tibber.com/fjafad7b)
 
-You will also need an API token from Tibber. Get it here:
-
-> https://developer.tibber.com/
+You will also need an OAuth client or an access token from Tibber. See the [configuration node](#configuration-node-tibber-api-endpoint) for how to get them.
 
 > Note! In order to use the included Grafana dashboard example, you will need Grafana 6.x or higher.
 
@@ -65,7 +63,7 @@ $ npm install node-red-contrib-tibber-api
 
 ![tibber-feed](examples/images/tibber-feed.png)
 
-Realtime power consuption data from Tibber Pulse. Provide API token, Home ID and select what kind of information you want to retrieve, including reactive power.
+Realtime power consuption data from Tibber Pulse. Select an API endpoint, provide Home ID and select what kind of information you want to retrieve, including reactive power.
 
 The access token and home ID can also be injected through an incoming message (`msg.payload.accessToken` and `msg.payload.homeId`). The feed reconnects by itself when the connection is lost.
 > Note! There should be only one instance running of *tibber-feed* per API key. Doing otherwise may return unpredictable result, or even error responses from the API.
@@ -213,18 +211,9 @@ Available queries:
 
 ### Tibber Data API nodes
 
-The [Tibber Data API](https://data-api.tibber.com/docs/) gives access to devices paired to Tibber, such as electric vehicles, chargers, thermostats, heat pumps, inverters and batteries, and to live measurements from Tibber Pulse and Watty. It is a separate API from the one used by the nodes above. It does not accept the same access token and it does not serve prices.
+The [Tibber Data API](https://data-api.tibber.com/docs/) gives access to devices paired to Tibber, such as electric vehicles, chargers, thermostats, heat pumps, inverters and batteries, and to live measurements from Tibber Pulse and Watty. It is a separate API from the one used by the nodes above, and it does not serve prices.
 
-#### Data API configuration node (*tibber-data-api-endpoint*)
-
-1. Create an OAuth client at [data-api.tibber.com](https://data-api.tibber.com/clients/manage/) and select the scopes you need.
-2. Open the configuration node in Node-RED. Add the **Redirect URI** it shows to the client at Tibber.
-3. Enter the **Client ID** and **Client Secret**, click **Log in to Tibber** and log in in the window that opens.
-4. Save and deploy.
-
-> The Redirect URI follows the address used to open the Node-RED editor, for example `http://localhost:1880/tibber-data-api/callback`. Tibber requires `https`, except for `localhost`.
-
-> The login gives Node-RED tokens that are renewed automatically. They are stored in the file `tibber-data-api-tokens.json` in the Node-RED user directory, readable only by the user running Node-RED. They are not part of the flow and are not included when flows are exported.
+The Tibber Data API nodes need a [configuration node](#configuration-node-tibber-api-endpoint) that logs in with client ID and secret. An access token is not accepted by the Tibber Data API.
 
 #### Tibber Data API query (*tibber-data-api*)
 
@@ -261,7 +250,81 @@ Live measurements from Tibber Pulse and Watty. `msg.payload` is the measurement 
 
 ![tibber-api-endpoint](examples/images/tibber-api-endpoint.png)
 
-When configuring regular tibber nodes, you will have to create or select the configuration from the property **API Endpoint**. Here you can specify **GraphQL Endpoint** and **Access Token**, and the timeouts for the feed and for queries. The access token is stored with the Node-RED credentials and is not included when flows are exported. This configuration can easily be used by any Tibber nodes. This will greatly simplyfy changing of urls and API key, since the change happens on all nodes using the configuration.
+When configuring regular tibber nodes, you will have to create or select the configuration from the property **API Endpoint**. The configuration can be used by any Tibber node, so a change happens on all nodes using it. There are two ways to authenticate:
+
+| Authentication | Works with | How to get it |
+| -------------- | ---------- | ------------- |
+| **Log in with client ID and secret** (default for new configurations) | All nodes | Create an OAuth client at [data-api.tibber.com](https://data-api.tibber.com/clients/manage/) |
+| **Access token** | All nodes except *tibber-data-api* and *tibber-data-api-feed* | Create a personal access token at [developer.tibber.com](https://developer.tibber.com/) |
+
+Configurations created before the login was added keep using their access token. Nothing has to be changed when upgrading.
+
+#### Log in with client ID and secret
+
+1. Create an OAuth client at [data-api.tibber.com](https://data-api.tibber.com/clients/manage/) and select the scopes you need.
+2. Open the configuration node in Node-RED. Add the **Redirect URI** it shows to the client at Tibber. See below if Tibber does not accept it.
+3. Enter the **Client ID** and **Client Secret**, click **Log in to Tibber** and log in in the window that opens. The status changes to *Logged in*.
+4. Save and deploy.
+
+The login gives Node-RED tokens that are renewed automatically. They are stored in the file `tibber-api-tokens.json` in the Node-RED user directory, readable only by the user running Node-RED. They are not part of the flow and are not included when flows are exported. The access token and the client secret are stored with the Node-RED credentials.
+
+#### The Redirect URI
+
+##### How the login works
+
+1. You click **Log in to Tibber**. Node-RED opens Tibber's login page in a new browser window.
+2. You log in at Tibber and approve the access.
+3. Tibber tells **your browser** to go to the Redirect URI, and adds a one-time code to the address.
+4. Node-RED reads the code from that address and exchanges it for tokens, in a call from Node-RED to Tibber.
+
+The Redirect URI is therefore an address your browser opens. Tibber's servers never connect to Node-RED, so **Node-RED does not have to be reachable from the internet**. It only has to be reachable from the browser you log in with, and it needs outgoing access to Tibber.
+
+Two rules decide which Redirect URI you can use:
+
+- It must be the same, character for character, in the configuration node and on the client at Tibber. That includes `http` or `https`, the port and any trailing `/`.
+- Tibber only accepts addresses that start with `https://`, or with `http://localhost`.
+
+##### Which Redirect URI to use
+
+| How you open the Node-RED editor | Redirect URI | What to do |
+| -------------------------------- | ------------ | ---------- |
+| `http://localhost:1880` or `http://127.0.0.1:1880`, on the computer running Node-RED | `http://localhost:1880/tibber-api/callback` | Use **Log in to Tibber**. If the configuration node suggests `127.0.0.1`, change it to `localhost`, and open the editor through `localhost` as well. |
+| An `https` address, for example `https://nodered.example.com` | The address the configuration node suggests | Use **Log in to Tibber**. |
+| An `http` address on your network, for example `http://192.168.1.10:1880` or `http://raspberrypi:1880` | `http://localhost:1880/tibber-api/callback` | Tibber does not accept your address. Use **the paste method** below. |
+| Through Home Assistant or another proxy that gives the editor a long or changing address | `http://localhost:1880/tibber-api/callback` | Use **the paste method** below. |
+| The editor is private, but your HTTP In nodes are reachable through a public `https` address | `https://your-public-address/tibber-api/callback` | Use **Log in to Tibber**. See **Public address** below. |
+
+The configuration node suggests a Redirect URI from the address you opened the editor with, including the path prefix if you have set `httpAdminRoot` in the Node-RED settings. You can change it, and it is saved with the configuration.
+
+##### The paste method
+
+Use this when Tibber does not accept the address of your Node-RED editor.
+
+1. Set the Redirect URI to `http://localhost:1880/tibber-api/callback`, both in the configuration node and on the client at Tibber.
+2. Click **Log in to Tibber** and log in.
+3. The browser now shows an error such as *This site can't be reached*. That is expected: Tibber sent the browser to `localhost`, which is your own computer, and Node-RED is running somewhere else.
+4. Copy the whole address from the address bar of that page. It starts with `http://localhost:1880/tibber-api/callback?code=`.
+5. Paste it into **Or paste** in the configuration node and click **Finish login**. The status changes to *Logged in*.
+
+The address can only be used once, and within 10 minutes of clicking **Log in to Tibber**. If it has expired, click **Log in to Tibber** again.
+
+##### Public address
+
+Node-RED answers on `/tibber-api/callback` in two places: next to the editor, and next to the HTTP In nodes. If only your HTTP In nodes are published on a public `https` address, set the Redirect URI to that address followed by `/tibber-api/callback`. Add the path prefix if you have set `httpNodeRoot` in the Node-RED settings, for example `https://example.com/api/tibber-api/callback`.
+
+This address does not need the editor's login, because the browser arrives there from Tibber. It only accepts a login that was started from the editor in the last 10 minutes, and each login can only be finished once. If you protect the HTTP In nodes with `httpNodeAuth`, the browser asks for that user name and password when Tibber sends it back.
+
+##### If the login fails
+
+| What you see | Cause |
+| ------------ | ----- |
+| Tibber shows an error page instead of the login page | The Redirect URI in the configuration node is not registered on the client, differs by a character, or is an `http` address other than `localhost`. |
+| An error that mentions the scope, at Tibber or as *Login failed* in Node-RED | **Scopes** in the configuration node contains a scope that is not selected on the client. Remove it there, or select it on the client. |
+| *Login failed: unknown or expired login* | More than 10 minutes passed, the address was already used, or Node-RED was restarted after you clicked **Log in to Tibber**. Start again. |
+| *Login failed: Token request failed* | Tibber did not accept the Client ID, the Client Secret or the Redirect URI. Check them and start again. |
+| The status stays *Not logged in* after the paste method | The pasted address was not complete. It must include everything after the `?`. |
+
+The configuration node also holds the **GraphQL Endpoint** and the timeouts for the feed and for queries.
 
 ## Examples
 

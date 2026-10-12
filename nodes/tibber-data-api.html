@@ -6,7 +6,7 @@
             name: {
                 value: '',
             },
-            apiEndpointRef: { value: null, type: 'tibber-data-api-endpoint' },
+            apiEndpointRef: { value: null, type: 'tibber-api-endpoint' },
             queryName: {
                 value: '',
             },
@@ -31,8 +31,8 @@
 
 <script type="text/x-red" data-template-name="tibber-data-api">
     <div class="form-row" style="white-space: nowrap;">
-      <label style="white-space: nowrap; width: 150px;" for="node-input-apiEndpointRef"><i class="icon-tag"></i> Data API Endpoint</label>
-      <input type="text" id="node-input-apiEndpointRef" placeholder="Data API Endpoint">
+      <label style="white-space: nowrap; width: 150px;" for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+      <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
     </div>
     <div class="form-row" style="white-space: nowrap;">
       <label style="white-space: nowrap; width: 150px;" for="node-input-name"><i class="icon-tag"></i> Name</label>
@@ -96,6 +96,7 @@
     <p><code>getDevice</code> returns the device with its <code>attributes</code> and its <code>capabilities</code>, which hold the current state, for example the state of charge of a car.</p>
     <p>A device only has history if <code>supportedHistory.resolutions</code> lists a resolution. <code>getDeviceHistory</code> returns
     <code>items</code> and a <code>next</code> or <code>prev</code> link to the page after or before.</p>
-    <p>A device is only visible if its kind was selected in the scopes when logging in.</p>
+    <p>The API endpoint must log in with client ID and secret. The Tibber Data API does not accept an access token.
+    A device is only visible if its kind was selected in the scopes when logging in.</p>
     <p>If the query fails, the node reports an error that can be handled with a Catch node.</p>
 </script>

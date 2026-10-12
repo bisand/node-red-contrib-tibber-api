@@ -9,7 +9,7 @@
             active: {
                 value: true,
             },
-            apiEndpointRef: { value: null, type: 'tibber-data-api-endpoint' },
+            apiEndpointRef: { value: null, type: 'tibber-api-endpoint' },
             homeId: {
                 value: '',
             },
@@ -32,8 +32,8 @@
         <input type="checkbox" id="node-input-active" value="1" style="width: auto;">
     </div>
     <div class="form-row" style="white-space: nowrap;">
-        <label style="white-space: nowrap; width: 150px;" for="node-input-apiEndpointRef"><i class="icon-tag"></i> Data API Endpoint</label>
-        <input type="text" id="node-input-apiEndpointRef" placeholder="Data API Endpoint">
+        <label style="white-space: nowrap; width: 150px;" for="node-input-apiEndpointRef"><i class="icon-tag"></i> API Endpoint</label>
+        <input type="text" id="node-input-apiEndpointRef" placeholder="API Endpoint">
     </div>
     <div class="form-row" style="white-space: nowrap;">
         <label style="white-space: nowrap; width: 150px;" for="node-input-name"><i class="icon-tag"></i> Name</label>
@@ -67,7 +67,7 @@
         <dd>ID of the device the measurement comes from.</dd>
     </dl>
     <h3>Details</h3>
-    <p>The scope <code>data-api-meters-read</code> must have been selected when logging in.</p>
+    <p>The API endpoint must log in with client ID and secret, and the scope <code>data-api-meters-read</code> must have been selected when logging in.</p>
     <p>Tibber allows one live feed per home. Starting a second one closes the first, which then shows the status <i>evicted</i> and
     does not reconnect. Use one <i>tibber-data-api-feed</i> node per home.</p>
     <p>The feed reconnects by itself when the connection is lost, with an increasing delay between the attempts.</p>

@@ -1,5 +1,4 @@
-const { toError, getPayload } = require('./tibber-common');
-const { getClient } = require('./tibber-data-api-common');
+const { getDataClient, getDataClientError, toError, getPayload } = require('./tibber-common');
 
 const queries = {
     getHomes: (client) => client.getHomes(),
@@ -35,9 +34,9 @@ module.exports = function (RED) {
         this._config = config;
 
         this.on('input', async (msg, send, done) => {
-            const client = getClient(RED, this._config);
+            const client = getDataClient(RED, this._config);
             if (!client) {
-                done(new Error('Not logged in to Tibber. Open the Data API endpoint and log in.'));
+                done(new Error(getDataClientError(RED, this._config)));
                 return;
             }
 

@@ -11,16 +11,48 @@ const userAgent = `bisand/node-red-contrib-tibber-api/${version}`;
  */
 function getApiConfig(RED, config, overrides = {}) {
     const endpoint = RED.nodes.getNode(config.apiEndpointRef);
-    const credentials = RED.nodes.getCredentials(config.apiEndpointRef);
-    const accessToken = overrides.accessToken || (credentials && credentials.accessToken);
-    if (!endpoint || !endpoint.queryUrl || !accessToken) {
+    const fixedToken = overrides.accessToken;
+    if (!endpoint || !endpoint.queryUrl || !(fixedToken || endpoint.currentAccessToken)) {
         return undefined;
     }
+    const apiEndpoint = { queryUrl: endpoint.queryUrl, userAgent };
+    // tibber-api reads the key on every request and connect. A login token is replaced
+    // about once an hour, so always hand out the current one.
+    Object.defineProperty(apiEndpoint, 'apiKey', { enumerable: true, get: () => fixedToken || endpoint.currentAccessToken });
     return {
         ...config,
         homeId: overrides.homeId || config.homeId,
-        apiEndpoint: { queryUrl: endpoint.queryUrl, apiKey: accessToken, userAgent },
+        apiEndpoint,
     };
+}
+
+/**
+ * Make sure the access token of the API endpoint selected on a node is valid, refreshing a login token if needed.
+ */
+async function ensureAccessToken(RED, config) {
+    const endpoint = RED.nodes.getNode(config.apiEndpointRef);
+    if (endpoint && typeof endpoint.getAccessToken === 'function') {
+        await endpoint.getAccessToken();
+    }
+}
+
+/**
+ * Get the Tibber Data API client from the API endpoint selected on a node.
+ * @returns TibberData object, or undefined if the endpoint does not use a login or the user has not logged in
+ */
+function getDataClient(RED, config) {
+    const endpoint = RED.nodes.getNode(config.apiEndpointRef);
+    return endpoint && typeof endpoint.getDataClient === 'function' ? endpoint.getDataClient() : undefined;
+}
+
+/**
+ * Explain why getDataClient returned nothing.
+ */
+function getDataClientError(RED, config) {
+    const endpoint = RED.nodes.getNode(config.apiEndpointRef);
+    return endpoint && endpoint.authType !== 'oauth'
+        ? 'The Tibber Data API does not accept an access token. Select an API endpoint that logs in with client ID and secret.'
+        : 'Not logged in to Tibber. Open the API endpoint and log in.';
 }
 
 /**
@@ -64,4 +96,4 @@ function getPayload(msg) {
     return msg && msg.payload && typeof msg.payload === 'object' ? msg.payload : {};
 }
 
-module.exports = { userAgent, getApiConfig, getTimeout, toError, getPayload };
+module.exports = { userAgent, getApiConfig, ensureAccessToken, getDataClient, getDataClientError, getTimeout, toError, getPayload };
