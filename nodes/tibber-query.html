@@ -31,6 +31,18 @@
   </div>
 </script>
 
-<script type="text/x-red" data-help-name="tibber-api">
-  <p>A simple node that enables you to query Tibber API.</p>
+<script type="text/x-red" data-help-name="tibber-query">
+  <p>Queries the Tibber API with a GraphQL query.</p>
+  <h3>Input</h3>
+  <dl class="message-properties">
+    <dt>payload <span class="property-type">string</span></dt>
+    <dd>the GraphQL query or mutation.</dd>
+  </dl>
+  <h3>Output</h3>
+  <dl class="message-properties">
+    <dt>payload <span class="property-type">object</span></dt>
+    <dd>the data returned by the Tibber API.</dd>
+  </dl>
+  <h3>Details</h3>
+  <p>If the query fails, the node reports an error that can be handled with a Catch node.</p>
 </script>

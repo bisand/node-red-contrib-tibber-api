@@ -1,4 +1,4 @@
-const { version } = require('./version.js')
+const { userAgent } = require('./tibber-common');
 
 module.exports = function (RED) {
     function TibberApiEndpointNode(config) {
@@ -16,16 +16,12 @@ module.exports = function (RED) {
         this.feedTimeout = config.feedTimeout;
         this.feedConnectionTimeout = config.feedConnectionTimeout;
         this.queryRequestTimeout = config.queryRequestTimeout;
-        this.userAgent = `bisand/node-red-contrib-tibber-api/${version}`;
-
-        this.on('export', () => {
-            alert('EXPORT!');
-        });
+        this.userAgent = userAgent;
     }
     RED.nodes.registerType('tibber-api-endpoint', TibberApiEndpointNode, {
         credentials: {
             accessToken: {
-                type: 'text',
+                type: 'password',
             },
         },
     });

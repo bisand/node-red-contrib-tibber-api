@@ -1,3 +1,4 @@
+const { describe, it } = require('node:test');
 let UrlTools = require('tibber-api').UrlTools;
 let assert = require('assert');
 const urlTools = new UrlTools();

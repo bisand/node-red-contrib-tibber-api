@@ -11,7 +11,6 @@ export default [
             globals: {
                 ...globals.node,
                 ...globals.browser,
-                ...globals.mocha,
                 Atomics: 'readonly',
                 SharedArrayBuffer: 'readonly',
             },

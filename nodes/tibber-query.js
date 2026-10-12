@@ -1,33 +1,33 @@
 const TibberQuery = require('tibber-api').TibberQuery;
+const { getApiConfig, getTimeout, toError } = require('./tibber-common');
 
 module.exports = function (RED) {
     function TibberQueryNode(config) {
         RED.nodes.createNode(this, config);
-        config.apiEndpoint = RED.nodes.getNode(config.apiEndpointRef);
         this._config = config;
 
-        var credentials = RED.nodes.getCredentials(config.apiEndpointRef);
-        if (!config.apiEndpoint.queryUrl || !credentials || !credentials.accessToken) {
+        const apiConfig = getApiConfig(RED, config);
+        if (!apiConfig) {
             this.error('Missing mandatory parameters (queryUrl and/or accessToken)');
             return;
         }
 
-        // Assign access token to api key to meintain compatibility. This will not cause the access token to be exported.
-        config.apiEndpoint.apiKey = credentials.accessToken;
-        this.client = new TibberQuery(config);
+        this.client = new TibberQuery(apiConfig, getTimeout(RED, config, 'queryRequestTimeout', 30));
 
-        this.on('input', async (msg) => {
-            var message = msg;
+        this.on('input', async (msg, send, done) => {
+            if (typeof msg.payload !== 'string' || !msg.payload) {
+                done(new Error('Missing mandatory parameter (msg.payload must be a GraphQL query)'));
+                return;
+            }
             try {
-                var payload = await this.client.query(message.payload);
-                message.payload = payload;
-                this.send(message);
+                msg.payload = await this.client.query(msg.payload);
+                send(msg);
+                done();
             } catch (error) {
-                this.error(error);
+                done(toError(error));
             }
         });
-
     }
 
-    RED.nodes.registerType("tibber-query", TibberQueryNode);
+    RED.nodes.registerType('tibber-query', TibberQueryNode);
 };
