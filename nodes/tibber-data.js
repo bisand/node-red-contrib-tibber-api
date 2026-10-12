@@ -1,109 +1,79 @@
 const TibberQuery = require('tibber-api').TibberQuery;
+const { getApiConfig, getTimeout, toError, getPayload } = require('./tibber-common');
 
-module.exports = function(RED) {
+// Convert a paging value from a message to what tibber-api expects: a Date, or a cursor from pageInfo.
+function toCursor(value) {
+    if (typeof value === 'number' || (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value))) {
+        return new Date(value);
+    }
+    return value || undefined;
+}
+
+// Price queries only accept HOURLY or QUARTER_HOURLY (PriceInfoResolution).
+function toPriceResolution(resolution) {
+    return resolution === 'QUARTER_HOURLY' ? 'QUARTER_HOURLY' : 'HOURLY';
+}
+
+const queries = {
+    getHome: (client, p) => client.getHome(p.homeId),
+    getHomeComplete: (client, p) => client.getHomeComplete(p.homeId),
+    getHomes: (client) => client.getHomes(),
+    getHomesComplete: (client) => client.getHomesComplete(),
+    getCurrentEnergyPrice: (client, p) => client.getCurrentEnergyPrice(p.homeId, toPriceResolution(p.energyResolution)),
+    getCurrentEnergyPrices: (client, p) => client.getCurrentEnergyPrices(toPriceResolution(p.energyResolution)),
+    getTodaysEnergyPrices: (client, p) => client.getTodaysEnergyPrices(p.homeId, toPriceResolution(p.energyResolution)),
+    getTomorrowsEnergyPrices: (client, p) => client.getTomorrowsEnergyPrices(p.homeId, toPriceResolution(p.energyResolution)),
+    getEnergyPriceRange: (client, p) => client.getEnergyPriceRange(p.homeId, p.energyResolution, p.paging),
+    getConsumption: (client, p) => client.getConsumption(p.energyResolution, p.lastCount, p.homeId ? p.homeId : undefined),
+    getConsumptionPage: (client, p) => client.getConsumptionPage(p.homeId, p.energyResolution, p.paging),
+    getProduction: (client, p) => client.getProduction(p.energyResolution, p.lastCount, p.homeId ? p.homeId : undefined),
+    getProductionPage: (client, p) => client.getProductionPage(p.homeId, p.energyResolution, p.paging),
+};
+
+module.exports = function (RED) {
     function TibberDataNode(config) {
         RED.nodes.createNode(this, config);
-        config.apiEndpoint = RED.nodes.getNode(config.apiEndpointRef);
-
         this._config = config;
 
-        var credentials = RED.nodes.getCredentials(config.apiEndpointRef);
-        if (!config.apiEndpoint.queryUrl || !credentials || !credentials.accessToken) {
+        const apiConfig = getApiConfig(RED, config);
+        if (!apiConfig) {
             this.error('Missing mandatory parameters (queryUrl and/or accessToken)');
             return;
         }
-        
-        // Assign access token to api key to meintain compatibility. This will not cause the access token to be exported.
-        config.apiEndpoint.apiKey = credentials.accessToken;
-        this.client = new TibberQuery(config);
 
-        this.on('input', async (msg) => {
-            var message = msg;
-            var queryName = this._config.queryName ? this._config.queryName : msg.payload.queryName;
-            var homeId = this._config.homeId ? this._config.homeId : msg.payload.homeId;
-            var energyResolution = this._config.energyResolution ? this._config.energyResolution : msg.payload.energyResolution;
-            var lastCount = Number(this._config.lastCount ? this._config.lastCount : msg.payload.lastCount);
+        this.client = new TibberQuery(apiConfig, getTimeout(RED, config, 'queryRequestTimeout', 30));
 
+        this.on('input', async (msg, send, done) => {
+            const payload = getPayload(msg);
+            const queryName = this._config.queryName ? this._config.queryName : payload.queryName;
+            const homeId = this._config.homeId ? this._config.homeId : payload.homeId;
             // Preserve default values.
-            energyResolution = energyResolution ? energyResolution : 'HOURLY';
-            // Price queries only accept HOURLY or QUARTER_HOURLY (PriceInfoResolution).
-            var priceResolution = energyResolution === 'QUARTER_HOURLY' ? 'QUARTER_HOURLY' : 'HOURLY';
+            const energyResolution = (this._config.energyResolution ? this._config.energyResolution : payload.energyResolution) || 'HOURLY';
+            let lastCount = Number(this._config.lastCount ? this._config.lastCount : payload.lastCount);
             if (isNaN(lastCount)) {
                 lastCount = 10;
             }
 
-            var payload;
-            switch (queryName) {
-                case 'getHome':
-                    try {
-                        payload = await this.client.getHome(homeId);
-                    } catch (error) {
-                        payload = error;
-                    }
-                    break;
-                case 'getHomeComplete':
-                    try {
-                        payload = await this.client.getHomeComplete(homeId);
-                    } catch (error) {
-                        payload = error;
-                    }
-                    break;
-                case 'getHomes':
-                    try {
-                        payload = await this.client.getHomes();
-                    } catch (error) {
-                        payload = error;
-                    }
-                    break;
-                case 'getHomesComplete':
-                    try {
-                        payload = await this.client.getHomesComplete();
-                    } catch (error) {
-                        payload = error;
-                    }
-                    break;
-                case 'getCurrentEnergyPrice':
-                    try {
-                        payload = await this.client.getCurrentEnergyPrice(homeId, priceResolution);
-                    } catch (error) {
-                        payload = error;
-                    }
-                    break;
-                case 'getCurrentEnergyPrices':
-                    try {
-                        payload = await this.client.getCurrentEnergyPrices(priceResolution);
-                    } catch (error) {
-                        payload = error;
-                    }
-                    break;
-                case 'getTodaysEnergyPrices':
-                    try {
-                        payload = await this.client.getTodaysEnergyPrices(homeId, priceResolution);
-                    } catch (error) {
-                        payload = error;
-                    }
-                    break;
-                case 'getTomorrowsEnergyPrices':
-                    try {
-                        payload = await this.client.getTomorrowsEnergyPrices(homeId, priceResolution);
-                    } catch (error) {
-                        payload = error;
-                    }
-                    break;
-                case 'getConsumption':
-                    try {
-                        payload = await this.client.getConsumption(energyResolution, lastCount, homeId ? homeId : undefined);
-                    } catch (error) {
-                        payload = error;
-                    }
-                    break;
-                default:
-                    payload = { error: 'Unknown query: ' + queryName };
-                    break;
+            // Paging for the page and range queries. Returns the last records unless the message says otherwise.
+            const paging = {
+                first: payload.first,
+                last: payload.first === undefined ? (payload.last !== undefined ? payload.last : lastCount) : undefined,
+                before: toCursor(payload.before),
+                after: toCursor(payload.after),
+                filterEmptyNodes: payload.filterEmptyNodes,
+            };
+
+            const query = Object.prototype.hasOwnProperty.call(queries, queryName) ? queries[queryName] : undefined;
+            if (!query) {
+                done(new Error('Unknown query: ' + queryName));
+                return;
             }
-            if (payload) {
-                message.payload = payload;
-                this.send(message);
+            try {
+                msg.payload = await query(this.client, { homeId, energyResolution, lastCount, paging });
+                send(msg);
+                done();
+            } catch (error) {
+                done(toError(error));
             }
         });
     }

@@ -1,6 +1,7 @@
 const TibberFeed = require('tibber-api').TibberFeed;
 const TibberQuery = require('tibber-api').TibberQuery;
-const StatusEnum = Object.freeze({ 'unknown': -1, 'disconnected': 0, 'waiting': 1, 'connecting': 2, 'connected': 100 });
+const { getApiConfig, getTimeout, toError, getPayload } = require('./tibber-common');
+const StatusEnum = Object.freeze({ 'unknown': -1, 'disconnected': 0, 'waiting': 1, 'connecting': 2, 'unauthenticated': 3, 'connected': 100 });
 
 // Defensive helper
 function getFeedNodeRegistry(feed) {
@@ -13,8 +14,6 @@ module.exports = function (RED) {
     function TibberFeedNode(config) {
         RED.nodes.createNode(this, config);
         const _config = config;
-        _config.apiEndpoint = RED.nodes.getNode(_config.apiEndpointRef);
-        _config.reconnectDelay = _config.reconnectDelay || 5000;
         this._config = _config;
 
         this.log('TibberFeedNode created');
@@ -36,6 +35,9 @@ module.exports = function (RED) {
                         break;
                     case StatusEnum.connecting:
                         this.status({ fill: "green", shape: "ring", text: "connecting" });
+                        break;
+                    case StatusEnum.unauthenticated:
+                        this.status({ fill: "red", shape: "dot", text: "invalid token" });
                         break;
                     case StatusEnum.connected:
                         this.status({ fill: "green", shape: "dot", text: "connected" });
@@ -95,33 +97,22 @@ module.exports = function (RED) {
             }
         }
 
-        // Add a property to track the reconnect timer
-        this._reconnectTimer = null;
-
+        // The feed reconnects by itself, with the backoff Tibber requires.
         this._onDisconnected = data => {
             for (const node of getFeedNodeRegistry(this._feed)) {
-                node._setStatus(StatusEnum.disconnected);
+                if (node._lastStatus !== StatusEnum.unauthenticated)
+                    node._setStatus(StatusEnum.disconnected);
                 node.log(`Disconnected: ${JSON.stringify(data)}`);
-
-                // Only proceed if node._config exists and node is active
-                if (node._config && node._config.active) {
-                    const delay = node._config.reconnectDelay || 5000;
-                    const seconds = delay / 1000;
-                    if (node._reconnectTimer) clearTimeout(node._reconnectTimer);
-                    node.log(`Scheduling reconnect in ${seconds} seconds...`);
-                    node._reconnectTimer = setTimeout(() => {
-                        if (node._config && node._config.active && node._feed && !node._feed.connected) {
-                            node.log('Attempting reconnect...');
-                            node.connect();
-                        }
-                    }, delay);
-                }
             }
         }
 
         this._onError = data => {
+            const message = toError(data).message;
             for (const node of getFeedNodeRegistry(this._feed)) {
-                node.error('TibberFeed error: ' + JSON.stringify(data));
+                // The feed stops when the token is rejected. A new token can be injected through a message.
+                if (message.startsWith('Unauthenticated'))
+                    node._setStatus(StatusEnum.unauthenticated);
+                node.error('TibberFeed error: ' + message);
             }
         }
         this._onWarn = data => {
@@ -162,31 +153,27 @@ module.exports = function (RED) {
         // and register this node with it. Used both at deploy time and when new
         // credentials are injected through an incoming message.
         this._setupFeed = (accessToken, homeId) => {
-            // Assign access token to api key to maintain compatibility.
-            const key = _config.apiEndpoint.apiKey = accessToken;
-            const home = _config.homeId = homeId;
+            const apiConfig = getApiConfig(RED, _config, { accessToken, homeId });
+            const key = accessToken;
+            const home = homeId;
             this._accessToken = accessToken;
             this._homeId = homeId;
-            const feedTimeout = (_config.apiEndpoint.feedTimeout ? _config.apiEndpoint.feedTimeout : 60) * 1000;
-            const feedConnectionTimeout = (_config.apiEndpoint.feedConnectionTimeout ? _config.apiEndpoint.feedConnectionTimeout : 30) * 1000;
-            const queryRequestTimeout = (_config.apiEndpoint.queryRequestTimeout ? _config.apiEndpoint.queryRequestTimeout : 30) * 1000;
+            const feedTimeout = getTimeout(RED, _config, 'feedTimeout', 60);
+            const feedConnectionTimeout = getTimeout(RED, _config, 'feedConnectionTimeout', 30);
+            const queryRequestTimeout = getTimeout(RED, _config, 'queryRequestTimeout', 30);
 
             // Only one TibberFeed per key+home
             if (!TibberFeedNode.instances[key]) {
                 TibberFeedNode.instances[key] = {};
             }
             if (!TibberFeedNode.instances[key][home]) {
-                this.debug(`Creating new TibberFeed for key=${key}, home=${home}`);
-                TibberFeedNode.instances[key][home] = new TibberFeed(new TibberQuery(_config), feedTimeout, true);
-                this.debug('TibberFeed instance created:', TibberFeedNode.instances[key][home]);
+                this.debug(`Creating new TibberFeed for home=${home}`);
+                TibberFeedNode.instances[key][home] = new TibberFeed(new TibberQuery(apiConfig, queryRequestTimeout), feedTimeout, true, feedConnectionTimeout, true);
             } else {
-                this.log(`Reusing existing TibberFeed for key=${key}, home=${home}`);
+                this.log(`Reusing existing TibberFeed for home=${home}`);
             }
             this._feed = TibberFeedNode.instances[key][home];
-            this._feed.config = _config;
-            this._feed.feedIdleTimeout = feedTimeout;
-            this._feed.feedConnectionTimeout = feedConnectionTimeout;
-            this._feed.queryRequestTimeout = queryRequestTimeout;
+            this._feedKey = key;
 
             // Register this node instance in the feed's registry
             const nodeRegistry = getFeedNodeRegistry(this._feed);
@@ -232,7 +219,6 @@ module.exports = function (RED) {
         // if no other nodes are using it.
         this._teardownFeed = () => {
             clearTimeout(this._connectionDelay);
-            if (this._reconnectTimer) clearTimeout(this._reconnectTimer);
             if (!this._feed) return;
 
             // Remove this node from the registry
@@ -243,8 +229,14 @@ module.exports = function (RED) {
             // If no more nodes are using this feed, clean up
             if (nodeRegistry.size === 0) {
                 this.log('Disconnecting from Tibber feed...');
-                this._feed.close();
+                // Deactivating closes the feed and keeps it from reconnecting.
+                this._feed.active = false;
                 nodeRegistry.clear();
+                const instances = TibberFeedNode.instances[this._feedKey];
+                if (instances) {
+                    delete instances[this._homeId];
+                    if (Object.keys(instances).length === 0) delete TibberFeedNode.instances[this._feedKey];
+                }
 
                 if (typeof this._feed.off === 'function' && this._feed._eventHandlersRegistered && this._feed._registeredHandlers) {
                     this.debug('Unregistering event handlers for TibberFeed');
@@ -264,10 +256,11 @@ module.exports = function (RED) {
         // reconnect the feed with the new values. This makes it possible to control
         // the feed without reconfiguring the node (e.g. from a dashboard).
         this.on('input', (msg, send, done) => {
-            done = done || ((err) => { if (err) this.error(err, msg); });
-            const payload = msg && msg.payload && typeof msg.payload === 'object' ? msg.payload : {};
-            const accessToken = payload.accessToken || this._accessToken;
-            const homeId = payload.homeId || this._homeId;
+            const payload = getPayload(msg);
+            // Fall back to the configured values when the feed has not been set up yet.
+            const configured = RED.nodes.getCredentials(_config.apiEndpointRef);
+            const accessToken = payload.accessToken || this._accessToken || (configured && configured.accessToken);
+            const homeId = payload.homeId || this._homeId || _config.homeId;
 
             if (!payload.accessToken && !payload.homeId) {
                 done('Nothing to do. Send msg.payload.accessToken and/or msg.payload.homeId to (re)configure the feed.');
@@ -277,7 +270,7 @@ module.exports = function (RED) {
                 done('Missing mandatory parameters (accessToken and/or homeId).');
                 return;
             }
-            if (!_config.apiEndpoint?.queryUrl) {
+            if (!getApiConfig(RED, _config, { accessToken, homeId })) {
                 done('Missing API endpoint configuration (queryUrl).');
                 return;
             }
@@ -300,7 +293,6 @@ module.exports = function (RED) {
         this.on('close', (removed, done) => {
             if (!this._feed) {
                 clearTimeout(this._connectionDelay);
-                if (this._reconnectTimer) clearTimeout(this._reconnectTimer);
                 done();
                 return;
             }
@@ -310,7 +302,7 @@ module.exports = function (RED) {
         });
 
         const credentials = RED.nodes.getCredentials(_config.apiEndpointRef);
-        if (!_config.apiEndpoint?.queryUrl || !credentials || !credentials.accessToken || !_config.homeId) {
+        if (!getApiConfig(RED, _config) || !_config.homeId) {
             this.warn('Missing mandatory parameters (accessToken and/or homeId). Waiting for them to be injected through an incoming message (msg.payload.accessToken / msg.payload.homeId).');
             return;
         }

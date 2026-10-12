@@ -13,6 +13,14 @@ This Node-Red module is used for communication with [Tibber API](https://develop
 
 > Note!
 >
+> **Breaking changes** in the version built on [tibber-api](https://www.npmjs.com/package/tibber-api) 6:
+>
+> - The nodes report an error when a call to Tibber fails, for example with an invalid access token. Use a **Catch** node to handle it. Earlier versions sent an empty result or the error object as `msg.payload`.
+> - `tibber-feed` reconnects by itself with an increasing delay, as Tibber requires. The **Reconnect delay** setting is removed. If Tibber rejects the access token, the feed stops and the status shows *invalid token*.
+> - `getConsumption` without a home ID returns one flat list with `homeId` on each record, instead of one list per home.
+
+> Note!
+>
 > From version 5.0.0 the URL for the `tibber-feed` has been removed from `tibber-api-endpoint` configuration node. The only URL needed now is the Query URL. The feed will automatically fetch the websocket url from Tibber.
 >
 > The version has also been bumped to reflect the version of the underlying [tibber-api](https://www.npmjs.com/package/tibber-api) component.
@@ -57,20 +65,22 @@ $ npm install node-red-contrib-tibber-api
 
 ![tibber-feed](examples/images/tibber-feed.png)
 
-Realtime power consuption data from Tibber Pulse. Provide API token, Home ID and select what kind of information you want to retrieve.
+Realtime power consuption data from Tibber Pulse. Provide API token, Home ID and select what kind of information you want to retrieve, including reactive power.
+
+The access token and home ID can also be injected through an incoming message (`msg.payload.accessToken` and `msg.payload.homeId`). The feed reconnects by itself when the connection is lost.
 > Note! There should be only one instance running of *tibber-feed* per API key. Doing otherwise may return unpredictable result, or even error responses from the API.
 
 ### Tibber API call node (*tibber-query*)
 
 ![tibber-query](examples/images/tibber-query.png)
 
-Do basic calls to Tibber API using GraphQL queries. To query the Tibber API, simply provide raw GraphQL queries in the payload of the incoming message. See Tibber API documentation and API Explorer for more informations.
+Do basic calls to Tibber API using GraphQL queries. To query the Tibber API, simply provide raw GraphQL queries in the payload of the incoming message. See Tibber API documentation and API Explorer for more informations. If the query fails, the node reports an error that can be handled with a Catch node.
 
 ### Tibber push notification (*tibber-notify*)
 
 ![tibber-notify](examples/images/tibber-notify.png)
 
-Send push nofifications to connected TIbber apps via Tibber API using GraphQL queries. Fill in Title, Message and which screen to open in the app directly in the node, or by providing the data via the incomming .
+Send push notifications to connected Tibber apps via Tibber API. Fill in Title, Message and which screen to open in the app directly in the node, or provide them in the payload of the incoming message as `title`, `message` and `screen`.
 
 ### Tibber data (*tibber-data*)
 
@@ -86,6 +96,27 @@ Payload example:
     "lastCount": 14
 }
 ```
+
+The queries `getEnergyPriceRange`, `getConsumptionPage` and `getProductionPage` return an object with `nodes` and `pageInfo`, and accept paging in the payload:
+
+| Property | Description |
+| -------- | ----------- |
+| `first` / `last` | Return the first or the last number of records. `lastCount` is used if neither is set. |
+| `before` / `after` | Return records before or from a point in time: an ISO 8601 date, a timestamp in milliseconds, or a cursor from `pageInfo`. `before` does not include the record at that point, `after` does. |
+| `filterEmptyNodes` | Leave out empty records (consumption and production). |
+
+Payload example, the quarter-hourly prices for one day:
+```json
+{
+    "queryName": "getEnergyPriceRange",
+    "homeId": "96a14971-525a-4420-aae9-e5aedaa129ff",
+    "energyResolution": "QUARTER_HOURLY",
+    "first": 96,
+    "after": "2026-10-10T00:00:00+02:00"
+}
+```
+
+> Tibber limits the number of records per request: 744 hourly, 31 daily, 52 weekly, 12 monthly and 1 annual, and 672 quarter-hourly prices. With `QUARTER_HOURLY`, `getEnergyPriceRange` works in whole hours, so use a multiple of 4.
 
 Available queries:
 ```javascript
@@ -151,13 +182,40 @@ Available queries:
      * @return Array of IConsumption
      */
     getConsumption(energyResolution: EnergyResolution, lastCount: number, homeId?: string): IConsumption[];
+
+    /**
+     * Get energy production for one or more homes.
+     * Returns an array of IProduction
+     * @param energyResolution EnergyResolution. Valid values: HOURLY, DAILY, WEEKLY, MONTHLY, ANNUAL
+     * @param lastCount Return the last number of records
+     * @param homeId Tibber home ID. Optional parameter. Empty parameter will return all registered homes.
+     * @return Array of IProduction
+     */
+    getProduction(energyResolution: EnergyResolution, lastCount: number, homeId?: string): IProduction[];
+
+    /**
+     * Get a page of energy consumption or production for selected home, including page info with totals and cursors.
+     * @param homeId Tibber home ID
+     * @param energyResolution EnergyResolution. Valid values: HOURLY, DAILY, WEEKLY, MONTHLY, ANNUAL
+     * @param paging first or last, before or after, and filterEmptyNodes
+     */
+    getConsumptionPage(homeId: string, energyResolution: EnergyResolution, paging): IHomeConsumptionConnection;
+    getProductionPage(homeId: string, energyResolution: EnergyResolution, paging): IHomeProductionConnection;
+
+    /**
+     * Get historical energy prices for selected home, including page info with min/max and cursors.
+     * @param homeId Tibber home ID
+     * @param energyResolution Valid values: DAILY, HOURLY, QUARTER_HOURLY
+     * @param paging first or last, and before or after
+     */
+    getEnergyPriceRange(homeId: string, energyResolution: PriceRangeResolution, paging): ISubscriptionPriceConnection;
 ```
 
 ### Configuration node (*tibber-api-endpoint*)
 
 ![tibber-api-endpoint](examples/images/tibber-api-endpoint.png)
 
-When configuring regular tibber nodes, you will have to create or select the configuration from the property **API Endpoint**. Here you can specify **GraphQL Endpoint** and **API Key**. This configuration can easily be used by any Tibber nodes. This will greatly simplyfy changing of urls and API key, since the change happens on all nodes using the configuration.
+When configuring regular tibber nodes, you will have to create or select the configuration from the property **API Endpoint**. Here you can specify **GraphQL Endpoint** and **Access Token**, and the timeouts for the feed and for queries. The access token is stored with the Node-RED credentials and is not included when flows are exported. This configuration can easily be used by any Tibber nodes. This will greatly simplyfy changing of urls and API key, since the change happens on all nodes using the configuration.
 
 ## Examples
 

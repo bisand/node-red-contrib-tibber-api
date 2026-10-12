@@ -15,13 +15,6 @@
             },
             homeId: {
                 value: '',
-                required: true,
-                validate: function (v) {
-                    if (v === '') {
-                        return false;
-                    }
-                    return true;
-                },
             },
             energyResolution: {
                 value: 'DAILY',
@@ -60,7 +53,11 @@
         <option value="getCurrentEnergyPrices">getCurrentEnergyPrices()</option>
         <option value="getTodaysEnergyPrices">getTodaysEnergyPrices(homeId)</option>
         <option value="getTomorrowsEnergyPrices">getTomorrowsEnergyPrices(homeId)</option>
+        <option value="getEnergyPriceRange">getEnergyPriceRange(homeId, EnergyResolution, paging)</option>
         <option value="getConsumption">getConsumption(EnergyResolution, lastCount, homeId?)</option>
+        <option value="getConsumptionPage">getConsumptionPage(homeId, EnergyResolution, paging)</option>
+        <option value="getProduction">getProduction(EnergyResolution, lastCount, homeId?)</option>
+        <option value="getProductionPage">getProductionPage(homeId, EnergyResolution, paging)</option>
       </select>
     </div>
     <div class="form-row" style="white-space: nowrap;">
@@ -85,6 +82,34 @@
     </div>
 </script>
 
-<script type="text/x-red" data-help-name="tibber-api">
-    <p>A simple node that enables you to query Tibber API with pre-defined queries.</p>
+<script type="text/x-red" data-help-name="tibber-data">
+    <p>Queries the Tibber API with a pre-defined query.</p>
+    <h3>Input</h3>
+    <p>Values set on the node are used first. Values left empty on the node are read from <code>msg.payload</code>.</p>
+    <dl class="message-properties">
+        <dt class="optional">payload.queryName <span class="property-type">string</span></dt>
+        <dd>the query to run, for example <code>getTodaysEnergyPrices</code>.</dd>
+        <dt class="optional">payload.homeId <span class="property-type">string</span></dt>
+        <dd>Tibber home ID. Not needed for <code>getHomes</code>, <code>getHomesComplete</code> and <code>getCurrentEnergyPrices</code>, and optional for <code>getConsumption</code> and <code>getProduction</code>.</dd>
+        <dt class="optional">payload.energyResolution <span class="property-type">string</span></dt>
+        <dd><code>HOURLY</code>, <code>DAILY</code>, <code>WEEKLY</code>, <code>MONTHLY</code> or <code>ANNUAL</code> for consumption and production.
+            <code>HOURLY</code> or <code>QUARTER_HOURLY</code> for prices. <code>QUARTER_HOURLY</code>, <code>HOURLY</code> or <code>DAILY</code> for <code>getEnergyPriceRange</code>. The default is <code>HOURLY</code>.</dd>
+        <dt class="optional">payload.lastCount <span class="property-type">number</span></dt>
+        <dd>return the last number of records. The default is 10.</dd>
+        <dt class="optional">payload.first / payload.last <span class="property-type">number</span></dt>
+        <dd>paging for <code>getEnergyPriceRange</code>, <code>getConsumptionPage</code> and <code>getProductionPage</code>: return the first or the last number of records. <code>lastCount</code> is used if neither is set.</dd>
+        <dt class="optional">payload.before / payload.after <span class="property-type">string | number</span></dt>
+        <dd>paging: return records before or from a point in time. An ISO 8601 date, a timestamp in milliseconds, or a cursor from <code>pageInfo</code>. <code>before</code> does not include the record at that point, <code>after</code> does.</dd>
+        <dt class="optional">payload.filterEmptyNodes <span class="property-type">boolean</span></dt>
+        <dd>leave out empty records from <code>getConsumptionPage</code> and <code>getProductionPage</code>.</dd>
+    </dl>
+    <h3>Output</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">object | array</span></dt>
+        <dd>the result of the query. The page and range queries return an object with <code>nodes</code> and <code>pageInfo</code>.</dd>
+    </dl>
+    <h3>Details</h3>
+    <p>Tibber limits the number of records per request: 744 hourly, 31 daily, 52 weekly, 12 monthly and 1 annual, and 672 quarter-hourly prices.
+    With <code>QUARTER_HOURLY</code>, <code>getEnergyPriceRange</code> works in whole hours, so use a multiple of 4.</p>
+    <p>If the query fails, the node reports an error that can be handled with a Catch node.</p>
 </script>

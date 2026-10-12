@@ -1,3 +1,4 @@
+const { describe, it } = require('node:test');
 let TibberQuery = require("tibber-api").TibberQuery;
 let assert = require("assert");
 describe("TibberQuery", function() {

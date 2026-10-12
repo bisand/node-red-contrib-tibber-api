@@ -56,6 +56,18 @@
   </div>
 </script>
 
-<script type="text/x-red" data-help-name="tibber-api">
-  <p>A simple node that enables you to query Tibber API.</p>
+<script type="text/x-red" data-help-name="tibber-notify">
+  <p>Sends a push notification to the Tibber app.</p>
+  <h3>Input</h3>
+  <p>Values set on the node are used first. Values left empty on the node are read from <code>msg.payload</code>.</p>
+  <dl class="message-properties">
+    <dt class="optional">payload.title <span class="property-type">string</span></dt>
+    <dd>title of the notification.</dd>
+    <dt class="optional">payload.message <span class="property-type">string</span></dt>
+    <dd>text of the notification.</dd>
+    <dt class="optional">payload.screen <span class="property-type">string</span></dt>
+    <dd>screen to open in the app: <code>HOME</code>, <code>REPORTS</code>, <code>CONSUMPTION</code>, <code>COMPARISON</code>, <code>DISAGGREGATION</code>, <code>HOME_PROFILE</code>, <code>CUSTOMER_PROFILE</code>, <code>METER_READING</code>, <code>NOTIFICATIONS</code> or <code>INVOICES</code>. The default is <code>HOME</code>.</dd>
+  </dl>
+  <h3>Details</h3>
+  <p>If the notification can not be sent, the node reports an error that can be handled with a Catch node.</p>
 </script>

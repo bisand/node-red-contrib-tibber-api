@@ -1,6 +1,8 @@
+const { describe, it, before, after } = require('node:test');
 const { TibberQueryBase, TibberFeed } = require('tibber-api');
 const assert = require('assert');
-const WebSocket = require('ws');
+// ws is a dependency of tibber-api.
+const WebSocket = require(require.resolve('ws', { paths: [require.resolve('tibber-api')] }));
 
 class FakeTibberQuery extends TibberQueryBase {
     /**
@@ -66,7 +68,6 @@ describe('TibberFeed', function () {
         if (server) {
             for (const client of server.clients) {
                 client.close();
-                console.log('Closed client.');
             }
             server.close();
             server = null;
@@ -89,8 +90,7 @@ describe('TibberFeed', function () {
     });
 
     describe('connect', function () {
-        it('Should be connected', function (done) {
-            this.timeout(5000);
+        it('Should be connected', { timeout: 5000 }, function (t, done) {
             const query = new FakeTibberQuery({
                 apiEndpoint: {
                     queryUrl: 'ws://localhost:1337',
@@ -111,8 +111,7 @@ describe('TibberFeed', function () {
     });
 
     describe('receive', function () {
-        it('Should receive data', function (done) {
-            this.timeout(5000);
+        it('Should receive data', { timeout: 5000 }, function (t, done) {
             const query = new FakeTibberQuery({
                 apiEndpoint: {
                     queryUrl: 'ws://localhost:1337',
@@ -133,8 +132,7 @@ describe('TibberFeed', function () {
     });
 
     describe('receive', function () {
-        it('Should receive data from two homes', function (done) {
-            this.timeout(5000);
+        it('Should receive data from two homes', { timeout: 5000 }, function (t, done) {
             let done1, done2 = false;
             const query1 = new FakeTibberQuery({
                 apiEndpoint: {
@@ -208,8 +206,7 @@ describe('TibberFeed', function () {
     });
 
     describe('timeout', function () {
-        it('Should timeout after 3 sec', function (done) {
-            this.timeout(10000);
+        it('Should timeout after 3 sec', { timeout: 10000 }, function (t, done) {
             const query = new FakeTibberQuery(
                 {
                     apiEndpoint: {
@@ -240,8 +237,7 @@ describe('TibberFeed', function () {
     });
 
     describe('reconnect', function () {
-        it('Should reconnect 3 times after 5 sec. timeout', function (done) {
-            this.timeout(60000);
+        it('Should reconnect 3 times after 5 sec. timeout', { timeout: 60000 }, function (t, done) {
             const query = new FakeTibberQuery(
                 {
                     apiEndpoint: {

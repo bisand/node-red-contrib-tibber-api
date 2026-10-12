@@ -9,7 +9,7 @@
     category: "config",
     credentials: {
       accessToken: {
-        type: 'text',
+        type: 'password',
       },
     },
     defaults: {
@@ -61,9 +61,6 @@
       return this.name ? this.name : 'Access Token';
     },
     oneditprepare: function () {
-      if (this.credentials.accessToken) {
-        delete this.apiKey;
-      }
       if (!this.feedConnectionTimeout) {
         this.feedConnectionTimeout = 30;
         $("#node-config-input-feedConnectionTimeout").val(this.feedConnectionTimeout);
@@ -83,7 +80,7 @@
   </div>
   <div class="form-row">
     <label for="node-config-input-accessToken"><i class="icon-bookmark"></i> Access Token</label>
-    <input type="text" id="node-config-input-accessToken" placeholder="Accss Token">
+    <input type="password" id="node-config-input-accessToken" placeholder="Access Token">
   </div>
   <div class="form-row">
     <label for="node-config-input-feedConnectionTimeout"><i class="icon-tag"></i> Connection Timeout (s)</label>
@@ -101,4 +98,21 @@
     <label for="node-config-input-name"><i class="icon-bookmark"></i> Name</label>
     <input type="text" id="node-config-input-name" placeholder="Name">
   </div>
+</script>
+
+<script type="text/x-red" data-help-name="tibber-api-endpoint">
+  <p>Connection to the Tibber API, shared by the Tibber nodes.</p>
+  <h3>Properties</h3>
+  <dl class="message-properties">
+    <dt>GraphQL Endpoint</dt>
+    <dd>URL of the Tibber GraphQL API. The default is <code>https://api.tibber.com/v1-beta/gql</code>.</dd>
+    <dt>Access Token</dt>
+    <dd>Personal access token from <a href="https://developer.tibber.com/" target="_blank">developer.tibber.com</a>. It is stored with the Node-RED credentials and is not included when flows are exported.</dd>
+    <dt>Connection Timeout</dt>
+    <dd>Seconds to wait for the live feed to connect.</dd>
+    <dt>Feed Timeout</dt>
+    <dd>Seconds without data before the live feed reconnects.</dd>
+    <dt>Request Timeout</dt>
+    <dd>Seconds to wait for a response to a query.</dd>
+  </dl>
 </script>

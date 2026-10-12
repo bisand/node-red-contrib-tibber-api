@@ -9,29 +9,22 @@
     "url": "https://github.com/bisand/node-red-contrib-tibber-api/issues"
   },
   "dependencies": {
-    "tibber-api": "^5.6.0"
+    "tibber-api": "^6.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.6.0",
-    "globals": "^17.7.0",
-    "mkver": "^5.0.1",
-    "mocha": "^11.7.6",
-    "node-red": "^5.0.1"
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "node-red": "^5.0.8"
   },
-  "directories": {
-    "examples": "./examples",
-    "nodes": "./nodes"
-  },
+  "files": [
+    "nodes/",
+    "examples/"
+  ],
   "scripts": {
-    "prepack": "mkver ./nodes/version.js",
-    "test": "mocha tests/test*.js",
-    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "test": "node --test tests/test-*.js",
     "lint": "eslint .",
-    "prepare": "",
     "preversion": "npm test",
-    "version": "",
-    "postversion": "",
     "start": "node node_modules/node-red/red.js -v -u . -s node-red-default-settings.js",
     "debug": "node --nolazy --inspect-brk=9229 node_modules/node-red/red.js -v -u . -s node-red-default-settings.js"
   },

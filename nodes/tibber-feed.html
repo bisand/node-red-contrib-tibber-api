@@ -55,6 +55,12 @@
             powerProduction: {
                 value: '1',
             },
+            powerReactive: {
+                value: '1',
+            },
+            powerProductionReactive: {
+                value: '1',
+            },
             minPowerProduction: {
                 value: '1',
             },
@@ -88,26 +94,12 @@
             signalStrength: {
                 value: '1',
             },
-            reconnectDelay: {
-                value: 5000,
-                type: 'number',
-            },
         },
         inputs: 1,
         outputs: 1,
         icon: 'feed.png',
         label: function () {
             return this.name || 'tibber-feed';
-        },
-        // Use function and not arrow function to access the correct context
-        oneditprepare: function () {
-            // Set the default value for the reconnectDelay input field
-            if (!this.reconnectDelay) {
-                $("#node-input-reconnectDelay").val(5000);
-            }
-            $("#node-input-reconnectDelay").typedInput({
-                type:"num",
-            })
         },
     });
 </script>
@@ -128,10 +120,6 @@
       <div class="form-row" style="white-space: nowrap;">
           <label style="white-space: nowrap; width: 120px;" for="node-input-name"><i class="icon-tag"></i> Name</label>
           <input type="text" id="node-input-name" placeholder="Name">
-      </div>
-      <div class="form-row" style="white-space: nowrap;">
-          <label style="white-space: nowrap; width: 120px;" for="node-input-reconnectDelay"><i class="icon-tag"></i> Reconnect delay</label>
-          <input type="text" id="node-input-reconnectDelay" placeholder="Delay (ms)" style="width: 100px;"><span> ms</span>
       </div>
 
       <hr>
@@ -195,6 +183,14 @@
           <input type="checkbox" id="node-input-powerProduction" value="1">
       </div>
       <div class="form-row" style="white-space: nowrap;">
+          <label style="white-space: nowrap;" for="node-input-powerReactive"><i class="icon-tag"></i> Reactive power</label>
+          <input type="checkbox" id="node-input-powerReactive" value="1">
+      </div>
+      <div class="form-row" style="white-space: nowrap;">
+          <label style="white-space: nowrap;" for="node-input-powerProductionReactive"><i class="icon-tag"></i> Reactive power production</label>
+          <input type="checkbox" id="node-input-powerProductionReactive" value="1">
+      </div>
+      <div class="form-row" style="white-space: nowrap;">
           <label style="white-space: nowrap;" for="node-input-minPowerProduction"><i class="icon-tag"></i> Min power production</label>
           <input type="checkbox" id="node-input-minPowerProduction" value="1">
       </div>
@@ -253,4 +249,8 @@
     for them to be injected.</p>
     <h3>Output</h3>
     <p><code>msg.payload</code> contains the selected realtime measurement properties.</p>
+    <h3>Details</h3>
+    <p>The feed reconnects by itself when the connection is lost, with an increasing delay between the attempts.
+    If Tibber rejects the access token, the status changes to <i>invalid token</i> and the feed stops until a new
+    token is injected or the flow is deployed again.</p>
 </script>

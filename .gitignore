@@ -69,5 +69,3 @@ flows_*
 flows.*
 .config.*.json
 .config.*.json.backup
-version.js
-version.mjs
