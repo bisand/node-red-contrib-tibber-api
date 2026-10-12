@@ -175,6 +175,15 @@ module.exports = function (RED) {
     // Logins that have been started from the editor, by OAuth state.
     const pending = new Map();
 
+    // Endpoints whose client ID and secret have changed through a login and are only held in memory.
+    // Node-RED writes credentials to disk on every deploy, so the editor asks for one.
+    const unsaved = new Set();
+    // When the latest login of each endpoint finished, so the dialog can tell that a login it started is done.
+    const lastLogin = new Map();
+    if (RED.events) {
+        RED.events.on('flows:started', () => unsaved.clear());
+    }
+
     // Finish a login with the values Tibber added to the redirect address. Returns the login that was finished.
     async function completeLogin(query, expectedId) {
         const login = pending.get(query.state);
@@ -197,8 +206,13 @@ module.exports = function (RED) {
         }
         // The tokens belong to the client that was used to log in. Keep its ID and secret with the
         // other credentials right away, so the login works even if the dialog is closed without saving.
-        // Node-RED writes them to disk on the next deploy.
-        RED.nodes.addCredentials(login.id, { ...(RED.nodes.getCredentials(login.id) || {}), clientId: login.clientId, clientSecret: login.clientSecret });
+        // Node-RED encrypts them and writes them to disk on the next deploy.
+        lastLogin.set(login.id, Date.now());
+        const stored = RED.nodes.getCredentials(login.id) || {};
+        if (stored.clientId !== login.clientId || stored.clientSecret !== login.clientSecret) {
+            RED.nodes.addCredentials(login.id, { ...stored, clientId: login.clientId, clientSecret: login.clientSecret });
+            unsaved.add(login.id);
+        }
         const node = RED.nodes.getNode(login.id);
         if (node) {
             // Use the new tokens from now on, and let the nodes that were waiting for a login start.
@@ -279,6 +293,11 @@ module.exports = function (RED) {
     // Tells the editor whether the user has logged in.
     RED.httpAdmin.get('/tibber-api/:id/status', RED.auth.needsPermission('tibber-api-endpoint.read'), (req, res) => {
         const tokens = loadTokens(RED, req.params.id);
-        res.json({ authorized: !!(tokens && tokens.accessToken) });
+        res.json({ authorized: !!(tokens && tokens.accessToken), unsaved: unsaved.has(req.params.id), lastLogin: lastLogin.get(req.params.id) || 0 });
+    });
+
+    // Tells the editor which endpoints need a deploy to save the client used for a login.
+    RED.httpAdmin.get('/tibber-api/unsaved', RED.auth.needsPermission('tibber-api-endpoint.read'), (req, res) => {
+        res.json({ ids: [...unsaved] });
     });
 };

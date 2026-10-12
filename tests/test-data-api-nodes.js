@@ -119,7 +119,7 @@ describe('Data API nodes', function () {
 
         it('Should log in and store the tokens', async function () {
             const id = 'new-endpoint';
-            assert.deepEqual((await RED.request('GET /tibber-api/:id/status', { params: { id } })).body, { authorized: false });
+            assert.deepEqual((await RED.request('GET /tibber-api/:id/status', { params: { id } })).body, { authorized: false, unsaved: false, lastLogin: 0 });
 
             const started = await RED.request('POST /tibber-api/:id/auth', {
                 params: { id },
@@ -148,7 +148,7 @@ describe('Data API nodes', function () {
             assert.equal(tokens.accessToken, 'access');
             assert.equal(tokens.refreshToken, 'refresh');
             assert.ok(tokens.expiresAt >= before + 3600000);
-            assert.deepEqual((await RED.request('GET /tibber-api/:id/status', { params: { id } })).body, { authorized: true });
+            assert.equal((await RED.request('GET /tibber-api/:id/status', { params: { id } })).body.authorized, true);
 
             // The same state can not be used twice.
             assert.equal((await RED.request('GET /tibber-api/callback', { query: { code: 'the-code', state: url.searchParams.get('state') } })).status, 400);
@@ -171,6 +171,18 @@ describe('Data API nodes', function () {
             await RED.nodes.getNode(id).getAccessToken();
             assert.equal(api.tokenRequests.at(-1).client_id, 'new-client');
             assert.equal(api.tokenRequests.at(-1).client_secret, 'new-secret');
+
+            // The new client is only in memory until a deploy. The editor is told, so it can ask for one.
+            const status = (await RED.request('GET /tibber-api/:id/status', { params: { id } })).body;
+            assert.equal(status.authorized, true);
+            assert.equal(status.unsaved, true);
+            assert.ok(status.lastLogin > 0);
+            assert.deepEqual((await RED.request('GET /tibber-api/unsaved')).body, { ids: [id] });
+            assert.equal(RED.routes['GET /tibber-api/unsaved'].permission, 'tibber-api-endpoint.read');
+            // A deploy writes the credentials to disk.
+            RED.events.emit('flows:started', { type: 'full' });
+            assert.equal((await RED.request('GET /tibber-api/:id/status', { params: { id } })).body.unsaved, false);
+            assert.deepEqual((await RED.request('GET /tibber-api/unsaved')).body, { ids: [] });
 
             // The page closes itself when the editor opened it, and otherwise links back to the editor.
             assert.match(finished.body, /window\.opener/);
@@ -232,6 +244,8 @@ describe('Data API nodes', function () {
 
             assert.equal(api.tokenRequests[0].client_secret, 'secret');
             assert.ok(RED.nodes.getNode(id).getDataClient());
+            // Logging in again with the client that is already saved needs no deploy.
+            assert.deepEqual((await RED.request('GET /tibber-api/unsaved')).body, { ids: [] });
         });
 
         it('Should finish a login from a pasted address', async function () {

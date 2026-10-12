@@ -264,7 +264,9 @@ Configurations created before the login was added keep using their access token.
 1. Create an OAuth client at [data-api.tibber.com](https://data-api.tibber.com/clients/manage/) and select the scopes you need.
 2. Open the configuration node in Node-RED. Add the **Redirect URI** it shows to the client at Tibber. See below if Tibber does not accept it.
 3. Enter the **Client ID** and **Client Secret**, click **Log in to Tibber** and log in in the window that opens. The status changes to *Logged in*.
-4. Save and deploy.
+4. Click **Update** (or **Add**) and then **Deploy**.
+
+The Tibber nodes work as soon as you have logged in. The deploy saves the Client ID and Client Secret, so the login survives a restart of Node-RED. If you log in and do not deploy, the editor enables **Deploy** and reminds you, also after the page has been reloaded.
 
 The login gives Node-RED tokens that are renewed automatically. They are stored in the file `tibber-api-tokens.json` in the Node-RED user directory, readable only by the user running Node-RED. They are not part of the flow and are not included when flows are exported. The access token and the client secret are stored with the Node-RED credentials.
 

@@ -17,6 +17,7 @@ function createRED(settings = {}) {
         routes,
         settings: { userDir: fs.mkdtempSync(path.join(os.tmpdir(), 'tibber-node-red-')), ...settings },
         auth: { needsPermission: (permission) => permission },
+        events: new EventEmitter(),
         // Collects the admin routes. The last argument is the handler, any before it are permissions.
         httpAdmin: {
             get: (route, ...handlers) => (routes[`GET ${route}`] = { permission: handlers.length > 1 ? handlers[0] : undefined, handler: handlers.at(-1) }),

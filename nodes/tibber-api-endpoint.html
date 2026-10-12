@@ -12,6 +12,34 @@
       statusTimer = undefined;
     }
 
+    // A login keeps the Client ID and Client Secret in Node-RED's memory. They are encrypted and written
+    // to disk by a deploy. If a login has not been deployed yet, enable Deploy and say so. This also covers
+    // a login that reloaded the editor, where the dialog and what was typed in it are gone.
+    var notified = {};
+    var notifications = [];
+    function askForDeploy() {
+      $.getJSON("tibber-api/unsaved", function (data) {
+        (data.ids || []).forEach(function (id) {
+          var node = RED.nodes.node(id);
+          if (!node || notified[id]) {
+            return;
+          }
+          notified[id] = true;
+          node.changed = true;
+          RED.nodes.dirty(true);
+          notifications.push(RED.notify("You have logged in to Tibber. Click <b>Deploy</b> to save the Client ID and Client Secret, so the login survives a restart of Node-RED.", { type: "warning", timeout: 20000 }));
+        });
+      });
+    }
+    RED.events.on("flows:loaded", askForDeploy);
+    RED.events.on("deploy", function () {
+      notified = {};
+      notifications.forEach(function (notification) { notification.close(); });
+      notifications = [];
+    });
+    // Editors that do not announce when the flows are loaded.
+    setTimeout(askForDeploy, 5000);
+
     RED.nodes.registerType("tibber-api-endpoint", {
       category: "config",
       credentials: {
@@ -112,7 +140,9 @@
         }
 
         // Set when a login has been started from this dialog.
-        var loginStarted = false;
+        // The time of the latest login, as known when a login was started from this dialog.
+        var latestLogin = 0;
+        var waitingFrom;
         // The stored secret belongs to the stored client. Ask for the secret again when the Client ID is changed.
         var originalClientId = $("#node-config-input-clientId").val();
         $("#node-config-input-clientId").on("change", function () {
@@ -122,12 +152,18 @@
           }
         });
 
+        node._tibberUnsaved = false;
         function showStatus() {
           $.getJSON("tibber-api/" + node.id + "/status", function (data) {
             $("#node-config-tibber-login-status").text(data.authorized ? "Logged in" : "Not logged in");
-            if (data.authorized) {
+            // The client used for a login is only in memory until a deploy.
+            node._tibberUnsaved = !!data.unsaved;
+            $("#node-config-tibber-login-saved").toggle(!!data.unsaved);
+            latestLogin = data.lastLogin || 0;
+            // Stop asking when the login that was started here has finished.
+            if (waitingFrom !== undefined && latestLogin !== waitingFrom) {
+              waitingFrom = undefined;
               stopStatusTimer();
-              $("#node-config-tibber-login-saved").toggle(loginStarted);
             }
           });
         }
@@ -155,7 +191,7 @@
               returnUrl: window.location.href
             }),
             success: function (data) {
-              loginStarted = true;
+              waitingFrom = latestLogin;
               if (loginWindow) {
                 loginWindow.location.href = data.url;
               } else {
@@ -163,6 +199,8 @@
               }
               stopStatusTimer();
               statusTimer = setInterval(showStatus, 2000);
+              // A login must be finished within ten minutes.
+              setTimeout(function () { if (waitingFrom !== undefined) { waitingFrom = undefined; stopStatusTimer(); } }, 10 * 60 * 1000);
             },
             error: function (xhr) {
               if (loginWindow) {
@@ -181,7 +219,6 @@
             data: JSON.stringify({ url: $("#node-config-tibber-pasted-url").val() }),
             success: function () {
               $("#node-config-tibber-pasted-url").val("");
-              loginStarted = true;
               showStatus();
             },
             error: function (xhr) {
@@ -190,8 +227,19 @@
           });
         });
       },
-      oneditsave: stopStatusTimer,
-      oneditcancel: stopStatusTimer
+      oneditsave: function () {
+        stopStatusTimer();
+        // Enable Deploy when a login is waiting to be saved, even if no field was changed.
+        if (this._tibberUnsaved) {
+          return true;
+        }
+      },
+      oneditcancel: function () {
+        stopStatusTimer();
+        if (this._tibberUnsaved) {
+          askForDeploy();
+        }
+      }
     });
   })();
 </script>
@@ -239,7 +287,7 @@
   </div>
   <div class="form-tips tibber-auth-oauth" id="node-config-tibber-login-saved" style="display: none; margin-bottom: 12px;">
     You are logged in, and the Tibber nodes can be used right away. Click <b>Update</b> (or <b>Add</b>) and then
-    <b>Deploy</b> to keep the Client ID and Client Secret when Node-RED restarts.
+    <b>Deploy</b> to save the Client ID and Client Secret, so the login survives a restart of Node-RED.
   </div>
   <div class="form-row tibber-auth-oauth">
     <label for="node-config-tibber-pasted-url"><i class="fa fa-clipboard"></i> Or paste</label>
